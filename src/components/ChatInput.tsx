@@ -71,7 +71,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
   };
 
   return (
-    <div className="w-full pt-1 pb-3 sm:pb-4 px-3 sm:px-6 bg-transparent">
+    <div className="w-full pt-1 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-6 bg-transparent">
       <div className="max-w-4xl mx-auto relative">
         {isAwakened ? (
           /* AWAKENED MODE TEXTPAD - 10X ADVANCED */
