@@ -12,7 +12,6 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Loki Prime X',
           short_name: 'Loki X',
@@ -22,6 +21,7 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           orientation: 'portrait',
           start_url: '/',
+          id: '/',
           icons: [
             {
               src: 'https://i.ibb.co/BVMjG8h1/Ai-Art-1738993587834.jpg',
@@ -42,7 +42,23 @@ export default defineConfig(({mode}) => {
           navigateFallback: '/index.html',
           cleanupOutdatedCaches: true,
           clientsClaim: true,
-          skipWaiting: true
+          skipWaiting: true,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/i\.ibb\.co\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'external-images',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
         },
         devOptions: {
           enabled: true
