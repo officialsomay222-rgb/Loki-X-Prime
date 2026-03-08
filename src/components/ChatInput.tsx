@@ -166,7 +166,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
           </div>
         ) : (
           /* NORMAL MODE TEXTPAD - CLEAN & SIMPLE */
-          <div className="relative flex flex-col gap-2 sm:gap-3 glass-panel !shadow-lg rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 input-container-focus border border-slate-200/50 dark:border-white/10">
+          <div className="relative flex flex-col gap-2 sm:gap-3 glass-panel premium-shadow rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 input-container-focus border border-slate-200/50 dark:border-white/10">
             <textarea
               ref={inputRef}
               value={input}

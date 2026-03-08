@@ -87,18 +87,18 @@ export const MessageBubble = memo(({
         
         <div className="relative group w-full">
           <div 
-            className={`px-4 py-3 sm:px-5 sm:py-4 shadow-md sm:shadow-lg relative overflow-hidden group/bubble ${
+            className={`px-4 py-3 sm:px-5 sm:py-4 premium-shadow relative overflow-hidden group/bubble transition-all duration-300 ${
               message.role === 'user' 
                 ? isAwakened
-                  ? 'bg-gradient-to-br from-cyan-950/60 to-blue-950/40 text-cyan-50 rounded-2xl sm:rounded-3xl rounded-tr-sm border border-cyan-500/20 shadow-[0_0_20px_rgba(0,242,255,0.04)]'
+                  ? 'bg-gradient-to-br from-cyan-950/60 to-blue-950/40 text-cyan-50 rounded-2xl sm:rounded-3xl rounded-tr-sm border border-cyan-500/20 hover:border-cyan-500/40 shadow-[0_0_20px_rgba(0,242,255,0.04)]'
                   : bubbleStyle === 'glass'
-                    ? 'bg-slate-900/90 dark:bg-[#2a2a30]/90 text-white rounded-2xl sm:rounded-3xl rounded-tr-sm border border-slate-700 dark:border-white/10 backdrop-blur-md'
+                    ? 'bg-slate-900/90 dark:bg-[#2a2a30]/90 text-white rounded-2xl sm:rounded-3xl rounded-tr-sm border border-slate-700 dark:border-white/10 hover:border-slate-600 dark:hover:border-white/20 backdrop-blur-md'
                     : 'bg-slate-900 dark:bg-[#2a2a30] text-white rounded-2xl sm:rounded-3xl rounded-tr-sm'
                 : isAwakened 
-                  ? 'bg-gradient-to-br from-[#0a0a12]/90 to-[#050508]/90 border border-cyan-500/20 rounded-xl sm:rounded-2xl rounded-tl-sm text-cyan-50 shadow-[0_0_25px_rgba(0,242,255,0.06)] backdrop-blur-2xl'
+                  ? 'bg-gradient-to-br from-[#0a0a12]/90 to-[#050508]/90 border border-cyan-500/20 hover:border-cyan-500/40 rounded-xl sm:rounded-2xl rounded-tl-sm text-cyan-50 shadow-[0_0_25px_rgba(0,242,255,0.06)] backdrop-blur-2xl'
                   : bubbleStyle === 'glass'
-                    ? 'bg-white/80 dark:bg-[#1e1e22]/80 border border-slate-200/50 dark:border-white/5 text-slate-800 dark:text-[#e0e0e0] rounded-xl sm:rounded-2xl rounded-tl-sm backdrop-blur-md'
-                    : 'bg-white dark:bg-[#1e1e22] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-[#e0e0e0] rounded-xl sm:rounded-2xl rounded-tl-sm'
+                    ? 'bg-white/80 dark:bg-[#1e1e22]/80 border border-slate-200/50 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 text-slate-800 dark:text-[#e0e0e0] rounded-xl sm:rounded-2xl rounded-tl-sm backdrop-blur-md'
+                    : 'bg-white dark:bg-[#1e1e22] border border-slate-100 dark:border-white/5 text-slate-800 dark:text-[#e0e0e0] rounded-xl sm:rounded-2xl rounded-tl-sm'
             }`}
           >
             {isAwakened && message.role === 'model' && (

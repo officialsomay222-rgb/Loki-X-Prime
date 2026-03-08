@@ -119,6 +119,36 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle PWA shortcuts and share target
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.get('settings') === 'true') {
+      setIsSettingsOpen(true);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    const command = urlParams.get('command');
+    if (command) {
+      // Handle web+loki:// protocol
+      console.log('Received command:', command);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    const shareText = urlParams.get('text');
+    const shareUrl = urlParams.get('url');
+    if (shareText || shareUrl) {
+      // Handle share target
+      const initialMessage = [shareText, shareUrl].filter(Boolean).join('\n');
+      if (initialMessage && inputRef.current) {
+        inputRef.current.value = initialMessage;
+        // Trigger synthetic change event if needed by ChatInput
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     // Auto-close sidebar on mobile initially
     if (window.innerWidth < 768) {
@@ -639,7 +669,7 @@ export default function App() {
 
         {/* Sidebar */}
         <div 
-          className={`fixed md:static inset-y-0 left-0 z-50 w-72 glass-panel border-y-0 border-l-0 border-r border-slate-200/50 dark:border-white/5 flex flex-col transition-transform duration-300 ease-in-out will-change-transform ${
+          className={`fixed md:static inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transition-transform duration-300 ease-in-out will-change-transform ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
           }`}
         >
@@ -737,7 +767,7 @@ export default function App() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
           {/* Header */}
-          <header className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200/50 dark:border-white/5 glass-panel !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
+          <header className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
             <div className="flex items-center gap-3 sm:gap-4 w-1/4">
               {!isSidebarOpen && (
                 <button 
@@ -790,7 +820,7 @@ export default function App() {
                       )}
                    </div>
                    <div className="relative">
-                     <p className={`text-slate-500 dark:text-[#6b6b80] tracking-[4px] sm:tracking-[6px] text-xs sm:text-sm font-montserrat font-bold uppercase drop-shadow-sm px-4 ${isAwakened ? 'text-cyan-300 animate-pulse' : ''}`} style={isAwakened ? { textShadow: '0 0 15px rgba(0,242,255,0.6)' } : {}}>
+                     <p className={`text-slate-500 dark:text-[#6b6b80] tracking-[4px] sm:tracking-[8px] text-[0.65rem] sm:text-xs font-montserrat font-bold uppercase drop-shadow-sm px-4 transition-all duration-1000 ${isAwakened ? 'text-cyan-300 animate-pulse' : 'opacity-80 hover:opacity-100'}`} style={isAwakened ? { textShadow: '0 0 15px rgba(0,242,255,0.6)' } : {}}>
                         {isAwakened ? 'SYSTEM AWAKENED. AWAITING INPUT.' : `AWAITING COMMAND, ${commanderName.toUpperCase()}.`}
                      </p>
                      {isAwakened && (

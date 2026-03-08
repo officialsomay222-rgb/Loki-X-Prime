@@ -12,6 +12,8 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Loki Prime X',
           short_name: 'Loki X',
@@ -19,9 +21,30 @@ export default defineConfig(({mode}) => {
           theme_color: '#08080c',
           background_color: '#08080c',
           display: 'standalone',
+          display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
           orientation: 'portrait',
           start_url: '/',
           id: '/',
+          categories: ['productivity', 'utilities', 'lifestyle', 'education'],
+          dir: 'ltr',
+          lang: 'en-US',
+          prefer_related_applications: false,
+          shortcuts: [
+            {
+              name: 'New Chat',
+              short_name: 'New',
+              description: 'Start a new chat session',
+              url: '/',
+              icons: [{ src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Settings',
+              short_name: 'Settings',
+              description: 'Open Loki Prime Settings',
+              url: '/?settings=true',
+              icons: [{ src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png', sizes: '192x192' }]
+            }
+          ],
           icons: [
             {
               src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
@@ -57,14 +80,31 @@ export default defineConfig(({mode}) => {
               form_factor: 'narrow',
               label: 'Loki Prime X Mobile'
             }
-          ]
+          ],
+          protocol_handlers: [
+            {
+              protocol: 'web+loki',
+              url: '/?command=%s'
+            }
+          ],
+          share_target: {
+            action: '/?share=true',
+            method: 'GET',
+            params: {
+              title: 'title',
+              text: 'text',
+              url: 'url'
+            }
+          }
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,woff2,json}'],
           navigateFallback: '/index.html',
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: true,
+          sourcemap: false,
+          maximumFileSizeToCacheInBytes: 5000000,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/i\.ibb\.co\/.*/i,
@@ -72,8 +112,29 @@ export default defineConfig(({mode}) => {
               options: {
                 cacheName: 'external-images',
                 expiration: {
-                  maxEntries: 10,
+                  maxEntries: 50,
                   maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'google-fonts-stylesheets',
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-webfonts',
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
@@ -83,7 +144,9 @@ export default defineConfig(({mode}) => {
           ]
         },
         devOptions: {
-          enabled: true
+          enabled: true,
+          type: 'module',
+          navigateFallback: 'index.html',
         }
       })
     ],
