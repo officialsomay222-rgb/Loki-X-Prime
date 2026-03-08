@@ -33,22 +33,6 @@ export default defineConfig(({mode}) => {
           launch_handler: {
             client_mode: ['navigate-existing', 'auto']
           },
-          shortcuts: [
-            {
-              name: 'New Chat',
-              short_name: 'New',
-              description: 'Start a new chat session',
-              url: '/',
-              icons: [{ src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' }]
-            },
-            {
-              name: 'Settings',
-              short_name: 'Settings',
-              description: 'Open Loki Prime Settings',
-              url: '/?settings=true',
-              icons: [{ src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' }]
-            }
-          ],
           icons: [
             {
               src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',

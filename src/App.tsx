@@ -284,7 +284,7 @@ export default function App() {
 
   if (isBooting) {
     return (
-      <div className="fixed inset-0 w-screen h-screen bg-[#08080c] z-[9999] flex flex-col justify-center items-center transition-opacity duration-700">
+      <div className="fixed inset-0 w-screen h-screen bg-[#08080c] z-[9999] flex flex-col justify-between items-center transition-opacity duration-700 pb-12 pt-24">
          <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[300px] my-auto mx-auto">
             <div className="w-full max-w-[240px] aspect-[2/1] relative flex justify-center items-center">
                <InfinityLogo />
@@ -293,6 +293,17 @@ export default function App() {
                <div className="h-full bg-white animate-[fill-progress_1.5s_ease-in-out_forwards]" />
             </div>
             <p className="text-[#6b6b80] tracking-[6px] text-sm animate-[pulse-text_1.5s_infinite] font-montserrat font-bold">INITIALIZING</p>
+         </div>
+         <div className="mt-auto">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-[0.3em] font-montserrat uppercase animate-[rgb-text_4s_linear_infinite] drop-shadow-[0_0_15px_rgba(0,242,255,0.8)]" style={{
+              backgroundImage: 'linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)',
+              backgroundSize: '200% auto',
+              color: 'transparent',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text'
+            }}>
+              LOKI X
+            </h1>
          </div>
       </div>
     );

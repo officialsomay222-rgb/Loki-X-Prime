@@ -40,6 +40,11 @@ html.dark, html.awakened-mode-active {
   background-color: #050508;
 }
 
+@keyframes rgb-text {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 /* Custom Scrollbar - Ultra Sleek */
 .custom-scrollbar {
   will-change: scroll-position;
