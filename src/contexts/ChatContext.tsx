@@ -213,7 +213,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       });
 
       clearTimeout(timeoutId);
-      const data = await response.json();
+      
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}...`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch response');
