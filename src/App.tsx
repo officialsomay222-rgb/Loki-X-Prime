@@ -50,6 +50,7 @@ export default function App() {
     bgStyle, setBgStyle, 
     commanderName, setCommanderName, 
     modelMode, setModelMode, 
+    tone, setTone,
     isAwakened, setIsAwakened,
     systemInstruction, setSystemInstruction,
     temperature, setTemperature,
@@ -136,7 +137,11 @@ export default function App() {
   // Save sessions to local storage whenever they change
   useEffect(() => {
     if (sessions.length > 0) {
-      localStorage.setItem('loki_chat_sessions', JSON.stringify(sessions));
+      try {
+        localStorage.setItem('loki_chat_sessions', JSON.stringify(sessions));
+      } catch (e) {
+        console.error('Failed to save sessions to localStorage', e);
+      }
     }
   }, [sessions]);
 
@@ -471,6 +476,21 @@ export default function App() {
                             >
                               <Moon className="w-5 h-5" /> DARK
                             </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Assistant Tone</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(['formal', 'casual', 'happy', 'custom'] as const).map((t) => (
+                              <button
+                                key={t}
+                                onClick={() => setTone(t)}
+                                className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${tone === t ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
+                              >
+                                {t.toUpperCase()}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       </section>

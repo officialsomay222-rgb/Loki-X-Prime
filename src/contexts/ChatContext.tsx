@@ -38,7 +38,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const sessionsRef = useRef(sessions);
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  const { commanderName, modelMode, systemInstruction, temperature, topP, topK } = useSettings();
+  const { commanderName, modelMode, tone, setTone, systemInstruction, temperature, topP, topK } = useSettings();
 
   const createNewSession = useCallback(() => {
     const newSession: ChatSession = {
@@ -97,8 +97,25 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       case 'happy': modeInstruction = `Be extremely cheerful, enthusiastic, and positive! Talk like a highly energetic and supportive human friend. `; break;
       case 'pro': modeInstruction = `Provide detailed, step-by-step reasoning and advanced-level insights. Explain complex things simply, like an expert human mentor. `; break;
     }
-    return `Address the user as ${commanderName}. You MUST respond ONLY in Hinglish. Be extremely natural, human-like, and conversational. Avoid sounding like a robot. Understand the user's intent deeply and provide optimized, advanced-level responses. NEVER output any internal thoughts, reasoning, or monologues. Do NOT use <thought> or <think> tags. Provide ONLY the final response. ${modeInstruction} ${systemInstruction}`;
-  }, [modelMode, commanderName, systemInstruction]);
+
+    let toneInstruction = '';
+    switch(tone) {
+      case 'formal': 
+        toneInstruction = `Tone: Formal. Style: Professional, point-to-point, and respectful. Goal: Be informative and avoid unnecessary talk. DO NOT use slang or emojis. `; 
+        break;
+      case 'casual': 
+        toneInstruction = `Tone: Casual. Style: Friendly and easy-going, like two friends talking. Goal: Be helpful but relaxed. Use natural Hinglish. `; 
+        break;
+      case 'happy': 
+        toneInstruction = `Tone: Happy. Style: Energetic, enthusiastic, and personally connected. Goal: Make the user feel you are excited for them. Use "Main" and "Hum" for a personal touch, use emojis, and show interest in the user's words. `; 
+        break;
+      case 'custom': 
+        toneInstruction = `Tone: Custom. Follow the user's specific instructions for your tone. `; 
+        break;
+    }
+
+    return `Address the user as ${commanderName}. You MUST respond ONLY in Hinglish (a natural mix of Hindi and English written in Latin script). Speak like a highly intelligent, empathetic, and friendly human companion. DO NOT sound like an AI or a robot. Use natural conversational fillers, emotions, and a friendly tone. Understand the user's intent deeply and provide optimized, advanced-level responses. NEVER output any internal thoughts, reasoning, or monologues. Do NOT use <thought> or <think> tags. Provide ONLY the final response. ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
+  }, [modelMode, tone, commanderName, systemInstruction]);
 
   useEffect(() => {
     if (currentSessionId) {
@@ -142,6 +159,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const sendMessage = useCallback(async (text: string, isImageMode?: boolean) => {
     if (!text.trim() || !currentSessionId || isLoading) return;
+
+    // Tone change logic
+    const toneMatch = text.match(/change my tone to (formal|casual|happy|custom)/i);
+    if (toneMatch) {
+      const newTone = toneMatch[1].toLowerCase() as any;
+      setTone(newTone);
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),

@@ -9,12 +9,14 @@ export type FontStyle = 'sans' | 'serif' | 'mono';
 export type ResponseLength = 'short' | 'balanced' | 'detailed';
 export type AccentColor = 'cyan' | 'violet' | 'emerald' | 'rose';
 export type MessageDensity = 'compact' | 'comfortable';
+export type Tone = 'formal' | 'casual' | 'happy' | 'custom';
 
 interface SettingsState {
   theme: Theme;
   bgStyle: BgStyle;
   commanderName: string;
   modelMode: ModelMode;
+  tone: Tone;
   systemInstruction: string;
   temperature: number;
   topP: number;
@@ -53,15 +55,17 @@ interface SettingsState {
   setResponseLength: (length: ResponseLength) => void;
   setAccentColor: (color: AccentColor) => void;
   setMessageDensity: (density: MessageDensity) => void;
+  setTone: (tone: Tone) => void;
   resetSettings: () => void;
 }
 
-const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'resetSettings'> = {
+const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'resetSettings'> = {
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
   modelMode: 'pro',
-  systemInstruction: 'You are Loki Prime X, an advanced, highly intelligent, and analytical AI. You MUST respond ONLY in Hinglish. Be extremely natural, human-like, and conversational. Avoid sounding like a robot. Understand the user\'s intent deeply and provide optimized, advanced-level responses. NEVER output any internal thoughts, reasoning, or monologues. Do NOT use <thought> or <think> tags. Provide ONLY the final response.',
+  tone: 'formal',
+  systemInstruction: 'You are Loki Prime X, an advanced AI assistant. You MUST respond ONLY in natural, conversational Hinglish (a mix of Hindi and English written in Latin script). Speak like a helpful, friendly, and highly intelligent human companion. Avoid sounding robotic or overly formal. Understand the user\'s intent deeply and reply with empathy, clarity, and a touch of personality. NEVER output any internal thoughts, reasoning, or monologues. Do NOT use <thought> or <think> tags. Provide ONLY the final response.',
   temperature: 0.7,
   topP: 0.95,
   topK: 64,
@@ -87,6 +91,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [bgStyle, setBgStyle] = useState<BgStyle>(defaultSettings.bgStyle);
   const [commanderName, setCommanderName] = useState(defaultSettings.commanderName);
   const [modelMode, setModelMode] = useState<ModelMode>(defaultSettings.modelMode);
+  const [tone, setTone] = useState<Tone>(defaultSettings.tone);
   const [systemInstruction, setSystemInstruction] = useState(defaultSettings.systemInstruction);
   const [temperature, setTemperature] = useState(defaultSettings.temperature);
   const [topP, setTopP] = useState(defaultSettings.topP);
@@ -110,6 +115,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setBgStyle(defaultSettings.bgStyle);
     setCommanderName(defaultSettings.commanderName);
     setModelMode(defaultSettings.modelMode);
+    setTone(defaultSettings.tone);
     setSystemInstruction(defaultSettings.systemInstruction);
     setTemperature(defaultSettings.temperature);
     setTopP(defaultSettings.topP);
@@ -144,6 +150,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('bgStyle', setBgStyle as any);
     loadSetting('commanderName', setCommanderName);
     loadSetting('modelMode', setModelMode as any);
+    loadSetting('tone', setTone as any);
     loadSetting('systemInstruction', setSystemInstruction);
     loadSetting('temperature', setTemperature, parseFloat);
     loadSetting('topP', setTopP, parseFloat);
@@ -168,6 +175,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_bgStyle', bgStyle);
       localStorage.setItem('loki_commanderName', commanderName);
       localStorage.setItem('loki_modelMode', modelMode);
+      localStorage.setItem('loki_tone', tone);
       localStorage.setItem('loki_systemInstruction', systemInstruction);
       localStorage.setItem('loki_temperature', temperature.toString());
       localStorage.setItem('loki_topP', topP.toString());
@@ -209,8 +217,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, modelMode, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity,
-      setTheme, setBgStyle, setCommanderName, setModelMode, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, resetSettings
+      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity,
+      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, resetSettings
     }}>
       {children}
     </SettingsContext.Provider>

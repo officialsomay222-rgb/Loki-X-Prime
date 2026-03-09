@@ -23,8 +23,8 @@ app.post("/api/chat", async (req, res) => {
   res.flushHeaders();
 
   try {
-    if (mode === "fast") {
-      // Fast Mode: Gemini 3.1 Flash Lite via Google GenAI
+    if (mode === "fast" || mode === "pro" || mode === "happy") {
+      // All text modes now use Gemini for advanced, human-like Hinglish responses
       let geminiKey = process.env.GEMINI_API_KEY;
       let googleKey = process.env.GOOGLE_AI_KEY;
       
@@ -39,7 +39,13 @@ app.post("/api/chat", async (req, res) => {
       }
       
       const ai = new GoogleGenAI({ apiKey });
-      const modelName = "gemini-3.1-flash-lite-preview";
+      
+      let modelName = "gemini-1.5-flash-latest"; // Using flash-latest for better stability in fast mode
+      if (mode === "pro") {
+        modelName = "gemini-3.1-pro-preview";
+      } else if (mode === "happy") {
+        modelName = "gemini-3-flash-preview";
+      }
 
       // Format history for Gemini
       const rawContents: any[] = [];
@@ -94,83 +100,6 @@ app.post("/api/chat", async (req, res) => {
       for await (const chunk of responseStream) {
         if (chunk.text) {
           res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-        }
-      }
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-
-    } else if (mode === "pro" || mode === "happy") {
-      // Pro & Happy Modes: Groq API
-      // Pro -> "gpt oss 120b" (User specified)
-      // Happy -> "groq compound" (User specified)
-      
-      const modelMap: Record<string, string> = {
-        "pro": "openai/gpt-oss-120b",
-        "happy": "groq/compound"
-      };
-
-      const model = modelMap[mode];
-
-      const messages = [];
-      if (systemInstruction) {
-        messages.push({ role: "system", content: systemInstruction });
-      }
-      
-      // Add history
-      if (history && Array.isArray(history)) {
-        history.forEach((msg: any) => {
-          messages.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.parts[0].text });
-        });
-      }
-      
-      messages.push({ role: "user", content: message });
-
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-          temperature: temperature || 0.7,
-          top_p: topP || 0.95,
-          stream: true
-        })
-      });
-      
-      if (!groqRes.ok) {
-        const errData = await groqRes.json();
-        throw new Error(errData.error?.message || "Groq API Error");
-      }
-
-      const reader = groqRes.body?.getReader();
-      const decoder = new TextDecoder("utf-8");
-
-      if (reader) {
-        let buffer = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || "";
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-              try {
-                const data = JSON.parse(line.slice(6));
-                const text = data.choices[0]?.delta?.content || "";
-                if (text) {
-                  res.write(`data: ${JSON.stringify({ text })}\n\n`);
-                }
-              } catch (e) {
-                // Ignore parse errors for incomplete chunks
-              }
-            }
-          }
         }
       }
       res.write(`data: [DONE]\n\n`);
