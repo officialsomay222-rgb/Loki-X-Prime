@@ -33,14 +33,44 @@ const MarkdownComponents = {
     )
   },
   img({node, ...props}: any) {
+    const isDataUri = props.src?.startsWith('data:');
+    
     return (
-      <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/20">
+      <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/20 group/img relative">
         <img 
           {...props} 
-          className="w-full h-auto object-contain max-h-[500px] hover:scale-[1.02] transition-transform duration-500" 
+          className="w-full h-auto object-contain max-h-[600px] hover:scale-[1.01] transition-transform duration-500" 
           referrerPolicy="no-referrer"
-          loading="lazy"
+          loading="eager"
+          onLoad={(e) => {
+            const img = e.currentTarget;
+            img.style.opacity = '1';
+          }}
+          style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
         />
+        
+        {/* Download Button */}
+        {isDataUri && (
+          <button
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = props.src;
+              link.download = `loki-prime-gen-${Date.now()}.png`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="absolute top-2 right-2 p-2 rounded-full bg-black/60 text-white/80 hover:text-white hover:bg-black/80 opacity-0 group-hover/img:opacity-100 transition-all backdrop-blur-md border border-white/10"
+            title="Download Image"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        )}
+        
+        {/* Loading Placeholder */}
+        <div className="absolute inset-0 -z-10 flex items-center justify-center bg-slate-900/50 animate-pulse">
+          <div className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+        </div>
       </div>
     )
   }

@@ -118,17 +118,24 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation Logic using Gemini 2.5 Flash Image
+      // Image Generation Logic using Gemini for refinement and Hugging Face FLUX
       let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
       let googleKey = process.env.GOOGLE_AI_KEY;
+      let hfToken = process.env.HF_TOKEN || process.env.HF;
       
+      // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
       if (googleKey && (googleKey.includes("MY_GOOGLE") || googleKey.includes("YOUR_"))) googleKey = undefined;
+      if (hfToken && (hfToken.includes("MY_HF") || hfToken.includes("YOUR_"))) hfToken = undefined;
 
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
       
       if (!apiKey) {
         throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
+      }
+
+      if (!hfToken) {
+        throw new Error("Hugging Face Token (HF) is missing. Please add it to your AI Studio Secrets.");
       }
       
       const ai = new GoogleGenAI({ apiKey });
@@ -140,7 +147,7 @@ app.post("/api/chat", async (req, res) => {
           model: "gemini-3.1-flash-lite-preview",
           contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
           config: {
-            systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko image generation model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
+            systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko FLUX model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
           }
         });
         detailedPrompt = refinementResponse.text || message;
@@ -148,36 +155,35 @@ app.post("/api/chat", async (req, res) => {
         console.error("Gemini refinement failed, using original prompt:", e);
       }
 
-      // Step 2: Generate image using gemini-2.5-flash-image
-      const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [
-            {
-              text: detailedPrompt,
-            },
-          ],
+      // Step 2: Generate image using Hugging Face FLUX
+      const API_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell";
+      
+      const hfResponse = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${hfToken}`,
+          "Content-Type": "application/json",
         },
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1"
-          }
-        }
+        body: JSON.stringify({ inputs: detailedPrompt }),
       });
 
-      let base64Image = "";
-      for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          base64Image = part.inlineData.data;
-          break;
+      if (!hfResponse.ok) {
+        const errText = await hfResponse.text();
+        if (hfResponse.status === 503) {
+          throw new Error("FLUX model is loading on Hugging Face. Please try again in 20-30 seconds.");
         }
+        throw new Error(`Hugging Face API Error (${hfResponse.status}): ${errText}`);
       }
 
-      if (!base64Image) {
-        throw new Error("Gemini failed to generate an image. Please try a different prompt.");
+      const imageBuffer = await hfResponse.arrayBuffer();
+      const base64EncodeString = Buffer.from(imageBuffer).toString('base64');
+
+      if (!base64EncodeString || base64EncodeString.length < 100) {
+        throw new Error("Generated image data is invalid or empty.");
       }
 
-      const responseText = `![Generated Image](data:image/png;base64,${base64Image})\n\n**Refined Prompt:** ${detailedPrompt}`;
+      // Use a cleaner response format
+      const responseText = `![Generated Image](data:image/png;base64,${base64EncodeString})\n\n**Refined Prompt:** ${detailedPrompt}`;
       res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
