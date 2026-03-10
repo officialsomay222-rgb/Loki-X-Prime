@@ -25,9 +25,9 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     if (mode === "fast" || mode === "pro" || mode === "happy") {
-      let geminiKey = process.env.GEMINI_API_KEY;
+      let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
       let googleKey = process.env.GOOGLE_AI_KEY;
-      let groqKey = process.env.GROQ_API_KEY;
+      let groqKey = process.env.GROQ_API_KEY || process.env.GR;
       
       // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
@@ -39,7 +39,7 @@ app.post("/api/chat", async (req, res) => {
       if (mode === "fast") {
         // Fast mode uses Gemini 3.1 Flash Lite as requested
         if (!apiKey) {
-          throw new Error("Google AI Key is missing or invalid. Please add a real GOOGLE_AI_KEY or GEMINI_API_KEY.");
+          throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -81,7 +81,7 @@ app.post("/api/chat", async (req, res) => {
       } else if (mode === "pro" || mode === "happy") {
         // Pro and Happy modes use Groq as requested
         if (!groqKey) {
-          throw new Error("Groq API Key is missing or invalid. Please add a real GROQ_API_KEY to your AI Studio Secrets.");
+          throw new Error("Groq API Key (GR) is missing or invalid. Please add a real GROQ_API_KEY or GR to your AI Studio Secrets.");
         }
 
         const groq = new Groq({ apiKey: groqKey });
@@ -119,9 +119,9 @@ app.post("/api/chat", async (req, res) => {
 
     } else if (mode === "image") {
       // Image Generation Logic using Gemini for refinement and Hugging Face FLUX
-      let geminiKey = process.env.GEMINI_API_KEY;
+      let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
       let googleKey = process.env.GOOGLE_AI_KEY;
-      let hfToken = process.env.HF_TOKEN;
+      let hfToken = process.env.HF_TOKEN || process.env.HF;
       
       // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
@@ -131,26 +131,29 @@ app.post("/api/chat", async (req, res) => {
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
       
       if (!apiKey) {
-        throw new Error("Google AI Key is missing or invalid. Please add a real GOOGLE_AI_KEY or GEMINI_API_KEY to your AI Studio Secrets.");
+        throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
       }
 
       if (!hfToken) {
-        throw new Error("Hugging Face Token (HF_TOKEN) is missing. Please add it to your AI Studio Secrets.");
+        throw new Error("Hugging Face Token (HF) is missing. Please add it to your AI Studio Secrets.");
       }
       
       const ai = new GoogleGenAI({ apiKey });
       
       // Step 1: Refine prompt using Gemini
-      const refinementModel = ai.models.generateContent({
-        model: "gemini-1.5-pro",
-        contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
-        config: {
-          systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko FLUX model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
-        }
-      });
-
-      const refinementResponse = await refinementModel;
-      const detailedPrompt = refinementResponse.text || message;
+      let detailedPrompt = message;
+      try {
+        const refinementResponse = await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite-preview",
+          contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
+          config: {
+            systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko FLUX model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
+          }
+        });
+        detailedPrompt = refinementResponse.text || message;
+      } catch (e) {
+        console.error("Gemini refinement failed, using original prompt:", e);
+      }
 
       // Step 2: Generate image using Hugging Face FLUX
       const API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
