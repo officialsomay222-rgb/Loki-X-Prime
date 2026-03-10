@@ -118,39 +118,64 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation Logic
+      // Image Generation Logic using Gemini for refinement and Hugging Face FLUX
       let geminiKey = process.env.GEMINI_API_KEY;
       let googleKey = process.env.GOOGLE_AI_KEY;
+      let hfToken = process.env.HF_TOKEN;
       
       // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
       if (googleKey && (googleKey.includes("MY_GOOGLE") || googleKey.includes("YOUR_"))) googleKey = undefined;
+      if (hfToken && (hfToken.includes("MY_HF") || hfToken.includes("YOUR_"))) hfToken = undefined;
 
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
       
       if (!apiKey) {
-        throw new Error("API Key is missing or invalid. Please add a real GOOGLE_AI_KEY or GEMINI_API_KEY to your AI Studio Secrets.");
+        throw new Error("Google AI Key is missing or invalid. Please add a real GOOGLE_AI_KEY or GEMINI_API_KEY to your AI Studio Secrets.");
+      }
+
+      if (!hfToken) {
+        throw new Error("Hugging Face Token (HF_TOKEN) is missing. Please add it to your AI Studio Secrets.");
       }
       
       const ai = new GoogleGenAI({ apiKey });
       
-      const response = await ai.models.generateImages({
-          model: 'imagen-4.0-generate-001',
-          prompt: message,
-          config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '1:1',
-          },
+      // Step 1: Refine prompt using Gemini
+      const refinementModel = ai.models.generateContent({
+        model: "gemini-1.5-pro",
+        contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
+        config: {
+          systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko FLUX model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
+        }
       });
 
-      if (!response.generatedImages || response.generatedImages.length === 0) {
-        throw new Error("Failed to generate image. The model did not return image data.");
+      const refinementResponse = await refinementModel;
+      const detailedPrompt = refinementResponse.text || message;
+
+      // Step 2: Generate image using Hugging Face FLUX
+      const API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
+      
+      const hfResponse = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${hfToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: detailedPrompt }),
+      });
+
+      if (!hfResponse.ok) {
+        if (hfResponse.status === 503) {
+          throw new Error("FLUX model is loading on Hugging Face. Please try again in 20-30 seconds.");
+        }
+        const errText = await hfResponse.text();
+        throw new Error(`Hugging Face API Error (${hfResponse.status}): ${errText}`);
       }
 
-      const base64EncodeString = response.generatedImages[0].image.imageBytes;
+      const imageBuffer = await hfResponse.arrayBuffer();
+      const base64EncodeString = Buffer.from(imageBuffer).toString('base64');
 
-      const responseText = `![Generated Image](data:image/jpeg;base64,${base64EncodeString})`;
+      const responseText = `![Generated Image](data:image/jpeg;base64,${base64EncodeString})\n\n**Refined Prompt:** ${detailedPrompt}`;
       res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
