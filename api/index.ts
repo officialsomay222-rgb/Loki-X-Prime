@@ -156,7 +156,7 @@ app.post("/api/chat", async (req, res) => {
       }
 
       // Step 2: Generate image using Hugging Face FLUX
-      const API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
+      const API_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell";
       
       const hfResponse = await fetch(API_URL, {
         method: "POST",
