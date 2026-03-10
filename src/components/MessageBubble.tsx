@@ -31,6 +31,18 @@ const MarkdownComponents = {
         {children}
       </code>
     )
+  },
+  img({node, ...props}: any) {
+    return (
+      <div className="my-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/20">
+        <img 
+          {...props} 
+          className="w-full h-auto object-contain max-h-[500px] hover:scale-[1.02] transition-transform duration-500" 
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      </div>
+    )
   }
 };
 
