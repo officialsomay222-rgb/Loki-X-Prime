@@ -22,37 +22,30 @@ app.post("/api/transcribe", async (req, res) => {
     if (groqKey && (groqKey.includes("MY_GROQ") || groqKey.includes("YOUR_"))) groqKey = undefined;
 
     if (!groqKey) {
-      return res.status(400).json({ error: "Groq API Key (GR) is missing or invalid." });
+      return res.status(400).json({ 
+        error: "Groq API Key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets (Settings -> Secrets) to enable voice transcription." 
+      });
     }
 
+    const groq = new Groq({ apiKey: groqKey });
+    
     // Convert base64 to buffer
     const buffer = Buffer.from(audioBase64, 'base64');
     
-    // Use fetch to send to Groq API
-    const formData = new FormData();
-    const extension = mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm';
-    const blob = new Blob([buffer], { type: mimeType || 'audio/webm' });
-    formData.append('file', blob, `audio.${extension}`);
-    formData.append('model', 'whisper-large-v3-turbo');
-    formData.append('response_format', 'json');
-    formData.append('prompt', 'The following is a conversation in English and Hinglish (Hindi written in the Latin alphabet). Please transcribe exactly as spoken, keeping Hinglish words in Latin script. Examples: "Haan bhai, kya haal hai?", "I am doing good", "Theek hai."');
+    // Create a temporary file-like object for Groq SDK
+    // Groq SDK expects a File or a stream with a path
+    const { Readable } = await import('stream');
+    const stream = Readable.from(buffer);
+    (stream as any).path = `audio.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`;
 
-    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqKey}`
-      },
-      body: formData
+    const transcription = await groq.audio.transcriptions.create({
+      file: stream as any,
+      model: 'whisper-large-v3-turbo',
+      response_format: 'json',
+      prompt: 'The following is a conversation in English and Hinglish (Hindi written in the Latin alphabet). Please transcribe exactly as spoken, keeping Hinglish words in Latin script. Examples: "Haan bhai, kya haal hai?", "Theek hai."',
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Groq transcription error:", errorText);
-      return res.status(response.status).json({ error: `Groq API Error: ${response.statusText}` });
-    }
-
-    const data = await response.json();
-    res.json({ text: data.text });
+    res.json({ text: transcription.text });
   } catch (error: any) {
     console.error("Transcription Error:", error);
     res.status(500).json({ error: error.message || "Internal server error during transcription." });
@@ -129,7 +122,7 @@ app.post("/api/chat", async (req, res) => {
       if (mode === "fast") {
         // Fast mode uses Gemini 3.1 Flash Lite as requested
         if (!apiKey) {
-          throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
+          throw new Error("Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Fast Model.");
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -171,7 +164,7 @@ app.post("/api/chat", async (req, res) => {
       } else if (mode === "pro" || mode === "happy") {
         // Pro and Happy modes use Groq as requested
         if (!groqKey) {
-          throw new Error("Groq API Key (GR) is missing or invalid. Please add a real GROQ_API_KEY or GR to your AI Studio Secrets.");
+          throw new Error("Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Pro/Happy models.");
         }
 
         const groq = new Groq({ apiKey: groqKey });

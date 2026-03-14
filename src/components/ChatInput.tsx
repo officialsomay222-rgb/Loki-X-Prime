@@ -38,6 +38,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
   const [isFocused, setIsFocused] = useState(false);
   const [isSuccessFlash, setIsSuccessFlash] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const internalRef = useRef<HTMLTextAreaElement>(null);
@@ -48,6 +49,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
   const silenceStartRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const hasSpokenRef = useRef<boolean>(false);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const { playChirp, playBlip } = useGlobalInteraction();
 
@@ -94,12 +97,16 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
   const startRecording = async () => {
     setMicError(null);
+    setTranscriptionError(null);
     setInput('');
     playChirp();
     
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Microphone access is not supported in this browser or environment.");
+      }
+      if (!window.MediaRecorder) {
+        throw new Error("Audio recording is not supported in this browser.");
       }
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -123,8 +130,6 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
       // 2. Setup Web Speech API for live transcription and silence detection (if available)
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      let recognition: any = null;
-      let silenceTimer: NodeJS.Timeout | null = null;
       let finalTranscript = '';
       let isSpeechRecognitionActive = false;
 
@@ -204,10 +209,11 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
       if (SpeechRecognition) {
         try {
-          recognition = new SpeechRecognition();
+          const recognition = new SpeechRecognition();
+          recognitionRef.current = recognition;
           recognition.continuous = true;
           recognition.interimResults = true;
-          recognition.lang = 'en-IN'; // Optimized for Indian English / Hinglish
+          recognition.lang = 'en-US'; // Optimized for English
           
           recognition.onstart = () => {
             isSpeechRecognitionActive = true;
@@ -230,9 +236,11 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
               hasSpokenRef.current = true;
               setAudioVolume(0.8 + Math.random() * 0.2);
               
-              if (silenceTimer) clearTimeout(silenceTimer);
-              silenceTimer = setTimeout(() => {
-                recognition.stop();
+              if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+              silenceTimerRef.current = setTimeout(() => {
+                if (recognitionRef.current) {
+                  recognitionRef.current.stop();
+                }
               }, 2500); // 2.5s silence detection
             }
           };
@@ -243,23 +251,21 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
           };
           
           recognition.onend = () => {
-            if (silenceTimer) clearTimeout(silenceTimer);
-            // We don't check isRecording here because it might be stale from the closure
-            // finishRecording has its own isFinishing check to prevent double calls
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
             finishRecording(finalTranscript);
           };
 
-          (window as any).currentRecognition = recognition;
           recognition.start();
 
           // Fallback timer if they don't speak at all
-          silenceTimer = setTimeout(() => {
-            // We don't check isRecording here either
-            recognition.stop();
+          silenceTimerRef.current = setTimeout(() => {
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
           }, 5000);
           
         } catch (err) {
-          console.error("SpeechRecognition failed:", err);
+          console.error("Speech recognition initialization failed", err);
           isSpeechRecognitionActive = false;
         }
       }
@@ -270,6 +276,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
       // 3. Fallback Silence Detection (RMS) if SpeechRecognition isn't active
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      await audioContext.resume();
       audioContextRef.current = audioContext;
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 1024;
@@ -291,8 +298,10 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         
+        // Always update volume for visual feedback
+        setAudioVolume(Math.min(1, rms * 10));
+
         if (!isSpeechRecognitionActive) {
-          setAudioVolume(Math.min(1, rms * 10));
           const silenceThreshold = 0.015;
 
           if (rms < silenceThreshold) { 
@@ -326,9 +335,14 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
   const stopRecording = () => {
     // Stop Web Speech API if active
-    if ((window as any).currentRecognition) {
-      (window as any).currentRecognition.stop();
-      (window as any).currentRecognition = null;
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
 
     if (mediaRecorderRef.current) {
@@ -386,11 +400,19 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
             )}
           </div>
         )}
+        {transcriptionError && (
+          <div className="absolute -top-16 left-0 right-0 mx-auto w-fit px-4 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm rounded-lg backdrop-blur-md shadow-lg flex flex-col items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {transcriptionError}
+            </div>
+          </div>
+        )}
         
         {isAwakened ? (
           /* AWAKENED MODE TEXTPAD - 10X ADVANCED */
           <div className={`relative flex flex-col gap-1.5 sm:gap-2 rounded-[1.2rem] sm:rounded-[1.5rem] p-1.5 sm:p-2 bg-gradient-to-br from-[#0a0a12]/80 to-[#050508]/90 border transition-all duration-500 group ${
-            isSuccessFlash ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 
+            isSuccessFlash ? 'success-flash border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 
             isRecording ? 'border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.2)] animate-pulse' : 
             'border-cyan-500/20 backdrop-blur-2xl focus-within:bg-[#0a0a12]/95 focus-within:border-cyan-400/40 focus-within:shadow-[0_0_20px_rgba(0,242,255,0.08)]'
           }`}>
@@ -465,7 +487,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
               placeholder={isTranscribing ? "Transcribing..." : isRecording ? "Listening..." : isImageMode ? "Describe the image for LOKI..." : "Ask LOKI..."}
               className="w-full max-h-[120px] sm:max-h-[150px] min-h-[40px] sm:min-h-[50px] bg-gray-950/90 border-0 focus:ring-0 focus:outline-none resize-none px-3 sm:px-4 py-2.5 sm:py-3.5 text-[1rem] sm:text-[1.1rem] text-cyan-50 placeholder:text-cyan-600/50 custom-scrollbar leading-relaxed font-mono tracking-wide relative z-10 caret-[#4285F4] rounded-[1.1rem] sm:rounded-[1.4rem]"
               rows={1}
-              disabled={isLoading || isRecording || isTranscribing}
+              readOnly={isRecording || isTranscribing}
+              disabled={isLoading}
             />
             <div className="flex justify-between items-center w-full px-1 relative z-10">
               <div className="flex items-center gap-1 sm:gap-1.5">
@@ -508,17 +531,31 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <button 
-                    onClick={toggleRecording}
-                    disabled={isTranscribing}
-                    style={{
-                      boxShadow: isRecording ? `0 0 ${10 + audioVolume * 40}px rgba(244,63,94,${0.3 + audioVolume * 0.5})` : undefined,
-                      transform: isRecording ? `scale(${1 + audioVolume * 0.15})` : undefined
-                    }}
-                    className={`mic-button-trigger w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
-                  >
-                    {isTranscribing ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : isRecording ? <StopSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                  </button>
+                  <div className="flex items-center">
+                    {isRecording && (
+                      <div className="flex items-center gap-[2px] h-4 mr-2">
+                        {[1, 2, 3, 4].map(i => (
+                          <motion.div
+                            key={i}
+                            animate={{ height: [4, 4 + audioVolume * 12 * (i % 2 === 0 ? 1 : 0.7), 4] }}
+                            transition={{ duration: 0.2, repeat: Infinity }}
+                            className="w-[2px] bg-rose-500 rounded-full"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <button 
+                      onClick={toggleRecording}
+                      disabled={isTranscribing}
+                      style={{
+                        boxShadow: isRecording ? `0 0 ${10 + audioVolume * 40}px rgba(244,63,94,${0.3 + audioVolume * 0.5})` : undefined,
+                        transform: isRecording ? `scale(${1 + audioVolume * 0.15})` : undefined
+                      }}
+                      className={`mic-button-trigger w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
+                    >
+                      {isTranscribing ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : isRecording ? <StopSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                    </button>
+                  </div>
                   
                   {isLoading ? (
                     <button
@@ -550,7 +587,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         ) : (
           /* NORMAL MODE TEXTPAD - CLEAN & SIMPLE */
           <div className={`relative flex flex-col gap-2 sm:gap-3 glass-panel premium-shadow rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 input-container-focus border transition-all duration-500 ${
-            isSuccessFlash ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : 
+            isSuccessFlash ? 'success-flash border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : 
             isRecording ? 'border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)] animate-pulse' : 
             'border-slate-200/50 dark:border-white/10'
           }`}>
@@ -564,7 +601,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
               placeholder={isTranscribing ? "Transcribing..." : isRecording ? "Listening..." : isImageMode ? "Describe the image for LOKI..." : "Ask LOKI..."}
               className="w-full max-h-[200px] sm:max-h-[250px] min-h-[50px] sm:min-h-[60px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-3 sm:px-4 py-3 sm:py-4 text-[1.05rem] sm:text-[1.2rem] text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#6b6b80] custom-scrollbar leading-relaxed font-medium"
               rows={1}
-              disabled={isLoading || isRecording || isTranscribing}
+              readOnly={isRecording || isTranscribing}
+              disabled={isLoading}
             />
             <div className="flex justify-between items-center w-full px-2">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -607,17 +645,31 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <button 
-                    onClick={toggleRecording}
-                    disabled={isTranscribing}
-                    style={{
-                      boxShadow: isRecording ? `0 0 ${10 + audioVolume * 30}px rgba(244,63,94,${0.2 + audioVolume * 0.4})` : undefined,
-                      transform: isRecording ? `scale(${1 + audioVolume * 0.1})` : undefined
-                    }}
-                    className={`mic-button-trigger w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-500' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white'}`}
-                  >
-                    {isTranscribing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : isRecording ? <StopSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  </button>
+                  <div className="flex items-center">
+                    {isRecording && (
+                      <div className="flex items-center gap-[2px] h-4 mr-2">
+                        {[1, 2, 3, 4].map(i => (
+                          <motion.div
+                            key={i}
+                            animate={{ height: [4, 4 + audioVolume * 12 * (i % 2 === 0 ? 1 : 0.7), 4] }}
+                            transition={{ duration: 0.2, repeat: Infinity }}
+                            className="w-[2px] bg-rose-500 rounded-full"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <button 
+                      onClick={toggleRecording}
+                      disabled={isTranscribing}
+                      style={{
+                        boxShadow: isRecording ? `0 0 ${10 + audioVolume * 30}px rgba(244,63,94,${0.2 + audioVolume * 0.4})` : undefined,
+                        transform: isRecording ? `scale(${1 + audioVolume * 0.1})` : undefined
+                      }}
+                      className={`mic-button-trigger w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-500' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white'}`}
+                    >
+                      {isTranscribing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : isRecording ? <StopSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </button>
+                  </div>
                   
                   {isLoading ? (
                     <button
