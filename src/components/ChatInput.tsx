@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo, forwardRef } from 'react';
-import { Plus, Mic, Send, Loader2, Trash2, Square, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { Plus, Mic, Send, Loader2, Trash2, Square, Image as ImageIcon, MessageSquare, Square as StopSquare } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
 
 interface ChatInputProps {
@@ -7,11 +7,13 @@ interface ChatInputProps {
   isLoading: boolean;
   modelMode: string;
   setModelMode: (mode: string) => void;
-  onSendMessage: (text: string, isImageMode?: boolean) => void;
+  onSendMessage: (text: string, isImageMode?: boolean, audioUrl?: string) => void;
   onDeleteSession: (e: React.MouseEvent, id: string) => void;
   currentSessionId: string | null;
   onStopGeneration?: () => void;
   enterToSend: boolean;
+  input: string;
+  setInput: (value: string) => void;
 }
 
 export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
@@ -23,11 +25,17 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
   onDeleteSession,
   currentSessionId,
   onStopGeneration,
-  enterToSend
+  enterToSend,
+  input,
+  setInput
 }, ref) => {
-  const [input, setInput] = useState('');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isImageMode, setIsImageMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const internalRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = (ref as React.MutableRefObject<HTMLTextAreaElement>) || internalRef;
 
@@ -72,9 +80,98 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
     }
   };
 
+  const startRecording = async () => {
+    setMicError(null);
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Microphone access is not supported in this browser or environment.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        setIsTranscribing(true);
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64data = (reader.result as string).split(',')[1];
+          
+          try {
+            const response = await fetch('/api/transcribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioBase64: base64data, mimeType })
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.text) {
+                onSendMessage(data.text, isImageMode, audioUrl);
+              }
+            } else {
+              console.error("Transcription failed");
+            }
+          } catch (error) {
+            console.error("Error transcribing audio:", error);
+          } finally {
+            setIsTranscribing(false);
+          }
+        };
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err: any) {
+      console.error("Error accessing microphone:", err);
+      if (err.name === 'NotAllowedError' || err?.message?.includes('Permission denied')) {
+        setMicError("Microphone access denied. Please allow microphone access in your browser settings.");
+      } else {
+        setMicError("Could not access the microphone. Please ensure a microphone is connected.");
+      }
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setMicError(null), 5000);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   return (
     <div className="w-full pt-1 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-6 bg-transparent">
       <div className="max-w-4xl mx-auto relative">
+        {micError && (
+          <div className="absolute -top-12 left-0 right-0 mx-auto w-fit px-4 py-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm rounded-lg backdrop-blur-md shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {micError}
+          </div>
+        )}
+        
         {isAwakened ? (
           /* AWAKENED MODE TEXTPAD - 10X ADVANCED */
           <div className="relative flex flex-col gap-1.5 sm:gap-2 rounded-[1.2rem] sm:rounded-[1.5rem] p-1.5 sm:p-2 bg-gradient-to-br from-[#0a0a12]/80 to-[#050508]/90 border border-cyan-500/20 backdrop-blur-2xl focus-within:bg-[#0a0a12]/95 focus-within:border-cyan-400/40 focus-within:shadow-[0_0_20px_rgba(0,242,255,0.08)] transition-all duration-500 group">
@@ -142,8 +239,12 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <button className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 transition-all border border-transparent hover:border-cyan-500/30 overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'}`}>
-                    <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <button 
+                    onClick={toggleRecording}
+                    disabled={isTranscribing}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-400 border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] animate-pulse' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
+                  >
+                    {isTranscribing ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : isRecording ? <StopSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </button>
                   
                   {isLoading ? (
@@ -227,8 +328,12 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <button className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'}`}>
-                    <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <button 
+                    onClick={toggleRecording}
+                    disabled={isTranscribing}
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-500 animate-pulse' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white'}`}
+                  >
+                    {isTranscribing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : isRecording ? <StopSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>
                   
                   {isLoading ? (

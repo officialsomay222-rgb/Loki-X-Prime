@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { useSettings } from './SettingsContext';
+import { get, set, del } from 'idb-keyval';
 
 export type Message = {
   id: string;
@@ -8,6 +9,7 @@ export type Message = {
   timestamp: Date;
   status?: 'pending' | 'sent' | 'error';
   isImage?: boolean;
+  audioUrl?: string;
 };
 
 export type ChatSession = {
@@ -23,9 +25,11 @@ interface ChatState {
   isLoading: boolean;
   createNewSession: () => void;
   deleteSession: (id: string) => void;
+  deleteMessage: (sessionId: string, messageId: string) => void;
   clearAllSessions: () => void;
+  clearSessionMessages: (id: string) => void;
   setCurrentSessionId: (id: string) => void;
-  sendMessage: (text: string, isImageMode?: boolean) => void;
+  sendMessage: (text: string, isImageMode?: boolean, audioUrl?: string) => void;
   stopGeneration: () => void;
   renameSession: (id: string, title: string) => void;
 }
@@ -57,64 +61,73 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    try {
-      const savedSessions = localStorage.getItem('loki_chat_sessions');
-      if (savedSessions) {
-        const parsed = JSON.parse(savedSessions);
-        const usedIds = new Set<string>();
-        
-        const formatted = parsed.map((s: any) => {
-          // Ensure session ID is unique
-          let sessionId = s.id;
-          if (usedIds.has(sessionId)) {
-            sessionId = generateId();
-          }
-          usedIds.add(sessionId);
+    const loadSessions = async () => {
+      try {
+        const savedSessionsStr = await get('loki_chat_sessions');
+        const legacySessions = localStorage.getItem('loki_chat_sessions');
+        let parsed = null;
 
-          const sessionUsedMessageIds = new Set<string>();
-          return {
-            ...s,
-            id: sessionId,
-            updatedAt: new Date(s.updatedAt),
-            messages: s.messages.map((m: any) => {
-              // Ensure message ID is unique within session
-              let msgId = m.id;
-              if (sessionUsedMessageIds.has(msgId)) {
-                msgId = generateId();
-              }
-              sessionUsedMessageIds.add(msgId);
-              
-              return {
-                ...m,
-                id: msgId,
-                timestamp: new Date(m.timestamp)
-              };
-            })
-          };
-        });
-        setSessions(formatted);
-        if (formatted.length > 0) {
-          setCurrentSessionId(formatted[0].id);
+        if (savedSessionsStr) {
+          parsed = JSON.parse(savedSessionsStr);
+        } else if (legacySessions) {
+          parsed = JSON.parse(legacySessions);
+        }
+
+        if (parsed) {
+          const usedIds = new Set<string>();
+          
+          const formatted = parsed.map((s: any) => {
+            // Ensure session ID is unique
+            let sessionId = s.id;
+            if (usedIds.has(sessionId)) {
+              sessionId = generateId();
+            }
+            usedIds.add(sessionId);
+
+            const sessionUsedMessageIds = new Set<string>();
+            return {
+              ...s,
+              id: sessionId,
+              updatedAt: new Date(s.updatedAt),
+              messages: s.messages.map((m: any) => {
+                // Ensure message ID is unique within session
+                let msgId = m.id;
+                if (sessionUsedMessageIds.has(msgId)) {
+                  msgId = generateId();
+                }
+                sessionUsedMessageIds.add(msgId);
+                
+                return {
+                  ...m,
+                  id: msgId,
+                  timestamp: new Date(m.timestamp)
+                };
+              })
+            };
+          });
+          setSessions(formatted);
+          if (formatted.length > 0) {
+            setCurrentSessionId(formatted[0].id);
+          } else {
+            createNewSession();
+          }
         } else {
           createNewSession();
         }
-      } else {
+      } catch (e) {
+        console.error("Failed to parse sessions", e);
         createNewSession();
       }
-    } catch (e) {
-      console.error("Failed to parse sessions", e);
-      createNewSession();
-    }
+    };
+    loadSessions();
   }, []);
 
   useEffect(() => {
     sessionsRef.current = sessions;
     if (sessions.length > 0) {
-      try {
-        localStorage.setItem('loki_chat_sessions', JSON.stringify(sessions));
-      } catch (e) {
+      set('loki_chat_sessions', JSON.stringify(sessions)).catch(e => {
         console.error("Failed to save sessions", e);
-      }
+      });
     }
   }, [sessions]);
 
@@ -184,8 +197,30 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
     });
   }, [currentSessionId, createNewSession]);
 
+  const deleteMessage = useCallback((sessionId: string, messageId: string) => {
+    setSessions(prev => prev.map(session => {
+      if (session.id === sessionId) {
+        return {
+          ...session,
+          messages: session.messages.filter(m => m.id !== messageId)
+        };
+      }
+      return session;
+    }));
+  }, []);
+
+  const clearSessionMessages = useCallback((id: string) => {
+    setSessions(prev => prev.map(session => {
+      if (session.id === id) {
+        return { ...session, messages: [] };
+      }
+      return session;
+    }));
+  }, []);
+
   const clearAllSessions = useCallback(() => {
     setSessions([]);
+    del('loki_chat_sessions').catch(e => console.error("Failed to delete sessions", e));
     localStorage.removeItem('loki_chat_sessions');
     createNewSession();
   }, [createNewSession]);
@@ -202,8 +237,8 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
     }
   }, []);
 
-  const sendMessage = useCallback(async (text: string, isImageMode?: boolean) => {
-    if (!text.trim() || !currentSessionId || isLoading) return;
+  const sendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string) => {
+    if ((!text.trim() && !audioUrl) || !currentSessionId || isLoading) return;
 
     // Tone change logic
     const toneMatch = text.match(/change my tone to (formal|casual|happy|custom)/i);
@@ -218,7 +253,8 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
       content: text.trim(),
       timestamp: new Date(),
       status: 'pending',
-      isImage: isImageMode
+      isImage: isImageMode,
+      audioUrl: audioUrl
     };
 
     setSessions(prev => prev.map(s => {
@@ -241,6 +277,7 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
     const controller = new AbortController();
     abortControllerRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 second timeout (5 minutes)
+    const modelMessageId = generateId();
 
     try {
       setSessions(prev => prev.map(s => {
@@ -251,7 +288,6 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
         return s;
       }));
 
-      const modelMessageId = generateId();
       setSessions(prev => prev.map(s => {
         if (s.id === currentSessionId) {
           return {
@@ -269,10 +305,16 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
       }));
 
       const currentSession = sessionsRef.current.find(s => s.id === currentSessionId);
-      const history = currentSession?.messages.map(m => ({
-        role: m.role,
-        parts: [{ text: m.content }]
-      })) || [];
+      const history = currentSession?.messages.map(m => {
+        let text = m.content;
+        if (m.isImage && text.startsWith('![')) {
+          text = "[Image Generated]";
+        }
+        return {
+          role: m.role,
+          parts: [{ text }]
+        };
+      }) || [];
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -392,16 +434,12 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
         console.error("Error sending message:", error);
         setSessions(prev => prev.map(s => {
           if (s.id === currentSessionId) {
-            const updatedMessages = s.messages.map(m => m.id === userMessage.id ? { ...m, status: 'error' as const } : m);
-            return {
-              ...s,
-              messages: [...updatedMessages, {
-                id: generateId(),
-                role: 'model',
-                content: `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`,
-                timestamp: new Date()
-              }]
-            };
+            const updatedMessages = s.messages.map(m => {
+              if (m.id === userMessage.id) return { ...m, status: 'error' as const };
+              if (m.id === modelMessageId) return { ...m, content: `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`, isImage: false };
+              return m;
+            });
+            return { ...s, messages: updatedMessages };
           }
           return s;
         }));
@@ -414,8 +452,8 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
 
   const contextValue = React.useMemo(() => ({
     sessions, currentSessionId, isLoading,
-    createNewSession, deleteSession, clearAllSessions, setCurrentSessionId, sendMessage, stopGeneration, renameSession
-  }), [sessions, currentSessionId, isLoading, createNewSession, deleteSession, clearAllSessions, sendMessage, stopGeneration, renameSession]);
+    createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession
+  }), [sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, sendMessage, stopGeneration, renameSession]);
 
   return (
     <ChatContext.Provider value={contextValue}>

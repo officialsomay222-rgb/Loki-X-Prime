@@ -1,5 +1,5 @@
-import React, { memo, useMemo } from 'react';
-import { Copy, Check } from 'lucide-react';
+import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
+import { Copy, Check, Edit2, Trash2, Play, Square, Mic } from 'lucide-react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -35,9 +35,9 @@ const MarkdownCode = ({node, inline, className, children, ...props}: any) => {
 const MarkdownImage = ({node, ...props}: any) => {
   if (!props.src) return null;
   const isDataUri = props.src?.startsWith('data:');
-  const [hasError, setHasError] = React.useState(false);
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   return (
     <>
@@ -149,9 +149,9 @@ const MemoizedMarkdown = memo(({ content }: { content: string }) => (
 ));
 
 const ImageGenerationPlaceholder = () => {
-  const [showCanvas, setShowCanvas] = React.useState(false);
+  const [showCanvas, setShowCanvas] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setShowCanvas(true);
     }, 1000);
@@ -192,12 +192,54 @@ const ImageGenerationPlaceholder = () => {
   );
 };
 
+const AudioPlayer = ({ url }: { url: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-black/20 dark:bg-white/5 rounded-xl p-2 sm:p-3 border border-white/10 w-[200px] sm:w-[250px]">
+      <button 
+        onClick={togglePlay}
+        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center hover:bg-cyan-500/40 transition-colors shrink-0"
+      >
+        {isPlaying ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4 ml-1" />}
+      </button>
+      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden relative">
+        <div className={`absolute inset-0 bg-gradient-to-r from-cyan-500/50 to-blue-500/50 w-full ${isPlaying ? 'animate-[scanline_2s_linear_infinite]' : ''}`}></div>
+      </div>
+      <div className="text-[10px] sm:text-xs font-mono text-cyan-500/70 flex items-center gap-1">
+        <Mic className="w-3 h-3" />
+        VOICE
+      </div>
+      <audio 
+        ref={audioRef} 
+        src={url} 
+        onEnded={() => setIsPlaying(false)} 
+        className="hidden" 
+      />
+    </div>
+  );
+};
+
 interface MessageBubbleProps {
   message: Message;
   isAwakened: boolean;
   commanderName: string;
   copiedId: string | null;
   onCopy: (text: string, id: string) => void;
+  onEdit?: (text: string) => void;
+  onDelete?: (id: string) => void;
   formatDate: (date: Date) => string;
   bubbleStyle: BubbleStyle;
   fontSize: FontSize;
@@ -210,6 +252,8 @@ export const MessageBubble = memo(({
   commanderName,
   copiedId,
   onCopy,
+  onEdit,
+  onDelete,
   formatDate,
   bubbleStyle,
   fontSize,
@@ -245,7 +289,15 @@ export const MessageBubble = memo(({
           <div className={`relative transition-all duration-300 py-2 ${isAwakened ? 'text-cyan-50' : 'text-slate-800 dark:text-[#e0e0e0]'}`}>
             <div className={`markdown-body ${fontSizeClass}`}>
               {message.content ? (
-                message.isImage && message.content.startsWith('![') ? (
+                message.content.startsWith('SYSTEM ERROR:') ? (
+                  <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-xs sm:text-sm uppercase tracking-wider">Generation Failed</span>
+                      <span className="text-sm">{message.content.replace('SYSTEM ERROR:', '').trim()}</span>
+                    </div>
+                  </div>
+                ) : message.isImage && message.content.startsWith('![') ? (
                   <MarkdownImage src={message.content.slice(message.content.indexOf('(data:image') + 1, -1)} alt="Generated Image" />
                 ) : (
                   <MemoizedMarkdown content={message.content} />
@@ -262,15 +314,26 @@ export const MessageBubble = memo(({
             </div>
           </div>
           
-          {/* Copy Button */}
+          {/* Copy & Delete Buttons */}
           {message.content && (
-            <button 
-              onClick={() => onCopy(message.content, message.id)}
-              className="absolute -right-2 sm:-right-4 top-2 p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
-              title="Copy text"
-            >
-              {copiedId === message.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            </button>
+            <div className="absolute -right-2 sm:-right-4 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              <button 
+                onClick={() => onCopy(message.content, message.id)}
+                className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 backdrop-blur-sm"
+                title="Copy text"
+              >
+                {copiedId === message.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              </button>
+              {onDelete && (
+                <button 
+                  onClick={() => onDelete(message.id)}
+                  className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm"
+                  title="Delete message"
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -303,20 +366,48 @@ export const MessageBubble = memo(({
             {isAwakened && (
               <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover/bubble:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             )}
-            <div className={`whitespace-pre-wrap ${userFontSizeClass} leading-relaxed font-medium`}>
-              {message.content}
-            </div>
+            {message.audioUrl ? (
+              <AudioPlayer url={message.audioUrl} />
+            ) : (
+              <div className={`whitespace-pre-wrap ${userFontSizeClass} leading-relaxed font-medium`}>
+                {message.content}
+              </div>
+            )}
           </div>
           
-          {/* Copy Button */}
-          {message.content && (
-            <button 
-              onClick={() => onCopy(message.content, message.id)}
-              className="absolute -left-8 sm:-left-10 top-2 p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
-              title="Copy text"
-            >
-              {copiedId === message.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            </button>
+          {/* Copy, Edit & Delete Buttons */}
+          {(message.content || message.audioUrl) && (
+            <div className="absolute -left-8 sm:-left-10 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              {!message.audioUrl && (
+                <>
+                  <button 
+                    onClick={() => onCopy(message.content, message.id)}
+                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 backdrop-blur-sm"
+                    title="Copy text"
+                  >
+                    {copiedId === message.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                  </button>
+                  {onEdit && (
+                    <button 
+                      onClick={() => onEdit(message.content)}
+                      className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 backdrop-blur-sm"
+                      title="Edit message"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </button>
+                  )}
+                </>
+              )}
+              {onDelete && (
+                <button 
+                  onClick={() => onDelete(message.id)}
+                  className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm"
+                  title="Delete message"
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

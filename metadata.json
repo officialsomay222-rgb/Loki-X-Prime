@@ -1,5 +1,5 @@
 {
   "name": "LOKI PRIME X",
   "description": "Advanced AI Interface - The Awakening",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }

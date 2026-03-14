@@ -3,11 +3,59 @@ import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // API routes FIRST
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.post("/api/transcribe", async (req, res) => {
+  try {
+    const { audioBase64, mimeType } = req.body;
+    if (!audioBase64) {
+      return res.status(400).json({ error: "audioBase64 is required" });
+    }
+
+    let groqKey = process.env.GROQ_API_KEY || process.env.GR;
+    if (groqKey && (groqKey.includes("MY_GROQ") || groqKey.includes("YOUR_"))) groqKey = undefined;
+
+    if (!groqKey) {
+      return res.status(400).json({ error: "Groq API Key (GR) is missing or invalid." });
+    }
+
+    // Convert base64 to buffer
+    const buffer = Buffer.from(audioBase64, 'base64');
+    
+    // Use fetch to send to Groq API
+    const formData = new FormData();
+    const extension = mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm';
+    const blob = new Blob([buffer], { type: mimeType || 'audio/webm' });
+    formData.append('file', blob, `audio.${extension}`);
+    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('response_format', 'json');
+
+    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqKey}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Groq transcription error:", errorText);
+      return res.status(response.status).json({ error: `Groq API Error: ${response.statusText}` });
+    }
+
+    const data = await response.json();
+    res.json({ text: data.text });
+  } catch (error: any) {
+    console.error("Transcription Error:", error);
+    res.status(500).json({ error: error.message || "Internal server error during transcription." });
+  }
 });
 
 app.post("/api/chat", async (req, res) => {

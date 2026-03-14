@@ -30,7 +30,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-[100]"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}

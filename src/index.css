@@ -74,7 +74,7 @@ html.dark, html.awakened-mode-active {
 
 /* Markdown Styles - Premium Typography */
 .markdown-body {
-  @apply text-[0.95rem] leading-relaxed tracking-wide;
+  @apply text-[0.95rem] leading-relaxed tracking-wide break-words;
 }
 
 .markdown-body p {
@@ -564,11 +564,11 @@ body.awakened-mode-active {
 
 /* Awakened Mode - Optimized Performance & High Detail */
 .awakened-mode .glass-panel {
-  background: rgba(5, 5, 10, 0.85) !important;
-  border: 1px solid rgba(0, 242, 255, 0.3) !important;
-  box-shadow: 0 0 15px rgba(0, 242, 255, 0.1) !important;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(5, 5, 10, 0.65) !important;
+  border: 1px solid rgba(0, 242, 255, 0.2) !important;
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.15) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
   transform: translateZ(0);
 }
 

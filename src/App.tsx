@@ -44,6 +44,7 @@ export default function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
+  const [input, setInput] = useState('');
   
   const { 
     theme, setTheme, 
@@ -70,7 +71,7 @@ export default function App() {
     messageDensity, setMessageDensity,
     resetSettings
   } = useSettings();
-  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, clearAllSessions, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
+  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -133,17 +134,6 @@ export default function App() {
       setIsSidebarOpen(false);
     }
   }, []);
-
-  // Save sessions to local storage whenever they change
-  useEffect(() => {
-    if (sessions.length > 0) {
-      try {
-        localStorage.setItem('loki_chat_sessions', JSON.stringify(sessions));
-      } catch (e) {
-        console.error('Failed to save sessions to localStorage', e);
-      }
-    }
-  }, [sessions]);
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
 
@@ -259,13 +249,18 @@ export default function App() {
         commanderName={commanderName}
         copiedId={copiedId}
         onCopy={copyToClipboard}
+        onEdit={message.role === 'user' ? (text) => {
+          setInput(text);
+          inputRef.current?.focus();
+        } : undefined}
+        onDelete={(id) => currentSessionId && deleteMessage(currentSessionId, id)}
         formatDate={formatDate}
         bubbleStyle={bubbleStyle}
         fontSize={fontSize}
         messageAnimation={messageAnimation}
       />
     ));
-  }, [currentSession?.messages, isAwakened, commanderName, copiedId, bubbleStyle, fontSize, messageAnimation]);
+  }, [currentSession?.messages, isAwakened, commanderName, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, setInput, currentSessionId, deleteMessage]);
 
   if (isBooting) {
     return (
@@ -364,335 +359,334 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. Main Content Layer (Flex Column) */}
-      <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
-        
-        {/* Settings Modal - Full Screen Refined */}
-        {isSettingsOpen && (
-          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#050508] animate-in fade-in duration-300 overflow-y-auto custom-scrollbar transform-gpu overscroll-contain">
-            <div className="absolute inset-0 bg-slate-50/80 dark:bg-[#050508]/80 backdrop-blur-md -z-10" />
-            <div className="w-full min-h-full max-w-6xl mx-auto flex flex-col md:flex-row relative">
-              
-              {/* Close Button */}
-              <button 
-                onClick={() => setIsSettingsOpen(false)} 
-                className="absolute top-6 right-6 p-2.5 rounded-full bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300/50 dark:hover:bg-white/10 transition-colors z-50 shadow-sm"
-              >
-                <X className="w-6 h-6 text-slate-600 dark:text-slate-300" />
-              </button>
+      {/* Settings Modal - Full Screen Refined */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#050508]/95 backdrop-blur-2xl animate-in fade-in duration-300 overflow-y-auto custom-scrollbar transform-gpu overscroll-contain">
+          <div className="absolute inset-0 bg-slate-50/50 dark:bg-[#050508]/50 backdrop-blur-3xl -z-10" />
+          <div className="w-full min-h-full max-w-6xl mx-auto flex flex-col md:flex-row relative">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setIsSettingsOpen(false)} 
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2.5 rounded-full bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300/80 dark:hover:bg-white/20 transition-colors z-[100] shadow-md backdrop-blur-md"
+            >
+              <X className="w-5 h-5 md:w-6 md:h-6 text-slate-700 dark:text-slate-200" />
+            </button>
 
-              {/* Settings Sidebar */}
-              <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 p-6 flex flex-col gap-6 shrink-0">
-                <div className="flex flex-col items-center text-center gap-3 mt-3">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white dark:border-[#0a0a0c] shadow-md relative ring-4 ring-cyan-500/5">
-                    <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" alt="Commander Avatar" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="mt-2">
-                    <h2 className="text-lg font-montserrat font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{commanderName}</h2>
-                  </div>
+            {/* Settings Sidebar */}
+            <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 p-6 flex flex-col gap-6 shrink-0">
+              <div className="flex flex-col items-center text-center gap-3 mt-3">
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white dark:border-[#0a0a0c] shadow-md relative ring-4 ring-cyan-500/5">
+                  <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" alt="Commander Avatar" className="w-full h-full object-cover" />
                 </div>
-
-                <div className="flex flex-col gap-1.5 mt-2">
-                  <button 
-                    onClick={() => setActiveSettingsTab('general')}
-                    className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'general' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
-                  >
-                    <User className="w-5 h-5" />
-                    General
-                  </button>
-                  <button 
-                    onClick={() => setActiveSettingsTab('advanced')}
-                    className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'advanced' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
-                  >
-                    <Sliders className="w-5 h-5" />
-                    Advanced
-                  </button>
+                <div className="mt-2">
+                  <h2 className="text-lg font-montserrat font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{commanderName}</h2>
                 </div>
               </div>
 
-              {/* Settings Content - Scrollable area */}
-              <div className="flex-1 p-6 md:p-10">
-                <div className="max-w-2xl mx-auto pb-20">
-                  
-                  {activeSettingsTab === 'general' && (
-                    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                      <section className="space-y-6">
-                        <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Identity & Appearance</h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Commander Name</label>
-                            <input 
-                              type="text" 
-                              value={commanderName}
-                              onChange={(e) => setCommanderName(e.target.value)}
-                              className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-[0.85rem] text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-sm"
-                              placeholder="Enter Commander Name..."
-                            />
-                          </div>
+              <div className="flex flex-col gap-1.5 mt-2">
+                <button 
+                  onClick={() => setActiveSettingsTab('general')}
+                  className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'general' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
+                >
+                  <User className="w-5 h-5" />
+                  General
+                </button>
+                <button 
+                  onClick={() => setActiveSettingsTab('advanced')}
+                  className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'advanced' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
+                >
+                  <Sliders className="w-5 h-5" />
+                  Advanced
+                </button>
+              </div>
+            </div>
 
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Accent Color</label>
-                            <div className="flex gap-2 p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl h-[50px] items-center px-3">
-                              {(['cyan', 'violet', 'emerald', 'rose'] as const).map((color) => (
-                                <button
-                                  key={color}
-                                  onClick={() => setAccentColor(color)}
-                                  className={`w-6 h-6 rounded-full transition-all transform hover:scale-110 ${accentColor === color ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-white scale-110' : 'opacity-60'}`}
-                                  style={{ backgroundColor: color === 'cyan' ? '#06b6d4' : color === 'violet' ? '#8b5cf6' : color === 'emerald' ? '#10b981' : '#f43f5e' }}
-                                />
-                              ))}
-                            </div>
+            {/* Settings Content - Scrollable area */}
+            <div className="flex-1 p-6 md:p-10">
+              <div className="max-w-2xl mx-auto pb-20">
+                
+                {activeSettingsTab === 'general' && (
+                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <section className="space-y-6">
+                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Identity & Appearance</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Commander Name</label>
+                          <input 
+                            type="text" 
+                            value={commanderName}
+                            onChange={(e) => setCommanderName(e.target.value)}
+                            className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-[0.85rem] text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-sm"
+                            placeholder="Enter Commander Name..."
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Accent Color</label>
+                          <div className="flex gap-2 p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl h-[50px] items-center px-3">
+                            {(['cyan', 'violet', 'emerald', 'rose'] as const).map((color) => (
+                              <button
+                                key={color}
+                                onClick={() => setAccentColor(color)}
+                                className={`w-6 h-6 rounded-full transition-all transform hover:scale-110 ${accentColor === color ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-white scale-110' : 'opacity-60'}`}
+                                style={{ backgroundColor: color === 'cyan' ? '#06b6d4' : color === 'violet' ? '#8b5cf6' : color === 'emerald' ? '#10b981' : '#f43f5e' }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Holographic Background</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {(['default', 'nebula', 'cyber-grid'] as const).map((style) => (
+                            <button
+                              key={style}
+                              onClick={() => setBgStyle(style)}
+                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${bgStyle === style ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
+                            >
+                              {style.replace('-', ' ').toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Interface Theme</label>
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => setTheme('light')}
+                            className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'light' ? 'bg-amber-500/10 border-amber-500/50 text-amber-600' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
+                          >
+                            <Sun className="w-5 h-5" /> LIGHT
+                          </button>
+                          <button 
+                            onClick={() => setTheme('dark')}
+                            className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
+                          >
+                            <Moon className="w-5 h-5" /> DARK
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Assistant Tone</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {(['formal', 'casual', 'happy', 'custom'] as const).map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setTone(t)}
+                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${tone === t ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
+                            >
+                              {t.toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Model Core</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { id: 'pro', label: 'PRO THINKING' },
+                            { id: 'fast', label: 'FAST CORE' },
+                            { id: 'happy', label: 'HAPPY MODEL' }
+                          ].map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => setModelMode(m.id as any)}
+                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${modelMode === m.id ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="space-y-6 pt-10 border-t border-slate-200 dark:border-white/5">
+                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Chat Experience</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Message Density</label>
+                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
+                            {(['compact', 'comfortable'] as const).map((density) => (
+                              <button
+                                key={density}
+                                onClick={() => setMessageDensity(density)}
+                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${messageDensity === density ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                              >
+                                {density.toUpperCase()}
+                              </button>
+                            ))}
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Holographic Background</label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {(['default', 'nebula', 'cyber-grid'] as const).map((style) => (
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Bubble Style</label>
+                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
+                            {(['glass', 'solid'] as const).map((style) => (
                               <button
                                 key={style}
-                                onClick={() => setBgStyle(style)}
-                                className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${bgStyle === style ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
+                                onClick={() => setBubbleStyle(style)}
+                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${bubbleStyle === style ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                               >
-                                {style.replace('-', ' ').toUpperCase()}
+                                {style.toUpperCase()}
                               </button>
                             ))}
                           </div>
                         </div>
+                      </div>
 
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Interface Theme</label>
-                          <div className="flex gap-3">
-                            <button 
-                              onClick={() => setTheme('light')}
-                              className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'light' ? 'bg-amber-500/10 border-amber-500/50 text-amber-600' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
-                            >
-                              <Sun className="w-5 h-5" /> LIGHT
-                            </button>
-                            <button 
-                              onClick={() => setTheme('dark')}
-                              className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
-                            >
-                              <Moon className="w-5 h-5" /> DARK
-                            </button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                          <div>
+                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Enter to Send</span>
+                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Instant transmission.</span>
                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Assistant Tone</label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {(['formal', 'casual', 'happy', 'custom'] as const).map((t) => (
-                              <button
-                                key={t}
-                                onClick={() => setTone(t)}
-                                className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${tone === t ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
-                              >
-                                {t.toUpperCase()}
-                              </button>
-                            ))}
+                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${enterToSend ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setEnterToSend(!enterToSend)}>
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${enterToSend ? 'left-5.5' : 'left-0.5'}`} />
                           </div>
-                        </div>
+                        </label>
 
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Model Core</label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { id: 'pro', label: 'PRO THINKING' },
-                              { id: 'fast', label: 'FAST CORE' },
-                              { id: 'happy', label: 'HAPPY MODEL' }
-                            ].map((m) => (
-                              <button
-                                key={m.id}
-                                onClick={() => setModelMode(m.id as any)}
-                                className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${modelMode === m.id ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
-                              >
-                                {m.label}
-                              </button>
-                            ))}
+                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                          <div>
+                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Sound Effects</span>
+                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">System audio.</span>
                           </div>
-                        </div>
-                      </section>
-
-                      <section className="space-y-6 pt-10 border-t border-slate-200 dark:border-white/5">
-                        <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Chat Experience</h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Message Density</label>
-                            <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                              {(['compact', 'comfortable'] as const).map((density) => (
-                                <button
-                                  key={density}
-                                  onClick={() => setMessageDensity(density)}
-                                  className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${messageDensity === density ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                  {density.toUpperCase()}
-                                </button>
-                              ))}
-                            </div>
+                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${soundEnabled ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setSoundEnabled(!soundEnabled)}>
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${soundEnabled ? 'left-5.5' : 'left-0.5'}`} />
                           </div>
+                        </label>
 
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Bubble Style</label>
-                            <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                              {(['glass', 'solid'] as const).map((style) => (
-                                <button
-                                  key={style}
-                                  onClick={() => setBubbleStyle(style)}
-                                  className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${bubbleStyle === style ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                  {style.toUpperCase()}
-                                </button>
-                              ))}
-                            </div>
+                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                          <div>
+                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Animations</span>
+                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Visual effects.</span>
                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Enter to Send</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Instant transmission.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${enterToSend ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setEnterToSend(!enterToSend)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${enterToSend ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Sound Effects</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">System audio.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${soundEnabled ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setSoundEnabled(!soundEnabled)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${soundEnabled ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Animations</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Visual effects.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${messageAnimation ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setMessageAnimation(!messageAnimation)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${messageAnimation ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Show Avatars</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Profile icons.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${showAvatars ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setShowAvatars(!showAvatars)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${showAvatars ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-                        </div>
-                      </section>
-
-                      <section className="pt-10 border-t border-slate-200 dark:border-white/5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <button 
-                            onClick={handleExportChat}
-                            className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-[0.8rem] hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/5 uppercase tracking-wider"
-                          >
-                            <Download className="w-5 h-5" /> Export History
-                          </button>
-                          <button 
-                            onClick={() => { if(confirm('Reset all settings to default?')) resetSettings(); }}
-                            className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-[0.8rem] hover:bg-rose-500/20 transition-all border border-rose-500/20 uppercase tracking-wider"
-                          >
-                            <RotateCcw className="w-5 h-5" /> Reset Settings
-                          </button>
-                        </div>
-                      </section>
-                    </div>
-                  )}
-
-                  {activeSettingsTab === 'advanced' && (
-                    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                      <section className="space-y-6">
-                        <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">AI Core Parameters</h3>
-                        
-                        <div className="space-y-8">
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Response Length</label>
-                            <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                              {(['short', 'balanced', 'detailed'] as const).map((len) => (
-                                <button
-                                  key={len}
-                                  onClick={() => setResponseLength(len)}
-                                  className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${responseLength === len ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                >
-                                  {len.toUpperCase()}
-                                </button>
-                              ))}
-                            </div>
+                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${messageAnimation ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setMessageAnimation(!messageAnimation)}>
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${messageAnimation ? 'left-5.5' : 'left-0.5'}`} />
                           </div>
+                        </label>
 
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Typing Speed (ms)</label>
-                              <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{typingSpeed}ms</span>
-                            </div>
-                            <input 
-                              type="range" min="0" max="100" step="5" 
-                              value={typingSpeed} onChange={(e) => setTypingSpeed(parseInt(e.target.value))}
-                              className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                            />
+                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                          <div>
+                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Show Avatars</span>
+                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Profile icons.</span>
                           </div>
-
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Temperature</label>
-                              <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{temperature.toFixed(1)}</span>
-                            </div>
-                            <input 
-                              type="range" min="0" max="2" step="0.1" 
-                              value={temperature} onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                              className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                            />
+                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${showAvatars ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setShowAvatars(!showAvatars)}>
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${showAvatars ? 'left-5.5' : 'left-0.5'}`} />
                           </div>
+                        </label>
+                      </div>
+                    </section>
 
-                          <div className="space-y-2">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">System Instructions</label>
-                            <textarea 
-                              value={systemInstruction}
-                              onChange={(e) => setSystemInstruction(e.target.value)}
-                              className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all h-40 resize-none text-[0.8rem] custom-scrollbar shadow-sm leading-relaxed font-medium"
-                              placeholder="Define the AI's core persona..."
-                            />
-                          </div>
-                        </div>
-                      </section>
-
-                      <section className="pt-10 border-t border-slate-200 dark:border-white/5">
+                    <section className="pt-10 border-t border-slate-200 dark:border-white/5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button 
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
-                              clearAllSessions();
-                              setIsSettingsOpen(false);
-                            }
-                          }}
-                          className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-red-500 font-black text-[0.8rem] uppercase tracking-wider hover:bg-red-500/10 transition-all shadow-sm"
+                          onClick={handleExportChat}
+                          className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-[0.8rem] hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/5 uppercase tracking-wider"
                         >
-                          <Trash2 className="w-5 h-5" /> Wipe All Data
+                          <Download className="w-5 h-5" /> Export History
                         </button>
-                      </section>
-                    </div>
-                  )}
-                </div>
+                        <button 
+                          onClick={() => { if(confirm('Reset all settings to default?')) resetSettings(); }}
+                          className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-[0.8rem] hover:bg-rose-500/20 transition-all border border-rose-500/20 uppercase tracking-wider"
+                        >
+                          <RotateCcw className="w-5 h-5" /> Reset Settings
+                        </button>
+                      </div>
+                    </section>
+                  </div>
+                )}
+
+                {activeSettingsTab === 'advanced' && (
+                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
+                    <section className="space-y-6">
+                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">AI Core Parameters</h3>
+                      
+                      <div className="space-y-8">
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Response Length</label>
+                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
+                            {(['short', 'balanced', 'detailed'] as const).map((len) => (
+                              <button
+                                key={len}
+                                onClick={() => setResponseLength(len)}
+                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${responseLength === len ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                              >
+                                {len.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Typing Speed (ms)</label>
+                            <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{typingSpeed}ms</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="100" step="5" 
+                            value={typingSpeed} onChange={(e) => setTypingSpeed(parseInt(e.target.value))}
+                            className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Temperature</label>
+                            <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{temperature.toFixed(1)}</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="2" step="0.1" 
+                            value={temperature} onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">System Instructions</label>
+                          <textarea 
+                            value={systemInstruction}
+                            onChange={(e) => setSystemInstruction(e.target.value)}
+                            className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all h-40 resize-none text-[0.8rem] custom-scrollbar shadow-sm leading-relaxed font-medium"
+                            placeholder="Define the AI's core persona..."
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="pt-10 border-t border-slate-200 dark:border-white/5">
+                      <button 
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
+                            clearAllSessions();
+                            setIsSettingsOpen(false);
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-red-500 font-black text-[0.8rem] uppercase tracking-wider hover:bg-red-500/10 transition-all shadow-sm"
+                      >
+                        <Trash2 className="w-5 h-5" /> Wipe All Data
+                      </button>
+                    </section>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
+      {/* 3. Main Content Layer (Flex Column) */}
+      <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
         {/* Sidebar Overlay for Mobile */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md z-40 md:hidden transition-opacity"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
@@ -797,8 +791,8 @@ export default function App() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
           {/* Header */}
-          <header className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
-            <div className="flex items-center gap-3 sm:gap-4 w-1/4">
+          <header className="h-16 sm:h-20 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1">
               {!isSidebarOpen && (
                 <button 
                   onClick={() => setIsSidebarOpen(true)}
@@ -809,33 +803,33 @@ export default function App() {
               )}
             </div>
             
-            <div className="flex items-center justify-center w-2/4">
+            <div className="flex items-center justify-center shrink-0">
               {isLoading && currentSession?.messages[currentSession.messages.length - 1]?.role === 'model' && currentSession?.messages[currentSession.messages.length - 2]?.isImage ? (
                 <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
-                  <div className="flex items-center gap-3 font-montserrat font-bold text-lg sm:text-xl tracking-[2px] sm:tracking-[4px] text-cyan-400 drop-shadow-[0_0_10px_rgba(0,242,255,0.8)]">
-                    <div className="w-8 h-4 sm:w-10 sm:h-5">
+                  <div className="flex items-center gap-2 sm:gap-3 font-montserrat font-bold text-base sm:text-xl tracking-[1px] sm:tracking-[4px] text-cyan-400 drop-shadow-[0_0_10px_rgba(0,242,255,0.8)]">
+                    <div className="w-6 h-3 sm:w-10 sm:h-5">
                       <HeaderInfinityLogo />
                     </div>
                     <span className="animate-pulse">GENERATING</span>
                     <span className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                     </span>
                   </div>
                 </div>
               ) : (
-                <h1 className="flex items-center gap-3 sm:gap-4 font-montserrat font-bold text-xl sm:text-2xl tracking-[2px] sm:tracking-[4px] text-slate-900 dark:text-[#e0e0e0]">
+                <h1 className="flex items-center gap-2 sm:gap-4 font-montserrat font-bold text-lg sm:text-2xl tracking-[1px] sm:tracking-[4px] text-slate-900 dark:text-[#e0e0e0]">
                   <span>LOKI</span>
-                  <div className="w-10 h-5 sm:w-14 sm:h-8">
+                  <div className="w-8 h-4 sm:w-14 sm:h-8">
                     <HeaderInfinityLogo />
                   </div>
-                  <span className="text-[0.65rem] sm:text-[0.75rem] tracking-[2px] sm:tracking-[3px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-cyan-500/50 dark:border-[#00f2ff]/50 text-cyan-600 dark:text-[#00f2ff] shadow-[0_0_12px_rgba(0,242,255,0.3)] dark:shadow-[0_0_20px_rgba(0,242,255,0.4)] bg-cyan-500/10">PRIME</span>
+                  <span className="text-[0.55rem] sm:text-[0.75rem] tracking-[1px] sm:tracking-[3px] font-black px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-lg border border-cyan-500/50 dark:border-[#00f2ff]/50 text-cyan-600 dark:text-[#00f2ff] shadow-[0_0_12px_rgba(0,242,255,0.3)] dark:shadow-[0_0_20px_rgba(0,242,255,0.4)] bg-cyan-500/10">PRIME</span>
                 </h1>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-4 sm:gap-6 w-1/4">
+            <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
               <div 
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? 'opacity-0' : 'opacity-100'}`} 
                 title={commanderName}
@@ -896,6 +890,8 @@ export default function App() {
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
+              input={input}
+              setInput={setInput}
             />
           </div>
         </div>
