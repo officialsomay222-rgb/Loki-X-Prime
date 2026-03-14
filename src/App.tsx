@@ -238,8 +238,8 @@ export default function App() {
     setAwakening({ id: Date.now(), phase: 'moving-in', startX, startY, width: rect.width, height: rect.height, isDeactivating: isAwakened });
     
     setTimeout(() => {
-      setIsAwakened(prevIsAwakened => {
-        if (prevIsAwakened) {
+      setIsAwakened(!isAwakened);
+      if (isAwakened) {
            // Deactivating
            setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
            setTimeout(() => {
@@ -252,12 +252,7 @@ export default function App() {
         } else {
            // Activating
            setAwakening(prev => prev ? { ...prev, phase: 'prompt' } : null);
-           // Actually, we should set isAwakened to true here?
-           // The original code didn't do that.
-           // Let's check where isAwakened is set to true.
         }
-        return prevIsAwakened;
-      });
     }, 1500);
   };
 

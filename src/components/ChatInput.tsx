@@ -101,6 +101,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
     setInput('');
     playChirp();
     
+    let stream: MediaStream;
+    let mediaRecorder: MediaRecorder;
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Microphone access is not supported in this browser or environment.");
@@ -108,7 +110,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
       if (!window.MediaRecorder) {
         throw new Error("Audio recording is not supported in this browser.");
       }
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -118,7 +120,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
       });
       
       // 1. Setup MediaRecorder for capturing the actual audio file
-      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -214,7 +216,205 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
           recognitionRef.current = recognition;
           recognition.continuous = true;
           recognition.interimResults = true;
-          recognition.lang = 'en-US'; // Optimized for English
+          recognition.lang = 'en-IN'; // Optimized for Hinglish
+          
+          recognition.onstart = () => {
+            isSpeechRecognitionActive = true;
+            setAudioVolume(0.5);
+          };
+          
+          recognition.onresult = (event: any) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+              } else {
+                interimTranscript += event.results[i][0].transcript;
+              }
+            }
+            
+            const currentText = (finalTranscript + interimTranscript).trim();
+            if (currentText) {
+              setInput(currentText); // Show live text!
+              hasSpokenRef.current = true;
+              setAudioVolume(0.8 + Math.random() * 0.2);
+              
+              if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+              silenceTimerRef.current = setTimeout(() => {
+                if (recognitionRef.current) {
+                  recognitionRef.current.stop();
+                }
+              }, 2500); // 2.5s silence detection
+            }
+          };
+          
+          recognition.onerror = (event: any) => {
+            console.error("Speech recognition error:", event.error);
+            isSpeechRecognitionActive = false;
+          };
+          
+          recognition.onend = () => {
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            finishRecording(finalTranscript);
+          };
+
+          recognition.start();
+
+          // Fallback timer if they don't speak at all
+          silenceTimerRef.current = setTimeout(() => {
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
+          }, 5000);
+          
+        } catch (err) {
+          console.error("Speech recognition initialization failed", err);
+          isSpeechRecognitionActive = false;
+        }
+      }
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      hasSpokenRef.current = false;
+
+      // 3. Fallback Silence Detection (RMS) if SpeechRecognition isn't active
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      await audioContext.resume();
+      audioContextRef.current = audioContext;
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.5;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      const dataArray = new Float32Array(analyser.fftSize);
+
+      const checkSilence = () => {
+        if (mediaRecorder.state !== 'recording') return;
+        
+        analyser.getFloatTimeDomainData(dataArray);
+        
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sumSquares += dataArray[i] * dataArray[i];
+        }
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+        
+        // Simple RMS threshold for silence detection
+        if (rms < 0.01) {
+          if (!silenceStartRef.current) silenceStartRef.current = Date.now();
+          if (Date.now() - silenceStartRef.current > 2500) {
+            // Silence detected for 2.5s
+            if (mediaRecorder.state === 'recording') {
+              mediaRecorder.stop();
+            }
+            return;
+          }
+        } else {
+          silenceStartRef.current = null;
+        }
+        
+        animationFrameRef.current = requestAnimationFrame(checkSilence);
+      };
+      checkSilence();
+      
+    } catch (err: any) {
+      console.error("Error accessing microphone:", err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setMicError("Microphone permission denied. Please click the lock icon in your browser address bar to allow microphone access.");
+      } else {
+        setMicError("Error accessing microphone: " + (err.message || "Unknown error"));
+      }
+      return;
+    }
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      let finalTranscript = '';
+      let isSpeechRecognitionActive = false;
+
+      let isFinishing = false;
+
+      const finishRecording = async (textFromSpeechAPI: string) => {
+        if (isFinishing) return;
+        isFinishing = true;
+
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+          // The actual sending and cleanup will happen in mediaRecorder.onstop
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        // Wait a tiny bit to ensure we have the latest text
+        setTimeout(async () => {
+          if (!hasSpokenRef.current && !finalTranscript && !input.trim()) {
+            setIsRecording(false);
+            stopRecording();
+            return;
+          }
+
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          const textToSend = finalTranscript.trim() || input.trim();
+          
+          if (textToSend) {
+            // We have the text from Web Speech API or input, send immediately!
+            setInput('');
+            playBlip();
+            setIsSuccessFlash(true);
+            setTimeout(() => setIsSuccessFlash(false), 1000);
+            onSendMessage(textToSend, isImageMode, audioUrl);
+          } else {
+            // Fallback: Transcribe using backend API if Web Speech API failed or wasn't available
+            setIsTranscribing(true);
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+              const base64data = (reader.result as string).split(',')[1];
+              try {
+                const response = await fetch('/api/transcribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ audioBase64: base64data, mimeType })
+                });
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  const text = data.text?.trim() || '';
+                  
+                  if (text) {
+                    playBlip();
+                    setIsSuccessFlash(true);
+                    setTimeout(() => setIsSuccessFlash(false), 1000);
+                    onSendMessage(text, isImageMode, audioUrl);
+                  } else {
+                    console.log("Empty transcription result");
+                  }
+                }
+              } catch (error) {
+                console.error("Error transcribing audio:", error);
+              } finally {
+                setIsTranscribing(false);
+              }
+            };
+          }
+          
+          // Cleanup after sending/processing
+          stopRecording();
+        }, 500);
+      };
+
+      if (SpeechRecognition) {
+        console.log("SpeechRecognition supported");
+        try {
+          const recognition = new SpeechRecognition();
+          recognitionRef.current = recognition;
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-IN'; // Optimized for Hinglish
           
           recognition.onstart = () => {
             isSpeechRecognitionActive = true;
@@ -322,7 +522,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
       };
 
       checkSilence();
-
+      
     } catch (err: any) {
       console.error("Error accessing microphone:", err);
       if (err.name === 'NotAllowedError' || err?.message?.includes('Permission denied')) {
@@ -588,8 +788,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         ) : (
           /* NORMAL MODE TEXTPAD - CLEAN & SIMPLE */
           <div className={`relative flex flex-col gap-2 sm:gap-3 glass-panel premium-shadow rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 input-container-focus border transition-all duration-500 ${
-            isSuccessFlash ? 'success-flash border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : 
-            isRecording ? 'border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)] animate-pulse' : 
+            isSuccessFlash ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 
+            isRecording ? 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse' : 
             'border-slate-200/50 dark:border-white/10'
           }`}>
             <textarea

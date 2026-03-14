@@ -60,8 +60,8 @@ app.post("/api/tts", async (req, res) => {
     }
 
     let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
-    let googleKey = process.env.GOOGLE_AI_KEY;
-    const apiKey = googleKey || geminiKey || process.env.API_KEY;
+    let googleKey = process.env.GOOGLE_AI_KEY || process.env.API_KEY;
+    const apiKey = googleKey || geminiKey;
 
     if (!apiKey) {
       return res.status(400).json({ error: "Google AI Key is missing." });
