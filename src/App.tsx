@@ -144,8 +144,8 @@ export default function App() {
     }
   }, [currentSession?.messages.length, currentSessionId, autoScroll]);
 
-  const handleSendMessage = useCallback(async (text: string, isImageMode?: boolean) => {
-    await sendMessage(text, isImageMode);
+  const handleSendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string) => {
+    await sendMessage(text, isImageMode, audioUrl);
     if (window.innerWidth >= 768) {
       setTimeout(() => {
         inputRef.current?.focus();

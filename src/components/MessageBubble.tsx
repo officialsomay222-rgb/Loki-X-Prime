@@ -245,10 +245,10 @@ const AudioPlayer = ({ url }: { url: string }) => {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 bg-slate-900/60 dark:bg-[#1a1a24]/60 rounded-full p-1.5 pr-4 border border-cyan-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.2)] w-[260px] sm:w-[300px] backdrop-blur-md">
+    <div className="flex items-center gap-3 bg-[#4f80ff] rounded-full p-2 pr-5 shadow-md w-[260px] sm:w-[300px]">
       <button 
         onClick={togglePlay}
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-cyan-600 text-white flex items-center justify-center hover:bg-cyan-500 transition-colors shrink-0 shadow-[0_0_15px_rgba(0,242,255,0.3)]"
+        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors shrink-0"
       >
         {isPlaying ? (
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -269,7 +269,7 @@ const AudioPlayer = ({ url }: { url: string }) => {
           return (
             <div 
               key={i} 
-              className={`w-1 rounded-full transition-colors duration-150 ${isPlayed ? 'bg-cyan-400' : 'bg-cyan-900/40'}`}
+              className={`w-1 rounded-full transition-colors duration-150 ${isPlayed ? 'bg-white' : 'bg-white/40'}`}
               style={{ 
                 height: `${height}%`,
                 opacity: isPlaying && !isPlayed ? 0.6 + Math.random() * 0.4 : 1
@@ -279,7 +279,7 @@ const AudioPlayer = ({ url }: { url: string }) => {
         })}
       </div>
 
-      <div className="text-[10px] sm:text-xs font-medium text-cyan-100/80 tracking-wide shrink-0 w-10 text-right">
+      <div className="text-[10px] sm:text-xs font-medium text-white tracking-wide shrink-0 w-10 text-right opacity-90">
         {formatTime(currentTime > 0 ? currentTime : duration)}
       </div>
 

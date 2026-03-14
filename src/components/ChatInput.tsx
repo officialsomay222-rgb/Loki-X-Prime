@@ -88,6 +88,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
   const startRecording = async () => {
     setMicError(null);
+    setInput('');
+    
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Microphone access is not supported in this browser or environment.");
@@ -100,6 +102,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
           channelCount: 1
         } 
       });
+      
+      // 1. Setup MediaRecorder for capturing the actual audio file
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -110,51 +114,156 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        if (!hasSpokenRef.current) {
-          // If the user didn't speak at all, just cancel the recording
-          setIsRecording(false);
-          return;
-        }
+      // 2. Setup Web Speech API for live transcription and silence detection (if available)
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      let recognition: any = null;
+      let silenceTimer: NodeJS.Timeout | null = null;
+      let finalTranscript = '';
+      let isSpeechRecognitionActive = false;
 
-        const mimeType = mediaRecorder.mimeType || 'audio/webm';
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        const audioUrl = URL.createObjectURL(audioBlob);
+      let isFinishing = false;
+
+      const finishRecording = async (textFromSpeechAPI: string) => {
+        if (isFinishing) return;
+        isFinishing = true;
+
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+          // The actual sending will happen in mediaRecorder.onstop
+        }
         
-        setIsTranscribing(true);
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64data = (reader.result as string).split(',')[1];
-          
-          try {
-            const response = await fetch('/api/transcribe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ audioBase64: base64data, mimeType })
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              if (data.text) {
-                onSendMessage(data.text, isImageMode, audioUrl);
-              }
-            } else {
-              console.error("Transcription failed");
-            }
-          } catch (error) {
-            console.error("Error transcribing audio:", error);
-          } finally {
-            setIsTranscribing(false);
-          }
-        };
+        // Ensure we clean up the tracks and UI state
+        stopRecording();
       };
+
+      mediaRecorder.onstop = () => {
+        // Wait a tiny bit to ensure we have the latest text
+        setTimeout(async () => {
+          if (!hasSpokenRef.current && !finalTranscript && !input.trim()) {
+            setIsRecording(false);
+            return;
+          }
+
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          const textToSend = finalTranscript.trim() || input.trim();
+          
+          if (textToSend) {
+            // We have the text from Web Speech API or input, send immediately!
+            setInput('');
+            onSendMessage(textToSend, isImageMode, audioUrl);
+            setIsRecording(false);
+            setAudioVolume(0);
+          } else {
+            // Fallback: Transcribe using backend API if Web Speech API failed or wasn't available
+            setIsTranscribing(true);
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+              const base64data = (reader.result as string).split(',')[1];
+              try {
+                const response = await fetch('/api/transcribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ audioBase64: base64data, mimeType })
+                });
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  const text = data.text?.trim() || '';
+                  const lowerText = text.toLowerCase();
+                  const hallucinations = [
+                    "hi", "hello", "hi, hello.", "hei.", "hi.", "hello.", "you", "thank you.", "thanks.", 
+                    "thank you", "thanks", "bye.", "bye", "ok.", "ok", "okay.", "okay"
+                  ];
+                  
+                  if (text && !hallucinations.includes(lowerText)) {
+                    onSendMessage(text, isImageMode, audioUrl);
+                  } else {
+                    console.log("Filtered out hallucinated or empty audio:", text);
+                  }
+                }
+              } catch (error) {
+                console.error("Error transcribing audio:", error);
+              } finally {
+                setIsTranscribing(false);
+                setIsRecording(false);
+                setAudioVolume(0);
+              }
+            };
+          }
+        }, 100);
+      };
+
+      if (SpeechRecognition) {
+        try {
+          recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-IN'; // Optimized for Indian English / Hinglish
+          
+          recognition.onstart = () => {
+            isSpeechRecognitionActive = true;
+            setAudioVolume(0.5);
+          };
+          
+          recognition.onresult = (event: any) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+              } else {
+                interimTranscript += event.results[i][0].transcript;
+              }
+            }
+            
+            const currentText = (finalTranscript + interimTranscript).trim();
+            if (currentText) {
+              setInput(currentText); // Show live text!
+              hasSpokenRef.current = true;
+              setAudioVolume(0.8 + Math.random() * 0.2);
+              
+              if (silenceTimer) clearTimeout(silenceTimer);
+              silenceTimer = setTimeout(() => {
+                recognition.stop();
+              }, 2500); // 2.5s silence detection
+            }
+          };
+          
+          recognition.onerror = (event: any) => {
+            console.error("Speech recognition error:", event.error);
+            isSpeechRecognitionActive = false;
+          };
+          
+          recognition.onend = () => {
+            if (silenceTimer) clearTimeout(silenceTimer);
+            // We don't check isRecording here because it might be stale from the closure
+            // finishRecording has its own isFinishing check to prevent double calls
+            finishRecording(finalTranscript);
+          };
+
+          (window as any).currentRecognition = recognition;
+          recognition.start();
+
+          // Fallback timer if they don't speak at all
+          silenceTimer = setTimeout(() => {
+            // We don't check isRecording here either
+            recognition.stop();
+          }, 5000);
+          
+        } catch (err) {
+          console.error("SpeechRecognition failed:", err);
+          isSpeechRecognitionActive = false;
+        }
+      }
 
       mediaRecorder.start();
       setIsRecording(true);
       hasSpokenRef.current = false;
 
-      // Silence Detection Logic using RMS (Root Mean Square)
+      // 3. Fallback Silence Detection (RMS) if SpeechRecognition isn't active
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       audioContextRef.current = audioContext;
       const analyser = audioContext.createAnalyser();
@@ -171,31 +280,27 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         
         analyser.getFloatTimeDomainData(dataArray);
         
-        // Calculate RMS (Root Mean Square)
         let sumSquares = 0;
         for (let i = 0; i < dataArray.length; i++) {
           sumSquares += dataArray[i] * dataArray[i];
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         
-        // Update visual volume (scale 0 to 1 for UI)
-        setAudioVolume(Math.min(1, rms * 10));
+        if (!isSpeechRecognitionActive) {
+          setAudioVolume(Math.min(1, rms * 10));
+          const silenceThreshold = 0.015;
 
-        // Threshold for silence (adjust as needed, 0.01 is usually a good baseline for background noise)
-        const silenceThreshold = 0.015;
-
-        if (rms < silenceThreshold) { 
-          if (silenceStartRef.current === null) {
-            silenceStartRef.current = Date.now();
-          } else if (Date.now() - silenceStartRef.current > 2500) {
-            // 2.5 seconds of continuous silence detected
-            stopRecording();
-            return;
+          if (rms < silenceThreshold) { 
+            if (silenceStartRef.current === null) {
+              silenceStartRef.current = Date.now();
+            } else if (Date.now() - silenceStartRef.current > 2500) {
+              finishRecording('');
+              return;
+            }
+          } else {
+            hasSpokenRef.current = true;
+            silenceStartRef.current = null; 
           }
-        } else {
-          // Sound detected, reset silence timer
-          hasSpokenRef.current = true;
-          silenceStartRef.current = null; 
         }
 
         animationFrameRef.current = requestAnimationFrame(checkSilence);
@@ -210,18 +315,25 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
       } else {
         setMicError("Could not access the microphone. Please ensure a microphone is connected and refresh the page.");
       }
-      
-      // Clear error after 8 seconds
       setTimeout(() => setMicError(null), 8000);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    // Stop Web Speech API if active
+    if ((window as any).currentRecognition) {
+      (window as any).currentRecognition.stop();
+      (window as any).currentRecognition = null;
+    }
+
+    if (mediaRecorderRef.current) {
+      if (mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
+    
+    setIsRecording(false);
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
