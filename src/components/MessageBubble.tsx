@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useRef, useEffect } from 'react';
-import { Copy, Check, Edit2, Trash2, Play, Square, Mic } from 'lucide-react';
+import { Copy, Check, Edit2, Trash2, Play, Square, Mic, Loader2 } from 'lucide-react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -192,11 +192,19 @@ const ImageGenerationPlaceholder = () => {
   );
 };
 
-const AudioPlayer = ({ url }: { url: string }) => {
+const AudioPlayer = ({ url, autoPlay, onPlay }: { url: string, autoPlay?: boolean, onPlay?: () => void }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (autoPlay && audioRef.current && !isPlaying) {
+      audioRef.current.play().catch(e => console.error("Auto-play failed", e));
+      setIsPlaying(true);
+      onPlay?.();
+    }
+  }, [autoPlay, url]);
 
   // Use a fixed seed for the waveform so it doesn't change on re-renders
   const bars = useMemo(() => {
@@ -286,6 +294,11 @@ const AudioPlayer = ({ url }: { url: string }) => {
       <audio 
         ref={audioRef} 
         src={url} 
+        onPlay={() => {
+          setIsPlaying(true);
+          onPlay?.();
+        }}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)} 
         className="hidden" 
       />
@@ -306,6 +319,57 @@ interface MessageBubbleProps {
   fontSize: FontSize;
   messageAnimation: boolean;
 }
+
+const ShockwaveBubble = ({ audioUrl, isUser, content }: { audioUrl?: string, isUser: boolean, content?: string }) => {
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(audioUrl || null);
+  const [isLoading, setIsLoading] = useState(!audioUrl && !!content);
+  const [autoPlayed, setAutoPlayed] = useState(false);
+
+  useEffect(() => {
+    if (!generatedAudioUrl && content && !isUser) {
+      const fetchTTS = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: content })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const blob = await (await fetch(`data:audio/wav;base64,${data.audioBase64}`)).blob();
+            const url = URL.createObjectURL(blob);
+            setGeneratedAudioUrl(url);
+          }
+        } catch (e) {
+          console.error("TTS failed", e);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchTTS();
+    }
+  }, [content, generatedAudioUrl, isUser]);
+
+  return (
+    <div className={`relative flex items-center justify-center p-8 min-w-[200px] min-h-[100px] overflow-hidden rounded-3xl ${isUser ? 'bg-cyan-500/10 border border-cyan-500/30' : 'bg-slate-800/50 border border-slate-700'}`}>
+      {/* Shockwave Animations */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="rgb-shockwave rgb-shockwave-1 opacity-40"></div>
+        <div className="rgb-shockwave rgb-shockwave-2 opacity-30"></div>
+        <div className="rgb-shockwave rgb-shockwave-3 opacity-20"></div>
+      </div>
+      
+      <div className="relative z-10 flex flex-col items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/40 animate-pulse">
+          {isLoading ? <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" /> : <Mic className="w-6 h-6 text-cyan-400" />}
+        </div>
+        {generatedAudioUrl && <AudioPlayer url={generatedAudioUrl} autoPlay={!isUser && !autoPlayed} onPlay={() => setAutoPlayed(true)} />}
+        {isLoading && <span className="text-[10px] font-mono text-cyan-400 animate-pulse">GENERATING VOICE...</span>}
+      </div>
+    </div>
+  );
+};
 
 export const MessageBubble = memo(({
   message,
@@ -349,7 +413,9 @@ export const MessageBubble = memo(({
         <div className="relative group w-full">
           <div className={`relative transition-all duration-300 py-2 ${isAwakened ? 'text-cyan-50' : 'text-slate-800 dark:text-[#e0e0e0]'}`}>
             <div className={`markdown-body ${fontSizeClass}`}>
-              {message.content ? (
+              {message.audioUrl || message.isVoiceResponse ? (
+                <ShockwaveBubble audioUrl={message.audioUrl} isUser={false} content={message.content} />
+              ) : message.content ? (
                 message.content.startsWith('SYSTEM ERROR:') ? (
                   <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -428,7 +494,7 @@ export const MessageBubble = memo(({
               <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover/bubble:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             )}
             {message.audioUrl ? (
-              <AudioPlayer url={message.audioUrl} />
+              <ShockwaveBubble audioUrl={message.audioUrl} isUser={true} content={message.content} />
             ) : (
               <div className={`whitespace-pre-wrap ${userFontSizeClass} leading-relaxed font-medium`}>
                 {message.content}

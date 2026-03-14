@@ -59,6 +59,47 @@ app.post("/api/transcribe", async (req, res) => {
   }
 });
 
+app.post("/api/tts", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "text is required" });
+    }
+
+    let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
+    let googleKey = process.env.GOOGLE_AI_KEY;
+    const apiKey = googleKey || geminiKey || process.env.API_KEY;
+
+    if (!apiKey) {
+      return res.status(400).json({ error: "Google AI Key is missing." });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Kore' },
+          },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64Audio) {
+      res.json({ audioBase64: base64Audio });
+    } else {
+      throw new Error("Failed to generate audio");
+    }
+  } catch (error: any) {
+    console.error("TTS Error:", error);
+    res.status(500).json({ error: error.message || "Internal server error during TTS." });
+  }
+});
+
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK } = req.body;
 

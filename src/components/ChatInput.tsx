@@ -135,11 +135,8 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
 
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
-          // The actual sending will happen in mediaRecorder.onstop
+          // The actual sending and cleanup will happen in mediaRecorder.onstop
         }
-        
-        // Ensure we clean up the tracks and UI state
-        stopRecording();
       };
 
       mediaRecorder.onstop = () => {
@@ -147,6 +144,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         setTimeout(async () => {
           if (!hasSpokenRef.current && !finalTranscript && !input.trim()) {
             setIsRecording(false);
+            stopRecording();
             return;
           }
 
@@ -161,8 +159,6 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
             setInput('');
             playBlip();
             onSendMessage(textToSend, isImageMode, audioUrl);
-            setIsRecording(false);
-            setAudioVolume(0);
           } else {
             // Fallback: Transcribe using backend API if Web Speech API failed or wasn't available
             setIsTranscribing(true);
@@ -180,29 +176,25 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                 if (response.ok) {
                   const data = await response.json();
                   const text = data.text?.trim() || '';
-                  const lowerText = text.toLowerCase();
-                  const hallucinations = [
-                    "hi", "hello", "hi, hello.", "hei.", "hi.", "hello.", "you", "thank you.", "thanks.", 
-                    "thank you", "thanks", "bye.", "bye", "ok.", "ok", "okay.", "okay"
-                  ];
                   
-                  if (text && !hallucinations.includes(lowerText)) {
+                  if (text) {
                     playBlip();
                     onSendMessage(text, isImageMode, audioUrl);
                   } else {
-                    console.log("Filtered out hallucinated or empty audio:", text);
+                    console.log("Empty transcription result");
                   }
                 }
               } catch (error) {
                 console.error("Error transcribing audio:", error);
               } finally {
                 setIsTranscribing(false);
-                setIsRecording(false);
-                setAudioVolume(0);
               }
             };
           }
-        }, 100);
+          
+          // Cleanup after sending/processing
+          stopRecording();
+        }, 500);
       };
 
       if (SpeechRecognition) {
@@ -511,7 +503,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                       boxShadow: isRecording ? `0 0 ${10 + audioVolume * 40}px rgba(244,63,94,${0.3 + audioVolume * 0.5})` : undefined,
                       transform: isRecording ? `scale(${1 + audioVolume * 0.15})` : undefined
                     }}
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
+                    className={`mic-button-trigger w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0 border-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
                   >
                     {isTranscribing ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : isRecording ? <StopSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </button>
@@ -606,7 +598,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                       boxShadow: isRecording ? `0 0 ${10 + audioVolume * 30}px rgba(244,63,94,${0.2 + audioVolume * 0.4})` : undefined,
                       transform: isRecording ? `scale(${1 + audioVolume * 0.1})` : undefined
                     }}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-500' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white'}`}
+                    className={`mic-button-trigger w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${input.length > 0 ? 'w-0 opacity-0 scale-50 pointer-events-none p-0 m-0' : 'opacity-100'} ${isRecording ? 'bg-rose-500/20 text-rose-500' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white'}`}
                   >
                     {isTranscribing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : isRecording ? <StopSquare className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>

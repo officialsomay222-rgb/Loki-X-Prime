@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white p-6 text-center">
+        <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-slate-950 text-white p-6 text-center">
           <h1 className="text-2xl font-bold mb-4">System Anomaly Detected</h1>
           <p className="mb-6 text-slate-400">The core interface has encountered an error. Please re-initialize.</p>
           <button 

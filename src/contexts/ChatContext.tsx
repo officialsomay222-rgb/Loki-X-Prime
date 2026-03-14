@@ -10,6 +10,7 @@ export type Message = {
   status?: 'pending' | 'sent' | 'error';
   isImage?: boolean;
   audioUrl?: string;
+  isVoiceResponse?: boolean;
 };
 
 export type ChatSession = {
@@ -257,6 +258,9 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
       audioUrl: audioUrl
     };
 
+    // Store if this was a voice message to trigger voice response
+    const isVoiceRequest = !!audioUrl;
+
     setSessions(prev => prev.map(s => {
       if (s.id === currentSessionId) {
         const title = s.title === 'New Awakening' 
@@ -381,6 +385,19 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
           if (pendingUpdate) {
             let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
             updateState(cleanResponse);
+          }
+          
+          // If it was a voice request, mark the response as a voice response
+          if (isVoiceRequest && fullResponse && !isImageMode) {
+            setSessions(prev => prev.map(s => {
+              if (s.id === currentSessionId) {
+                const updatedMessages = s.messages.map(m => 
+                  m.id === modelMessageId ? { ...m, isVoiceResponse: true } : m
+                );
+                return { ...s, messages: updatedMessages };
+              }
+              return s;
+            }));
           }
           break;
         }
