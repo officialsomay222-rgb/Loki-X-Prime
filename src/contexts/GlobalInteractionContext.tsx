@@ -7,11 +7,13 @@ const SOUNDS = {
   hum: 'https://cdn.freesound.org/previews/154/154173_2703579-lq.mp3',   // Power-On Hum
   chirp: 'https://cdn.freesound.org/previews/320/320181_527080-lq.mp3',  // Listening Chirp
   blip: 'https://cdn.freesound.org/previews/342/342200_5260872-lq.mp3',  // Data Processed Blip
+  notification: 'https://cdn.freesound.org/previews/235/235911_2398403-lq.mp3', // Tech Notification
 };
 
 interface GlobalInteractionContextType {
   playChirp: () => void;
   playBlip: () => void;
+  playNotification: () => void;
 }
 
 const GlobalInteractionContext = createContext<GlobalInteractionContextType | null>(null);
@@ -32,6 +34,7 @@ export const GlobalInteractionProvider: React.FC<{ children: React.ReactNode }> 
   const [playHum] = useSound(SOUNDS.hum, { volume: 0.3 });
   const [playChirp] = useSound(SOUNDS.chirp, { volume: 0.6 });
   const [playBlip] = useSound(SOUNDS.blip, { volume: 0.6 });
+  const [playNotification] = useSound(SOUNDS.notification, { volume: 0.5 });
 
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
@@ -61,7 +64,7 @@ export const GlobalInteractionProvider: React.FC<{ children: React.ReactNode }> 
   }, [hasInteracted, playClick, playHum]);
 
   return (
-    <GlobalInteractionContext.Provider value={{ playChirp, playBlip }}>
+    <GlobalInteractionContext.Provider value={{ playChirp, playBlip, playNotification }}>
       {children}
     </GlobalInteractionContext.Provider>
   );

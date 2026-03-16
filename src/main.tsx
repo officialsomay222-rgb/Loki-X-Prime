@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { GlobalInteractionProvider } from './contexts/GlobalInteractionContext';
 import { registerSW } from 'virtual:pwa-register';
@@ -33,14 +34,16 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <SettingsProvider>
-          <GlobalInteractionProvider>
-            <ChatProvider>
-              <App />
-              <Toaster theme="dark" position="top-center" />
-            </ChatProvider>
-          </GlobalInteractionProvider>
-        </SettingsProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <GlobalInteractionProvider>
+              <ChatProvider>
+                <App />
+                <Toaster theme="dark" position="top-center" />
+              </ChatProvider>
+            </GlobalInteractionProvider>
+          </SettingsProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>,

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, memo, forwardRef } from 'react';
-import { Plus, Mic, Send, Loader2, Trash2, Square, Image as ImageIcon, MessageSquare, Square as StopSquare } from 'lucide-react';
+import { Plus, Mic, Send, Loader2, Trash2, Square, Image as ImageIcon, MessageSquare, Square as StopSquare, Radio } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
 import { useGlobalInteraction } from '../contexts/GlobalInteractionContext';
-import { motion } from 'framer-motion';
+import { transcribeAudio, connectLiveSession } from '../services/geminiService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatInputProps {
   isAwakened: boolean;
@@ -52,7 +53,18 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  const { playChirp, playBlip } = useGlobalInteraction();
+  const { 
+    playChirp, 
+    playBlip,
+    playNotification 
+  } = useGlobalInteraction();
+
+  const { liveAudioEnabled, systemInstruction } = useSettings();
+  const [isLiveSessionActive, setIsLiveSessionActive] = useState(false);
+  const liveSessionRef = useRef<any>(null);
+  const audioOutRef = useRef<AudioContext | null>(null);
+  const audioQueueRef = useRef<Float32Array[]>([]);
+  const isPlayingRef = useRef(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -170,50 +182,42 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
           const audioUrl = URL.createObjectURL(audioBlob);
           
-          // Always use Groq Whisper for final highly accurate transcription
           setIsTranscribing(true);
           const currentInput = input.trim();
-          setInput(''); // Clear the live transcription text
+          setInput(''); 
+          
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
             const base64data = (reader.result as string).split(',')[1];
             try {
-              const response = await fetch('/api/transcribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ audioBase64: base64data, mimeType })
-              });
+              const text = await transcribeAudio(base64data, mimeType);
               
-              if (response.ok) {
-                const data = await response.json();
-                const text = data.text?.trim() || finalTranscript.trim() || currentInput;
-                
+              if (text) {
                 playBlip();
                 setIsSuccessFlash(true);
                 setTimeout(() => setIsSuccessFlash(false), 1000);
                 onSendMessage(text, isImageMode, audioUrl);
               } else {
-                const errorData = await response.json().catch(() => null);
-                if (errorData?.error) {
-                  setTranscriptionError(errorData.error);
-                  setTimeout(() => setTranscriptionError(null), 8000);
-                }
                 const fallbackText = finalTranscript.trim() || currentInput;
+                if (fallbackText) {
+                  playBlip();
+                  setIsSuccessFlash(true);
+                  setTimeout(() => setIsSuccessFlash(false), 1000);
+                  onSendMessage(fallbackText, isImageMode, audioUrl);
+                }
+              }
+            } catch (error) {
+              console.error("Error transcribing audio:", error);
+              setTranscriptionError("Error transcribing audio.");
+              setTimeout(() => setTranscriptionError(null), 8000);
+              const fallbackText = finalTranscript.trim() || currentInput;
+              if (fallbackText) {
                 playBlip();
                 setIsSuccessFlash(true);
                 setTimeout(() => setIsSuccessFlash(false), 1000);
                 onSendMessage(fallbackText, isImageMode, audioUrl);
               }
-            } catch (error) {
-              console.error("Error transcribing audio:", error);
-              setTranscriptionError("Network error while transcribing audio.");
-              setTimeout(() => setTranscriptionError(null), 8000);
-              const fallbackText = finalTranscript.trim() || currentInput;
-              playBlip();
-              setIsSuccessFlash(true);
-              setTimeout(() => setIsSuccessFlash(false), 1000);
-              onSendMessage(fallbackText, isImageMode, audioUrl);
             } finally {
               setIsTranscribing(false);
             }
@@ -362,6 +366,126 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
     }
   };
 
+  const startLiveSession = async () => {
+    if (isLiveSessionActive) return;
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicError("Microphone access is not supported by your browser or is blocked by security policies.");
+      return;
+    }
+    
+    try {
+      playNotification();
+      setIsLiveSessionActive(true);
+      
+      const session = await connectLiveSession({
+        onopen: () => {
+          console.log("Live session opened");
+        },
+        onmessage: async (message) => {
+          if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
+            const base64Audio = message.serverContent.modelTurn.parts[0].inlineData.data;
+            const audioData = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0));
+            // Handle audio playback (PCM 16kHz)
+            playLiveAudio(audioData);
+          }
+          if (message.serverContent?.interrupted) {
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+          }
+        },
+        onclose: () => {
+          setIsLiveSessionActive(false);
+          liveSessionRef.current = null;
+        },
+        onerror: (err) => {
+          console.error("Live session error:", err);
+          setIsLiveSessionActive(false);
+        }
+      }, systemInstruction);
+      
+      liveSessionRef.current = session;
+
+      // Setup microphone streaming for Live API
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioCtx = new AudioContext({ sampleRate: 16000 });
+      await audioCtx.resume();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      
+      processor.onaudioprocess = (e) => {
+        if (!isLiveSessionActive) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+        // Convert Float32 to Int16
+        const pcmData = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) {
+          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+        }
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+        session.sendRealtimeInput({
+          media: { data: base64, mimeType: 'audio/pcm;rate=16000' }
+        });
+      };
+
+    } catch (err: any) {
+      console.error("Failed to start live session:", err);
+      if (err.name === 'NotAllowedError' || err?.message?.includes('Permission denied')) {
+        setMicError("Microphone access denied. Please click the microphone icon in your browser's address bar to allow access, then refresh this page.");
+      }
+      if (liveSessionRef.current) {
+        liveSessionRef.current.close();
+        liveSessionRef.current = null;
+      }
+      setIsLiveSessionActive(false);
+    }
+  };
+
+  const stopLiveSession = () => {
+    if (liveSessionRef.current) {
+      liveSessionRef.current.close();
+    }
+    setIsLiveSessionActive(false);
+  };
+
+  const playLiveAudio = async (data: Uint8Array) => {
+    if (!audioOutRef.current) {
+      audioOutRef.current = new AudioContext({ sampleRate: 24000 });
+    }
+    
+    // PCM 16-bit to Float32
+    const int16 = new Int16Array(data.buffer);
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) {
+      float32[i] = int16[i] / 32768.0;
+    }
+    
+    audioQueueRef.current.push(float32);
+    if (!isPlayingRef.current) {
+      processAudioQueue();
+    }
+  };
+
+  const processAudioQueue = async () => {
+    if (audioQueueRef.current.length === 0 || !audioOutRef.current) {
+      isPlayingRef.current = false;
+      return;
+    }
+    
+    isPlayingRef.current = true;
+    const chunk = audioQueueRef.current.shift()!;
+    const buffer = audioOutRef.current.createBuffer(1, chunk.length, 24000);
+    buffer.getChannelData(0).set(chunk);
+    
+    const source = audioOutRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioOutRef.current.destination);
+    source.onended = () => processAudioQueue();
+    source.start();
+  };
+
   return (
     <div className="w-full pt-1 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-[calc(1rem+env(safe-area-inset-bottom))] px-3 sm:px-6 bg-transparent">
       <motion.div 
@@ -478,7 +602,16 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1.5">
+                    {liveAudioEnabled && (
+                      <button
+                        onClick={isLiveSessionActive ? stopLiveSession : startLiveSession}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all border ${isLiveSessionActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 animate-pulse' : 'text-cyan-600/70 hover:bg-cyan-500/10 hover:text-cyan-400 border-transparent hover:border-cyan-500/30'}`}
+                        title={isLiveSessionActive ? "Stop Live Session" : "Start Live Session"}
+                      >
+                        <Radio className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiveSessionActive ? 'animate-spin' : ''}`} />
+                      </button>
+                    )}
                     {isRecording && (
                       <div className="flex items-center gap-[2px] h-4 mr-2">
                         {[1, 2, 3, 4].map(i => (
@@ -596,7 +729,16 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   </div>
                   
                   {/* Mic button hides when typing */}
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    {liveAudioEnabled && (
+                      <button
+                        onClick={isLiveSessionActive ? stopLiveSession : startLiveSession}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all border ${isLiveSessionActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 animate-pulse' : 'text-slate-400 dark:text-[#888] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white border-transparent'}`}
+                        title={isLiveSessionActive ? "Stop Live Session" : "Start Live Session"}
+                      >
+                        <Radio className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiveSessionActive ? 'animate-spin' : ''}`} />
+                      </button>
+                    )}
                     {isRecording && (
                       <div className="flex items-center gap-[2px] h-4 mr-2">
                         {[1, 2, 3, 4].map(i => (

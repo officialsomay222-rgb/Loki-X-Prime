@@ -6,6 +6,7 @@ import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
 import { useSettings } from './contexts/SettingsContext';
 import { useChat } from './contexts/ChatContext';
+import { useAuth } from './contexts/AuthContext';
 import { InfinityLogo, HeaderInfinityLogo } from './components/Logos';
 import { format, isToday } from 'date-fns';
 import { TaskWidget } from './features/tasks/components/TaskWidget';
@@ -16,7 +17,7 @@ import {
   Trash2, 
   PanelLeftClose, 
   PanelLeftOpen,
-  User,
+  User as UserIcon,
   Sun,
   Moon,
   X,
@@ -28,7 +29,9 @@ import {
   RotateCcw,
   Type,
   Volume2,
-  CheckCircle2
+  CheckCircle2,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 
 declare global {
@@ -50,6 +53,7 @@ export default function App() {
   const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
   const [input, setInput] = useState('');
   
+  const { user, loading: authLoading, signIn, logout } = useAuth();
   const { 
     theme, setTheme, 
     bgStyle, setBgStyle, 
@@ -73,6 +77,10 @@ export default function App() {
     responseLength, setResponseLength,
     accentColor, setAccentColor,
     messageDensity, setMessageDensity,
+    thinkingMode, setThinkingMode,
+    searchGrounding, setSearchGrounding,
+    imageSize, setImageSize,
+    liveAudioEnabled, setLiveAudioEnabled,
     resetSettings
   } = useSettings();
   const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
@@ -277,7 +285,7 @@ export default function App() {
     ));
   }, [currentSession?.messages, isAwakened, commanderName, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, setInput, currentSessionId, deleteMessage]);
 
-  if (isBooting) {
+  if (isBooting || authLoading) {
     return (
       <div className="fixed inset-0 w-full h-full bg-[#08080c] z-[9999] flex flex-col justify-between items-center transition-opacity duration-700 pb-12 pt-24">
          <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[300px] my-auto mx-auto">
@@ -287,8 +295,10 @@ export default function App() {
             <div className="w-full h-[2px] bg-white/5 overflow-hidden rounded-sm">
                <div className="h-full bg-white animate-[fill-progress_1.5s_ease-in-out_forwards]" />
             </div>
-            <p className="text-[#6b6b80] tracking-[6px] text-sm animate-[pulse-text_1.5s_infinite] font-montserrat font-bold">INITIALIZING SYSTEM</p>
-            {showSkip && (
+            <p className="text-[#6b6b80] tracking-[6px] text-sm animate-[pulse-text_1.5s_infinite] font-montserrat font-bold uppercase">
+              {authLoading ? 'AUTHENTICATING' : 'INITIALIZING SYSTEM'}
+            </p>
+            {showSkip && !authLoading && (
               <button 
                 onClick={() => setIsBooting(false)}
                 className="mt-6 px-4 py-2 border border-cyan-500/30 rounded-lg text-cyan-500 text-[10px] font-bold tracking-[2px] hover:bg-cyan-500/10 transition-all animate-pulse"
@@ -309,6 +319,31 @@ export default function App() {
               LOKI X PRIME
             </h1>
          </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className={`fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-[#08080c] text-white p-6 ${theme}`}>
+        <div className="absolute inset-0 bg-cyber-grid opacity-20" />
+        <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center">
+          <div className="w-32 h-16 mb-8">
+            <InfinityLogo />
+          </div>
+          <h2 className="text-3xl font-black font-montserrat tracking-tighter mb-4 uppercase">Welcome to the Core</h2>
+          <p className="text-slate-400 mb-10 leading-relaxed">
+            LOKI X PRIME requires secure authentication to establish a neural link. Please sign in to continue.
+          </p>
+          <button 
+            onClick={signIn}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest hover:bg-cyan-400 transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(0,242,255,0.4)]"
+          >
+            <LogIn className="w-5 h-5" />
+            Sign in with Google
+          </button>
+          <p className="mt-8 text-[10px] text-slate-600 uppercase tracking-[0.2em]">Secure Encryption Enabled</p>
+        </div>
       </div>
     );
   }
@@ -354,7 +389,7 @@ export default function App() {
             } as any}
           >
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-[spin-aura_3s_linear_infinite]" style={{ background: 'conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)' }}></div>
-             <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
+             <img src={user?.photoURL || "https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
           </div>
 
           <div className={`fixed inset-0 z-[100005] flex flex-col items-center justify-center pointer-events-none transition-opacity duration-1000 ${awakening.phase === 'prompt' ? 'opacity-100' : 'opacity-0'}`}>
@@ -416,10 +451,11 @@ export default function App() {
             <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 p-6 flex flex-col gap-6 shrink-0">
               <div className="flex flex-col items-center text-center gap-3 mt-3">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white dark:border-[#0a0a0c] shadow-md relative ring-4 ring-cyan-500/5">
-                  <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" alt="Commander Avatar" className="w-full h-full object-cover" />
+                  <img src={user?.photoURL || "https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} alt="Commander Avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="mt-2">
-                  <h2 className="text-lg font-montserrat font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{commanderName}</h2>
+                  <h2 className="text-lg font-montserrat font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{user?.displayName || commanderName}</h2>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest">{user?.email}</p>
                 </div>
               </div>
 
@@ -428,7 +464,7 @@ export default function App() {
                   onClick={() => setActiveSettingsTab('general')}
                   className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'general' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
                 >
-                  <User className="w-5 h-5" />
+                  <UserIcon className="w-5 h-5" />
                   General
                 </button>
                 <button 
@@ -632,10 +668,10 @@ export default function App() {
                           <Download className="w-5 h-5" /> Export History
                         </button>
                         <button 
-                          onClick={() => { if(confirm('Reset all settings to default?')) resetSettings(); }}
-                          className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-[0.8rem] hover:bg-rose-500/20 transition-all border border-rose-500/20 uppercase tracking-wider"
+                          onClick={logout}
+                          className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-[0.8rem] hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/5 uppercase tracking-wider"
                         >
-                          <RotateCcw className="w-5 h-5" /> Reset Settings
+                          <LogOut className="w-5 h-5" /> Sign Out
                         </button>
                       </div>
                     </section>
@@ -648,6 +684,52 @@ export default function App() {
                       <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">AI Core Parameters</h3>
                       
                       <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                            <div>
+                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Thinking Mode</span>
+                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">High intelligence reasoning.</span>
+                            </div>
+                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${thinkingMode ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setThinkingMode(!thinkingMode)}>
+                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${thinkingMode ? 'left-5.5' : 'left-0.5'}`} />
+                            </div>
+                          </label>
+
+                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                            <div>
+                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Search Grounding</span>
+                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Real-time web data.</span>
+                            </div>
+                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${searchGrounding ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setSearchGrounding(!searchGrounding)}>
+                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${searchGrounding ? 'left-5.5' : 'left-0.5'}`} />
+                            </div>
+                          </label>
+
+                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
+                            <div>
+                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Live Audio</span>
+                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Conversational voice.</span>
+                            </div>
+                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${liveAudioEnabled ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setLiveAudioEnabled(!liveAudioEnabled)}>
+                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${liveAudioEnabled ? 'left-5.5' : 'left-0.5'}`} />
+                            </div>
+                          </label>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Image Generation Size</label>
+                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
+                            {(['1K', '2K', '4K'] as const).map((size) => (
+                              <button
+                                key={size}
+                                onClick={() => setImageSize(size)}
+                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${imageSize === size ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                         <div className="space-y-2">
                           <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Response Length</label>
                           <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">

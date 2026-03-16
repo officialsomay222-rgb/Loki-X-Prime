@@ -10,6 +10,7 @@ export type ResponseLength = 'short' | 'balanced' | 'detailed';
 export type AccentColor = 'cyan' | 'violet' | 'emerald' | 'rose';
 export type MessageDensity = 'compact' | 'comfortable';
 export type Tone = 'formal' | 'casual' | 'happy' | 'custom';
+export type ImageSize = '1K' | '2K' | '4K';
 
 interface SettingsState {
   theme: Theme;
@@ -34,6 +35,10 @@ interface SettingsState {
   responseLength: ResponseLength;
   accentColor: AccentColor;
   messageDensity: MessageDensity;
+  thinkingMode: boolean;
+  searchGrounding: boolean;
+  imageSize: ImageSize;
+  liveAudioEnabled: boolean;
   setTheme: (theme: Theme) => void;
   setBgStyle: (bg: BgStyle) => void;
   setCommanderName: (name: string) => void;
@@ -56,10 +61,14 @@ interface SettingsState {
   setAccentColor: (color: AccentColor) => void;
   setMessageDensity: (density: MessageDensity) => void;
   setTone: (tone: Tone) => void;
+  setThinkingMode: (enabled: boolean) => void;
+  setSearchGrounding: (enabled: boolean) => void;
+  setImageSize: (size: ImageSize) => void;
+  setLiveAudioEnabled: (enabled: boolean) => void;
   resetSettings: () => void;
 }
 
-const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'resetSettings'> = {
+const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'resetSettings'> = {
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
@@ -82,6 +91,10 @@ const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setComma
   responseLength: 'balanced',
   accentColor: 'cyan',
   messageDensity: 'comfortable',
+  thinkingMode: false,
+  searchGrounding: false,
+  imageSize: '1K',
+  liveAudioEnabled: false,
 };
 
 const SettingsContext = createContext<SettingsState | undefined>(undefined);
@@ -109,6 +122,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [responseLength, setResponseLength] = useState<ResponseLength>(defaultSettings.responseLength);
   const [accentColor, setAccentColor] = useState<AccentColor>(defaultSettings.accentColor);
   const [messageDensity, setMessageDensity] = useState<MessageDensity>(defaultSettings.messageDensity);
+  const [thinkingMode, setThinkingMode] = useState<boolean>(defaultSettings.thinkingMode);
+  const [searchGrounding, setSearchGrounding] = useState<boolean>(defaultSettings.searchGrounding);
+  const [imageSize, setImageSize] = useState<ImageSize>(defaultSettings.imageSize);
+  const [liveAudioEnabled, setLiveAudioEnabled] = useState<boolean>(defaultSettings.liveAudioEnabled);
 
   const resetSettings = () => {
     setTheme(defaultSettings.theme);
@@ -132,6 +149,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setResponseLength(defaultSettings.responseLength);
     setAccentColor(defaultSettings.accentColor);
     setMessageDensity(defaultSettings.messageDensity);
+    setThinkingMode(defaultSettings.thinkingMode);
+    setSearchGrounding(defaultSettings.searchGrounding);
+    setImageSize(defaultSettings.imageSize);
+    setLiveAudioEnabled(defaultSettings.liveAudioEnabled);
   };
 
   useEffect(() => {
@@ -167,6 +188,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('responseLength', setResponseLength as any);
     loadSetting('accentColor', setAccentColor as any);
     loadSetting('messageDensity', setMessageDensity as any);
+    loadSetting('thinkingMode', setThinkingMode, (val) => val === 'true');
+    loadSetting('searchGrounding', setSearchGrounding, (val) => val === 'true');
+    loadSetting('imageSize', setImageSize as any);
+    loadSetting('liveAudioEnabled', setLiveAudioEnabled, (val) => val === 'true');
   }, []);
 
   useEffect(() => {
@@ -192,6 +217,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_responseLength', responseLength);
       localStorage.setItem('loki_accentColor', accentColor);
       localStorage.setItem('loki_messageDensity', messageDensity);
+      localStorage.setItem('loki_thinkingMode', thinkingMode.toString());
+      localStorage.setItem('loki_searchGrounding', searchGrounding.toString());
+      localStorage.setItem('loki_imageSize', imageSize);
+      localStorage.setItem('loki_liveAudioEnabled', liveAudioEnabled.toString());
     } catch (e) {
       console.error('Failed to save settings to localStorage', e);
     }
@@ -217,8 +246,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity,
-      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, resetSettings
+      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled,
+      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, resetSettings
     }}>
       {children}
     </SettingsContext.Provider>
