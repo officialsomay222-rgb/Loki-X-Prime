@@ -18,30 +18,94 @@
   animation: waveform-play 1.2s ease-in-out infinite;
 }
 
-@property --angle {
+@property --border-angle {
   syntax: '<angle>';
   initial-value: 0deg;
   inherits: false;
 }
 
-@keyframes rotate-angle {
-  to { --angle: 360deg; }
+@keyframes rotate-border {
+  to { --border-angle: 360deg; }
 }
 
 .textpad-container {
   position: relative;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1.5px solid transparent;
-  /* Dark background in padding-box, RGB liquid in border-box */
-  background: 
-    linear-gradient(#030712, #030712) padding-box, 
-    conic-gradient(from var(--angle), #4285F4, #9B72CB, #D96570, #F4B400, #4285F4) border-box;
-  transition: box-shadow 0.3s ease;
+  background-image: 
+    linear-gradient(#030712, #030712), 
+    conic-gradient(
+      from var(--border-angle), 
+      transparent 0%, 
+      transparent 5%,
+      #4285F4 7%, 
+      #9B72CB 15%, 
+      #EA4335 25%, 
+      #FBBC05 35%, 
+      #34A853 43%,
+      transparent 50%,
+      transparent 55%,
+      #4285F4 57%, 
+      #9B72CB 65%, 
+      #EA4335 75%, 
+      #FBBC05 85%, 
+      #34A853 93%,
+      transparent 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  /* Realistic Depth: Inner Shadow */
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Realistic Glass Reflection */
+.textpad-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* The Glowing Aura - This creates the "Liquid Light" effect */
+.textpad-container::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 26px;
+  background: inherit;
+  filter: blur(12px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.textpad-container:focus-within::after {
+  opacity: 0.5;
+}
+
+.textpad-container * {
+  transition: background 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 .textpad-container:focus-within {
-  animation: rotate-angle 4s linear infinite;
-  box-shadow: 0 0 15px rgba(66, 133, 244, 0.15);
+  filter: drop-shadow(0 0 20px rgba(66, 133, 244, 0.15));
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 20px 40px -15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
 }
 html, body {
   height: 100%;

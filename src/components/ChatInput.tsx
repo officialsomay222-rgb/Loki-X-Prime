@@ -399,11 +399,15 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
         
         {isAwakened ? (
           /* AWAKENED MODE TEXTPAD - 10X ADVANCED */
-          <div className={`textpad-container relative flex flex-col gap-1.5 sm:gap-2 p-1.5 sm:p-2 transition-all duration-500 group ${
-            isSuccessFlash ? 'success-flash shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 
-            isRecording ? 'shadow-[0_0_20px_rgba(244,63,94,0.2)] animate-pulse' : 
-            ''
-          }`}>
+          <motion.div 
+            className={`textpad-container relative flex flex-col gap-1.5 sm:gap-2 p-2 sm:p-3 transition-all duration-500 group ${
+              isSuccessFlash ? 'success-flash shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 
+              isRecording ? 'shadow-[0_0_20px_rgba(244,63,94,0.2)] animate-pulse' : 
+              ''
+            }`}
+            animate={{ "--border-angle": ["0deg", "360deg"] } as any}
+            transition={{ duration: 4, ease: "linear", repeat: Infinity }}
+          >
             
             {/* Background effects container (handles overflow for animations) */}
             <div className="absolute inset-0 overflow-hidden rounded-[1.2rem] sm:rounded-[1.5rem] pointer-events-none">
@@ -526,31 +530,18 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   )}
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : (
           /* NORMAL MODE TEXTPAD - CLEAN & SIMPLE */
-          <div className={`textpad-container relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 transition-all duration-500 ${
-            isSuccessFlash ? 'shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 
-            isRecording ? 'shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse' : 
-            ''
-          }`}>
-            <motion.div
-              className="textpad-gradient"
-              animate={{
-                backgroundPosition: ["0% 0%", "100% 100%", "0% 100%", "0% 0%"],
-                scale: isFocused ? 1.02 : 1,
-                filter: isFocused ? "blur(12px) brightness(1.4)" : "blur(12px) brightness(1)"
-              }}
-              transition={{
-                duration: 10,
-                ease: "linear",
-                repeat: Infinity
-              }}
-              style={{
-                background: "radial-gradient(circle at 20% 30%, #4285F4, transparent 50%), radial-gradient(circle at 80% 20%, #9B72CB, transparent 50%), radial-gradient(circle at 70% 80%, #D96570, transparent 50%), radial-gradient(circle at 30% 70%, #F4B400, transparent 50%)",
-                backgroundSize: "200% 200%"
-              }}
-            />
+          <motion.div 
+            className={`textpad-container relative flex flex-col gap-2 sm:gap-3 p-4 sm:p-5 transition-all duration-500 ${
+              isSuccessFlash ? 'shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 
+              isRecording ? 'shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse' : 
+              ''
+            }`}
+            animate={{ "--border-angle": ["0deg", "360deg"] } as any}
+            transition={{ duration: 4, ease: "linear", repeat: Infinity }}
+          >
             <textarea
               ref={inputRef}
               value={input}
@@ -653,7 +644,7 @@ export const ChatInput = memo(forwardRef<HTMLTextAreaElement, ChatInputProps>(({
                   )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </motion.div>
     </div>
