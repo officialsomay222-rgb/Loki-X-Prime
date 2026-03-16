@@ -16,8 +16,7 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.uid is string && 
-             data.email is string && 
-             data.email.size() < 256;
+             (data.email == null || (data.email is string && data.email.size() < 256));
     }
 
     function isValidSession(data) {

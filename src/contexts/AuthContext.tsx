@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -26,14 +26,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!userSnap.exists()) {
           await setDoc(userRef, {
             uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
+            email: firebaseUser.email || 'guest@loki.prime',
+            displayName: firebaseUser.displayName || 'Commander Guest',
+            photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
             createdAt: serverTimestamp(),
+            isAnonymous: firebaseUser.isAnonymous
           });
         }
         setUser(firebaseUser);
       } else {
+        // Automatically sign in anonymously if no user
+        try {
+          await signInAnonymously(auth);
+        } catch (error) {
+          console.error("Error signing in anonymously", error);
+        }
         setUser(null);
       }
       setLoading(false);
