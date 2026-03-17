@@ -30,7 +30,11 @@ service cloud.firestore {
       return data.id is string && 
              data.role in ['user', 'model'] && 
              data.content is string &&
-             data.content.size() < 50000;
+             data.content.size() < 100000 &&
+             (!('status' in data) || data.status in ['pending', 'sent', 'error']) &&
+             (!('isImage' in data) || data.isImage is bool) &&
+             (!('audioUrl' in data) || data.audioUrl == null || data.audioUrl is string) &&
+             (!('isVoiceResponse' in data) || data.isVoiceResponse is bool);
     }
 
     match /users/{userId} {

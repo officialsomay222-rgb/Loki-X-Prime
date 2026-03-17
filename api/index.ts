@@ -264,6 +264,12 @@ app.post("/api/chat", async (req, res) => {
             model: "stabilityai/stable-diffusion-xl-base-1.0",
           });
         } catch (e: any) {
+          console.error("Hugging Face API Error Details:", {
+            message: e.message,
+            status: e.status,
+            name: e.name,
+            stack: e.stack
+          });
           if (e.message?.includes("loading") || e.status === 503) {
             throw new Error("stable-diffusion-xl-base-1.0 model is loading on Hugging Face. Please try again in 20-30 seconds.");
           }

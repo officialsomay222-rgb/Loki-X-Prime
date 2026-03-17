@@ -32,3 +32,12 @@ export const HeaderInfinityLogo = memo(({ className = "" }: { className?: string
     <path d="M25 15 C 5 15, 5 35, 25 35 C 45 35, 55 15, 75 15 C 95 15, 95 35, 75 35 C 55 35, 45 15, 25 15" fill="none" stroke="url(#rainbowGradHeader)" strokeWidth="7" strokeLinecap="round" style={{ strokeDasharray: '60 40', animation: 'dashMoveTitle 2s linear infinite' }}/>
   </svg>
 ));
+
+export const InfinityMic = memo(({ className = "" }: { className?: string }) => (
+  <svg className={`w-full h-full ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="1" width="6" height="11" rx="3"></rect>
+    <path d="M5 9v2a7 7 0 0 0 14 0v-2"></path>
+    <line x1="12" y1="18" x2="12" y2="20"></line>
+    <path d="M 7 21 C 4 21 4 23 7 23 C 9 23 10 21 12 21 C 14 21 15 23 17 23 C 20 23 20 21 17 21 C 15 21 14 23 12 23 C 10 23 9 21 7 21 Z" />
+  </svg>
+));

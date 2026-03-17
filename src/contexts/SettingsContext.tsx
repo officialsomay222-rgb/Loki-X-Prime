@@ -11,6 +11,11 @@ export type AccentColor = 'cyan' | 'violet' | 'emerald' | 'rose';
 export type MessageDensity = 'compact' | 'comfortable';
 export type Tone = 'formal' | 'casual' | 'happy' | 'custom';
 export type ImageSize = '1K' | '2K' | '4K';
+export type AnimationSpeed = 'slow' | 'normal' | 'fast';
+export type BorderRadius = 'sharp' | 'rounded' | 'pill';
+export type TextReveal = 'none' | 'fade' | 'typewriter';
+export type AppWidth = 'narrow' | 'normal' | 'wide';
+export type GlowIntensity = 'low' | 'medium' | 'high';
 
 interface SettingsState {
   theme: Theme;
@@ -39,6 +44,11 @@ interface SettingsState {
   searchGrounding: boolean;
   imageSize: ImageSize;
   liveAudioEnabled: boolean;
+  animationSpeed: AnimationSpeed;
+  borderRadius: BorderRadius;
+  textReveal: TextReveal;
+  appWidth: AppWidth;
+  glowIntensity: GlowIntensity;
   setTheme: (theme: Theme) => void;
   setBgStyle: (bg: BgStyle) => void;
   setCommanderName: (name: string) => void;
@@ -65,10 +75,15 @@ interface SettingsState {
   setSearchGrounding: (enabled: boolean) => void;
   setImageSize: (size: ImageSize) => void;
   setLiveAudioEnabled: (enabled: boolean) => void;
+  setAnimationSpeed: (speed: AnimationSpeed) => void;
+  setBorderRadius: (radius: BorderRadius) => void;
+  setTextReveal: (reveal: TextReveal) => void;
+  setAppWidth: (width: AppWidth) => void;
+  setGlowIntensity: (intensity: GlowIntensity) => void;
   resetSettings: () => void;
 }
 
-const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'resetSettings'> = {
+const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'resetSettings'> = {
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
@@ -95,6 +110,11 @@ const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setComma
   searchGrounding: false,
   imageSize: '1K',
   liveAudioEnabled: false,
+  animationSpeed: 'normal',
+  borderRadius: 'rounded',
+  textReveal: 'typewriter',
+  appWidth: 'normal',
+  glowIntensity: 'medium',
 };
 
 const SettingsContext = createContext<SettingsState | undefined>(undefined);
@@ -126,6 +146,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [searchGrounding, setSearchGrounding] = useState<boolean>(defaultSettings.searchGrounding);
   const [imageSize, setImageSize] = useState<ImageSize>(defaultSettings.imageSize);
   const [liveAudioEnabled, setLiveAudioEnabled] = useState<boolean>(defaultSettings.liveAudioEnabled);
+  const [animationSpeed, setAnimationSpeed] = useState<AnimationSpeed>(defaultSettings.animationSpeed);
+  const [borderRadius, setBorderRadius] = useState<BorderRadius>(defaultSettings.borderRadius);
+  const [textReveal, setTextReveal] = useState<TextReveal>(defaultSettings.textReveal);
+  const [appWidth, setAppWidth] = useState<AppWidth>(defaultSettings.appWidth);
+  const [glowIntensity, setGlowIntensity] = useState<GlowIntensity>(defaultSettings.glowIntensity);
 
   const resetSettings = () => {
     setTheme(defaultSettings.theme);
@@ -153,6 +178,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setSearchGrounding(defaultSettings.searchGrounding);
     setImageSize(defaultSettings.imageSize);
     setLiveAudioEnabled(defaultSettings.liveAudioEnabled);
+    setAnimationSpeed(defaultSettings.animationSpeed);
+    setBorderRadius(defaultSettings.borderRadius);
+    setTextReveal(defaultSettings.textReveal);
+    setAppWidth(defaultSettings.appWidth);
+    setGlowIntensity(defaultSettings.glowIntensity);
   };
 
   useEffect(() => {
@@ -192,6 +222,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('searchGrounding', setSearchGrounding, (val) => val === 'true');
     loadSetting('imageSize', setImageSize as any);
     loadSetting('liveAudioEnabled', setLiveAudioEnabled, (val) => val === 'true');
+    loadSetting('animationSpeed', setAnimationSpeed as any);
+    loadSetting('borderRadius', setBorderRadius as any);
+    loadSetting('textReveal', setTextReveal as any);
+    loadSetting('appWidth', setAppWidth as any);
+    loadSetting('glowIntensity', setGlowIntensity as any);
   }, []);
 
   useEffect(() => {
@@ -221,6 +256,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_searchGrounding', searchGrounding.toString());
       localStorage.setItem('loki_imageSize', imageSize);
       localStorage.setItem('loki_liveAudioEnabled', liveAudioEnabled.toString());
+      localStorage.setItem('loki_animationSpeed', animationSpeed);
+      localStorage.setItem('loki_borderRadius', borderRadius);
+      localStorage.setItem('loki_textReveal', textReveal);
+      localStorage.setItem('loki_appWidth', appWidth);
+      localStorage.setItem('loki_glowIntensity', glowIntensity);
     } catch (e) {
       console.error('Failed to save settings to localStorage', e);
     }
@@ -242,12 +282,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       document.body.style.backgroundColor = '#f8fafc';
       document.documentElement.style.backgroundColor = '#f8fafc';
     }
-  }, [theme, bgStyle, commanderName, modelMode, systemInstruction, temperature, topP, topK, isAwakened]);
+  }, [theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity]);
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled,
-      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, resetSettings
+      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity,
+      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, resetSettings
     }}>
       {children}
     </SettingsContext.Provider>

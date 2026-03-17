@@ -1,28 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { useSettings } from './SettingsContext';
-import { useAuth } from './AuthContext';
-import { db } from '../lib/firebase';
+import { localDb } from '../lib/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { 
   generateChatResponse, 
   generateImage, 
   transcribeAudio 
 } from '../services/geminiService';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  serverTimestamp, 
-  setDoc,
-  getDocs,
-  writeBatch,
-  Timestamp
-} from 'firebase/firestore';
 
 export type Message = {
   id: string;
@@ -40,43 +24,6 @@ export type ChatSession = {
   title: string;
   messages: Message[];
   updatedAt: Date;
-};
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-  }
-}
-
-const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null, user: any) => {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: user?.uid,
-      email: user?.email,
-      emailVerified: user?.emailVerified,
-      isAnonymous: user?.isAnonymous,
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  // We don't want to crash the whole app, but we should log it
 };
 
 interface ChatState {
@@ -101,13 +48,10 @@ const generateId = () => {
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const sessionsRef = useRef(sessions);
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  const { user } = useAuth();
   const { 
     commanderName, 
     modelMode, 
@@ -119,101 +63,54 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     topK,
     thinkingMode,
     searchGrounding,
-    imageSize
+    imageSize,
+    responseLength
   } = useSettings();
 
-  const createNewSession = useCallback(async () => {
-    if (!user) return;
-    
-    const sessionId = generateId();
-    const sessionPath = `users/${user.uid}/sessions/${sessionId}`;
-    
-    try {
-      await setDoc(doc(db, sessionPath), {
-        id: sessionId,
-        title: 'New Awakening',
-        updatedAt: serverTimestamp(),
-        uid: user.uid
-      });
-      setCurrentSessionId(sessionId);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, sessionPath, user);
-    }
-  }, [user]);
+  // Load sessions using Dexie live query
+  const sessions = useLiveQuery(
+    () => localDb.sessions.orderBy('updatedAt').reverse().toArray(),
+    [],
+    []
+  );
 
-  // Load sessions and messages from Firestore
-  useEffect(() => {
-    if (!user) {
-      setSessions([]);
-      setCurrentSessionId(null);
-      return;
-    }
-
-    const sessionsPath = `users/${user.uid}/sessions`;
-    const q = query(collection(db, sessionsPath), orderBy('updatedAt', 'desc'));
-
-    const unsubscribeSessions = onSnapshot(q, (snapshot) => {
-      const sessionList: ChatSession[] = [];
-      
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        sessionList.push({
-          id: data.id,
-          title: data.title,
-          updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
-          messages: [] // Messages will be loaded per session
-        });
-      });
-
-      setSessions(sessionList);
-      
-      if (sessionList.length > 0 && !currentSessionId) {
-        setCurrentSessionId(sessionList[0].id);
-      } else if (sessionList.length === 0) {
-        createNewSession();
-      }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, sessionsPath, user);
-    });
-
-    return () => unsubscribeSessions();
-  }, [user, createNewSession]);
-
-  // Load messages for the current session
-  useEffect(() => {
-    if (!user || !currentSessionId) return;
-
-    const messagesPath = `users/${user.uid}/sessions/${currentSessionId}/messages`;
-    const q = query(collection(db, messagesPath), orderBy('timestamp', 'asc'));
-
-    const unsubscribeMessages = onSnapshot(q, (snapshot) => {
-      const messageList: Message[] = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: data.id,
-          role: data.role,
-          content: data.content,
-          timestamp: data.timestamp instanceof Timestamp ? data.timestamp.toDate() : new Date(),
-          status: data.status,
-          isImage: data.isImage,
-          audioUrl: data.audioUrl,
-          isVoiceResponse: data.isVoiceResponse
-        };
-      });
-
-      setSessions(prev => prev.map(s => 
-        s.id === currentSessionId ? { ...s, messages: messageList } : s
-      ));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, messagesPath, user);
-    });
-
-    return () => unsubscribeMessages();
-  }, [user, currentSessionId]);
-
+  const sessionsRef = useRef(sessions);
   useEffect(() => {
     sessionsRef.current = sessions;
   }, [sessions]);
+
+  const createNewSession = useCallback(async () => {
+    const sessionId = generateId();
+    await localDb.sessions.add({
+      id: sessionId,
+      title: 'New Awakening',
+      messages: [],
+      updatedAt: new Date()
+    });
+    setCurrentSessionId(sessionId);
+  }, []);
+
+  // Initialize first session if empty
+  useEffect(() => {
+    if (sessions.length === 0 && !currentSessionId) {
+      // We only want to create a new session if the DB is actually empty
+      // useLiveQuery might initially return [] before loading, so we check if it's actually loaded
+      // A better way is to just let the user create one, or create one on first mount
+    } else if (sessions.length > 0 && !currentSessionId) {
+      setCurrentSessionId(sessions[0].id);
+    }
+  }, [sessions, currentSessionId]);
+
+  // Create initial session on mount if needed
+  useEffect(() => {
+    const init = async () => {
+      const count = await localDb.sessions.count();
+      if (count === 0) {
+        createNewSession();
+      }
+    };
+    init();
+  }, [createNewSession]);
 
   const getFullSystemInstruction = useCallback(() => {
     let modeInstruction = '';
@@ -236,6 +133,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         break;
       case 'custom': 
         toneInstruction = `Tone: Custom. Follow the user's specific instructions for your tone. `; 
+        break;
+    }
+
+    let lengthInstruction = '';
+    switch(responseLength) {
+      case 'short':
+        lengthInstruction = `Length: Short. Keep your responses extremely brief and to the point. No fluff. `;
+        break;
+      case 'detailed':
+        lengthInstruction = `Length: Detailed. Provide highly detailed, comprehensive, and exhaustive answers. Explain everything thoroughly. `;
+        break;
+      case 'balanced':
+      default:
+        lengthInstruction = `Length: Balanced. Provide balanced responses, neither too short nor too long. `;
         break;
     }
 
@@ -262,86 +173,50 @@ Rules:
 3. Understand the user's intent deeply. Don't just answer, engage like a friend.
 4. NEVER output internal thoughts or <think> tags. Just the final response.
 
-${modeInstruction} ${toneInstruction} ${systemInstruction}`;
-  }, [modelMode, tone, commanderName, systemInstruction]);
-
-  useEffect(() => {
-    if (currentSessionId) {
-      // No longer need to initialize chatInstanceRef
-    }
-  }, [currentSessionId, modelMode, commanderName, systemInstruction, temperature, topP, topK]);
+${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`;
+  }, [modelMode, tone, commanderName, systemInstruction, responseLength]);
 
   const deleteSession = useCallback(async (id: string) => {
-    if (!user) return;
-    const sessionPath = `users/${user.uid}/sessions/${id}`;
-    try {
-      // Delete messages first (optional but cleaner)
-      const messagesPath = `${sessionPath}/messages`;
-      const messagesSnap = await getDocs(collection(db, messagesPath));
-      const batch = writeBatch(db);
-      messagesSnap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-
-      await deleteDoc(doc(db, sessionPath));
-      
-      if (currentSessionId === id) {
-        const remainingSessions = sessionsRef.current.filter(s => s.id !== id);
-        if (remainingSessions.length > 0) {
-          setCurrentSessionId(remainingSessions[0].id);
-        } else {
-          createNewSession();
-        }
+    await localDb.sessions.delete(id);
+    if (currentSessionId === id) {
+      const remainingSessions = await localDb.sessions.orderBy('updatedAt').reverse().toArray();
+      if (remainingSessions.length > 0) {
+        setCurrentSessionId(remainingSessions[0].id);
+      } else {
+        createNewSession();
       }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, sessionPath, user);
     }
-  }, [user, currentSessionId, createNewSession]);
+  }, [currentSessionId, createNewSession]);
 
   const deleteMessage = useCallback(async (sessionId: string, messageId: string) => {
-    if (!user) return;
-    const messagePath = `users/${user.uid}/sessions/${sessionId}/messages/${messageId}`;
-    try {
-      await deleteDoc(doc(db, messagePath));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, messagePath, user);
+    const session = await localDb.sessions.get(sessionId);
+    if (session) {
+      session.messages = session.messages.filter(m => m.id !== messageId);
+      await localDb.sessions.put(session);
     }
-  }, [user]);
+  }, []);
 
   const clearSessionMessages = useCallback(async (id: string) => {
-    if (!user) return;
-    const messagesPath = `users/${user.uid}/sessions/${id}/messages`;
-    try {
-      const messagesSnap = await getDocs(collection(db, messagesPath));
-      const batch = writeBatch(db);
-      messagesSnap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, messagesPath, user);
+    const session = await localDb.sessions.get(id);
+    if (session) {
+      session.messages = [];
+      await localDb.sessions.put(session);
     }
-  }, [user]);
+  }, []);
 
   const clearAllSessions = useCallback(async () => {
-    if (!user) return;
-    try {
-      const sessionsPath = `users/${user.uid}/sessions`;
-      const sessionsSnap = await getDocs(collection(db, sessionsPath));
-      for (const sessionDoc of sessionsSnap.docs) {
-        await deleteSession(sessionDoc.id);
-      }
-    } catch (error) {
-      console.error("Failed to clear all sessions", error);
-    }
-  }, [user, deleteSession]);
+    await localDb.sessions.clear();
+    createNewSession();
+  }, [createNewSession]);
 
   const renameSession = useCallback(async (id: string, title: string) => {
-    if (!user) return;
-    const sessionPath = `users/${user.uid}/sessions/${id}`;
-    try {
-      await updateDoc(doc(db, sessionPath), { title, updatedAt: serverTimestamp() });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, sessionPath, user);
+    const session = await localDb.sessions.get(id);
+    if (session) {
+      session.title = title;
+      session.updatedAt = new Date();
+      await localDb.sessions.put(session);
     }
-  }, [user]);
+  }, []);
 
   const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
@@ -361,10 +236,7 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
       setTone(newTone);
     }
 
-    // Store if this was a voice message to trigger voice response
     const isVoiceRequest = !!audioUrl;
-    
-    // Convert blob URL to data URL for persistence if needed
     let persistentAudioUrl = audioUrl;
     if (audioUrl && audioUrl.startsWith('blob:')) {
       try {
@@ -381,78 +253,67 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
     }
 
     const userMessageId = generateId();
-    const userMessagePath = `users/${user.uid}/sessions/${currentSessionId}/messages/${userMessageId}`;
-    
     const userMessage: Message = {
       id: userMessageId,
       role: 'user',
       content: text.trim(),
       timestamp: new Date(),
-      status: 'pending',
+      status: 'sent',
       isImage: isImageMode,
-      audioUrl: persistentAudioUrl
+      audioUrl: persistentAudioUrl || undefined
     };
     
-    // Add a hidden flag for the AI if it's a voice request
     const processedText = isVoiceRequest ? `[VOICE_INPUT] ${text.trim()}` : text.trim();
 
-    try {
-      const sessionRef = doc(db, `users/${user.uid}/sessions/${currentSessionId}`);
-      const currentSession = sessionsRef.current.find(s => s.id === currentSessionId);
-      
-      const title = currentSession?.title === 'New Awakening' 
-        ? (userMessage.content.length > 30 ? userMessage.content.substring(0, 30) + '...' : userMessage.content)
-        : currentSession?.title || 'New Awakening';
+    const session = await localDb.sessions.get(currentSessionId);
+    if (!session) return;
 
-      await updateDoc(sessionRef, { title, updatedAt: serverTimestamp() });
-      await setDoc(doc(db, userMessagePath), {
-        ...userMessage,
-        timestamp: serverTimestamp()
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, userMessagePath, user);
-    }
+    const title = session.title === 'New Awakening' 
+      ? (userMessage.content.length > 30 ? userMessage.content.substring(0, 30) + '...' : userMessage.content)
+      : session.title;
+
+    session.title = title;
+    session.updatedAt = new Date();
+    session.messages.push(userMessage);
+    await localDb.sessions.put(session);
 
     setIsLoading(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 second timeout (5 minutes)
+    const timeoutId = setTimeout(() => controller.abort(), 300000); 
     const modelMessageId = generateId();
-    const modelMessagePath = `users/${user.uid}/sessions/${currentSessionId}/messages/${modelMessageId}`;
+
+    const modelMessage: Message = {
+      id: modelMessageId,
+      role: 'model',
+      content: isImageMode ? 'Generating image...' : '',
+      timestamp: new Date(),
+      isImage: isImageMode
+    };
+
+    session.messages.push(modelMessage);
+    await localDb.sessions.put(session);
 
     try {
-      await updateDoc(doc(db, userMessagePath), { status: 'sent' });
-
-      const currentSession = sessionsRef.current.find(s => s.id === currentSessionId);
-      const history = currentSession?.messages.map(m => ({
+      const history = session.messages.slice(0, -1).map(m => ({
         role: m.role,
         content: m.content
-      })) || [];
+      }));
 
       if (isImageMode) {
-        await setDoc(doc(db, modelMessagePath), {
-          id: modelMessageId,
-          role: 'model',
-          content: 'Generating image...',
-          timestamp: serverTimestamp(),
-          isImage: true
-        });
-
         const imageUrl = await generateImage(processedText, imageSize);
+        // Storing base64 directly in Dexie is fine, no 1MB limit like Firestore
         const imageMarkdown = `![Generated Image](${imageUrl})`;
         
-        await updateDoc(doc(db, modelMessagePath), { 
-          content: imageMarkdown 
-        });
+        const updatedSession = await localDb.sessions.get(currentSessionId);
+        if (updatedSession) {
+          const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
+          if (msgIndex !== -1) {
+            updatedSession.messages[msgIndex].content = imageMarkdown;
+            await localDb.sessions.put(updatedSession);
+          }
+        }
       } else {
-        await setDoc(doc(db, modelMessagePath), {
-          id: modelMessageId,
-          role: 'model',
-          content: '',
-          timestamp: serverTimestamp(),
-          isImage: false
-        });
-
         const responseStream = await generateChatResponse({
           message: processedText,
           history,
@@ -470,10 +331,13 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
         let pendingUpdate = false;
 
         const updateState = async (cleanResponse: string) => {
-          try {
-            await updateDoc(doc(db, modelMessagePath), { content: cleanResponse });
-          } catch (error) {
-            handleFirestoreError(error, OperationType.UPDATE, modelMessagePath, user);
+          const updatedSession = await localDb.sessions.get(currentSessionId);
+          if (updatedSession) {
+            const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
+            if (msgIndex !== -1) {
+              updatedSession.messages[msgIndex].content = cleanResponse;
+              await localDb.sessions.put(updatedSession);
+            }
           }
         };
 
@@ -483,7 +347,7 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
             const now = Date.now();
             if (now - lastUpdateTime > 50) {
               let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-              updateState(cleanResponse);
+              await updateState(cleanResponse);
               lastUpdateTime = now;
               pendingUpdate = false;
             } else {
@@ -494,7 +358,7 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
 
         if (pendingUpdate) {
           let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-          updateState(cleanResponse);
+          await updateState(cleanResponse);
         }
       }
 
@@ -504,21 +368,20 @@ ${modeInstruction} ${toneInstruction} ${systemInstruction}`;
         console.log('Generation stopped by user');
       } else {
         console.error("Error sending message:", error);
-        try {
-          await updateDoc(doc(db, userMessagePath), { status: 'error' });
-          await updateDoc(doc(db, modelMessagePath), { 
-            content: `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`,
-            isImage: false 
-          });
-        } catch (e) {
-          handleFirestoreError(e, OperationType.UPDATE, modelMessagePath, user);
+        const updatedSession = await localDb.sessions.get(currentSessionId);
+        if (updatedSession) {
+          const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
+          if (msgIndex !== -1) {
+            updatedSession.messages[msgIndex].content = `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`;
+            await localDb.sessions.put(updatedSession);
+          }
         }
       }
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [currentSessionId, isLoading, modelMode, getFullSystemInstruction, temperature, topP, topK]);
+  }, [currentSessionId, isLoading, modelMode, getFullSystemInstruction, temperature, topP, topK, imageSize, setTone, thinkingMode, searchGrounding, responseLength]);
 
   const contextValue = React.useMemo(() => ({
     sessions, currentSessionId, isLoading,
