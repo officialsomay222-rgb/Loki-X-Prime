@@ -36,7 +36,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg glass-panel premium-shadow rounded-2xl z-[101] overflow-hidden"
+            className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg glass-panel premium-shadow rounded-xl z-[101] overflow-hidden"
           >
             <div className="flex items-center px-4 border-b border-slate-200/30 dark:border-white/10">
               <Search className="w-5 h-5 text-slate-400" />
@@ -51,11 +51,11 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
               <button onClick={onClose} className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-md transition-colors"><X className="w-4 h-4 text-slate-500 dark:text-slate-400" /></button>
             </div>
             <div className="max-h-80 overflow-y-auto p-2 custom-scrollbar">
-              <button onClick={() => { createNewSession(); onClose(); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-slate-800 dark:text-white transition-colors">
+              <button onClick={() => { createNewSession(); onClose(); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-800 dark:text-white transition-colors">
                 <Plus className="w-4 h-4" /> New Awakening
               </button>
               {filteredSessions.map(session => (
-                <button key={session.id} onClick={() => { setCurrentSessionId(session.id); onClose(); }} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-slate-700 dark:text-slate-300 transition-colors">
+                <button key={session.id} onClick={() => { setCurrentSessionId(session.id); onClose(); }} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">
                   {session.title}
                 </button>
               ))}

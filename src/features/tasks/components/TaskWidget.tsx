@@ -19,7 +19,7 @@ export const TaskWidget: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+    <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
       <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
         <CheckCircle2 className="text-cyan-400" />
         Task List
@@ -31,12 +31,12 @@ export const TaskWidget: React.FC = () => {
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="Add a new task..."
-          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
         />
         <button
           type="submit"
           disabled={!newTaskTitle.trim()}
-          className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl p-2 transition-colors flex items-center justify-center"
+          className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg p-2 transition-colors flex items-center justify-center"
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -59,7 +59,7 @@ export const TaskWidget: React.FC = () => {
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
                   task.completed 
                     ? 'bg-slate-800/50 border-slate-800/50 opacity-60' 
                     : 'bg-slate-800 border-slate-700'

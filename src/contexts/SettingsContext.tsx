@@ -21,6 +21,7 @@ interface SettingsState {
   theme: Theme;
   bgStyle: BgStyle;
   commanderName: string;
+  avatarUrl: string;
   modelMode: ModelMode;
   tone: Tone;
   systemInstruction: string;
@@ -52,6 +53,7 @@ interface SettingsState {
   setTheme: (theme: Theme) => void;
   setBgStyle: (bg: BgStyle) => void;
   setCommanderName: (name: string) => void;
+  setAvatarUrl: (url: string) => void;
   setModelMode: (mode: ModelMode) => void;
   setSystemInstruction: (instruction: string) => void;
   setTemperature: (temp: number) => void;
@@ -83,10 +85,11 @@ interface SettingsState {
   resetSettings: () => void;
 }
 
-const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'resetSettings'> = {
+const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setAvatarUrl' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setIsAwakened' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'resetSettings'> = {
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
+  avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Loki',
   modelMode: 'pro',
   tone: 'formal',
   systemInstruction: 'You are Loki Prime X, an advanced AI assistant. You MUST respond ONLY in natural, conversational Hinglish (a mix of Hindi and English written in Latin script). Speak like a helpful, friendly, and highly intelligent human companion. Avoid sounding robotic or overly formal. Understand the user\'s intent deeply and reply with empathy, clarity, and a touch of personality. NEVER output any internal thoughts, reasoning, or monologues. Do NOT use <thought> or <think> tags. Provide ONLY the final response.',
@@ -123,6 +126,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(defaultSettings.theme);
   const [bgStyle, setBgStyle] = useState<BgStyle>(defaultSettings.bgStyle);
   const [commanderName, setCommanderName] = useState(defaultSettings.commanderName);
+  const [avatarUrl, setAvatarUrl] = useState(defaultSettings.avatarUrl);
   const [modelMode, setModelMode] = useState<ModelMode>(defaultSettings.modelMode);
   const [tone, setTone] = useState<Tone>(defaultSettings.tone);
   const [systemInstruction, setSystemInstruction] = useState(defaultSettings.systemInstruction);
@@ -156,6 +160,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setTheme(defaultSettings.theme);
     setBgStyle(defaultSettings.bgStyle);
     setCommanderName(defaultSettings.commanderName);
+    setAvatarUrl(defaultSettings.avatarUrl);
     setModelMode(defaultSettings.modelMode);
     setTone(defaultSettings.tone);
     setSystemInstruction(defaultSettings.systemInstruction);
@@ -200,6 +205,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('theme', setTheme as any);
     loadSetting('bgStyle', setBgStyle as any);
     loadSetting('commanderName', setCommanderName);
+    loadSetting('avatarUrl', setAvatarUrl);
     loadSetting('modelMode', setModelMode as any);
     loadSetting('tone', setTone as any);
     loadSetting('systemInstruction', setSystemInstruction);
@@ -234,6 +240,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_theme', theme);
       localStorage.setItem('loki_bgStyle', bgStyle);
       localStorage.setItem('loki_commanderName', commanderName);
+      localStorage.setItem('loki_avatarUrl', avatarUrl);
       localStorage.setItem('loki_modelMode', modelMode);
       localStorage.setItem('loki_tone', tone);
       localStorage.setItem('loki_systemInstruction', systemInstruction);
@@ -282,12 +289,19 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       document.body.style.backgroundColor = '#f8fafc';
       document.documentElement.style.backgroundColor = '#f8fafc';
     }
-  }, [theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity]);
+
+    // Apply global CSS variables
+    const radiusVar = borderRadius === 'sharp' ? '0px' : borderRadius === 'pill' ? '9999px' : '16px';
+    const glowOpacity = glowIntensity === 'low' ? '0.2' : glowIntensity === 'high' ? '0.8' : '0.5';
+    
+    document.documentElement.style.setProperty('--global-radius', radiusVar);
+    document.documentElement.style.setProperty('--glow-opacity', glowOpacity);
+  }, [theme, bgStyle, commanderName, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity]);
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity,
-      setTheme, setBgStyle, setCommanderName, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, resetSettings
+      theme, bgStyle, commanderName, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, isAwakened, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity,
+      setTheme, setBgStyle, setCommanderName, setAvatarUrl, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setIsAwakened, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, resetSettings
     }}>
       {children}
     </SettingsContext.Provider>

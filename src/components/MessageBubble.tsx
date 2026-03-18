@@ -64,7 +64,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
   return (
     <>
       <div
-        className={`my-4 aspect-square w-full max-w-[512px] mx-auto rounded-2xl overflow-hidden shadow-2xl bg-black/40 group/img relative cursor-pointer ${!isLoaded && !hasError ? "textpad-container" : "border border-white/10"}`}
+        className={`my-4 aspect-square w-full max-w-[512px] mx-auto rounded-lg overflow-hidden shadow-2xl bg-black/40 group/img relative cursor-pointer ${!isLoaded && !hasError ? "textpad-container" : "border border-white/10"}`}
         onClick={() => isLoaded && !hasError && setIsFullscreen(true)}
       >
         {!hasError ? (
@@ -381,7 +381,7 @@ const ImageGenerationPlaceholder = () => {
   }
 
   return (
-    <div className="my-4 aspect-square w-full max-w-[512px] mx-auto rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_30px_rgba(0,242,255,0.15)] bg-black/60 relative animate-in fade-in zoom-in-95 duration-500">
+    <div className="my-4 aspect-square w-full max-w-[512px] mx-auto rounded-lg overflow-hidden border border-cyan-500/30 shadow-[0_0_30px_rgba(0,242,255,0.15)] bg-black/60 relative animate-in fade-in zoom-in-95 duration-500">
       {/* Scanning Line */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-[200%] -translate-y-full animate-[scanline_3s_linear_infinite]"></div>
 
@@ -478,7 +478,7 @@ const AudioPlayer = ({
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 bg-black/20 dark:bg-black/40 backdrop-blur-md rounded-[20px] p-2 pr-4 shadow-inner w-[260px] sm:w-[300px] border border-white/10 group/player">
+    <div className="flex items-center gap-3 bg-black/20 dark:bg-black/40 backdrop-blur-md rounded-lg p-2 pr-4 shadow-inner w-[260px] sm:w-[300px] border border-white/10 group/player">
       <button
         onClick={togglePlay}
         className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-cyan-500/30"
@@ -568,6 +568,7 @@ interface MessageBubbleProps {
   message: Message;
   isAwakened: boolean;
   commanderName: string;
+  avatarUrl: string;
   copiedId: string | null;
   onCopy: (text: string, id: string) => void;
   onEdit?: (text: string) => void;
@@ -588,6 +589,7 @@ export const MessageBubble = memo(
     message,
     isAwakened,
     commanderName,
+    avatarUrl,
     copiedId,
     onCopy,
     onEdit,
@@ -661,7 +663,7 @@ export const MessageBubble = memo(
                 )}
                 {message.content ? (
                   message.content.startsWith("SYSTEM ERROR:") ? (
-                    <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400">
+                    <div className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="20"
@@ -771,8 +773,14 @@ export const MessageBubble = memo(
               </span>
             )}
             {showAvatars && (
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0 ml-1">
-                {commanderName.charAt(0).toUpperCase()}
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0 ml-1 overflow-hidden border border-slate-300 dark:border-slate-700">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={commanderName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                    {commanderName.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -781,10 +789,10 @@ export const MessageBubble = memo(
             <div
               className={`relative group/bubble transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 premium-shadow overflow-hidden ${
                 isAwakened
-                  ? "bg-gradient-to-br from-cyan-950/60 to-blue-950/40 text-cyan-50 rounded-2xl sm:rounded-3xl rounded-tr-sm border border-cyan-500/20 hover:border-cyan-500/40 shadow-[0_0_20px_rgba(0,242,255,0.04)]"
+                  ? "bg-gradient-to-br from-cyan-950/60 to-blue-950/40 text-cyan-50 rounded-xl sm:rounded-2xl rounded-tr-sm border border-cyan-500/20 hover:border-cyan-500/40 shadow-[0_0_20px_rgba(0,242,255,0.04)]"
                   : bubbleStyle === "glass"
-                    ? `${bgAccentClass} text-slate-800 dark:text-slate-200 rounded-2xl sm:rounded-3xl rounded-tr-sm border ${borderAccentClass} hover:border-slate-600 dark:hover:border-white/20 backdrop-blur-md`
-                    : `${bgAccentClass} text-slate-800 dark:text-slate-200 rounded-2xl sm:rounded-3xl rounded-tr-sm`
+                    ? `${bgAccentClass} text-slate-800 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm border ${borderAccentClass} hover:border-slate-600 dark:hover:border-white/20 backdrop-blur-md`
+                    : `${bgAccentClass} text-slate-800 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm`
               }`}
             >
               {isAwakened && (

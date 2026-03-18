@@ -9,12 +9,13 @@
   --font-montserrat: "Montserrat", sans-serif;
   --font-display: "Montserrat", sans-serif;
 
-  --radius-sm: calc(var(--global-radius) * 0.5);
-  --radius-md: calc(var(--global-radius) * 0.75);
+  --radius-sm: calc(var(--global-radius) * 0.25);
+  --radius-md: calc(var(--global-radius) * 0.5);
   --radius-lg: var(--global-radius);
   --radius-xl: calc(var(--global-radius) * 1.5);
   --radius-2xl: calc(var(--global-radius) * 2);
   --radius-3xl: calc(var(--global-radius) * 3);
+  --radius-full: var(--global-radius);
 }
 
 @keyframes waveform-play {
@@ -43,22 +44,55 @@
   inherits: false;
 }
 
+@property --s1-len {
+  syntax: '<angle>';
+  initial-value: 75deg;
+  inherits: false;
+}
+
+@property --s2-len {
+  syntax: '<angle>';
+  initial-value: 75deg;
+  inherits: false;
+}
+
+@property --h1-pos {
+  syntax: '<angle>';
+  initial-value: 140deg;
+  inherits: false;
+}
+
+@property --h2-pos {
+  syntax: '<angle>';
+  initial-value: 325deg;
+  inherits: false;
+}
+
+@keyframes morph-segments {
+  0%, 100% { 
+    --s1-len: 135deg; --s2-len: 45deg; 
+    --h1-pos: 140deg; --h2-pos: 325deg;
+  } /* 1. 3:1 Line Ratio, 3.5:1 Gap Ratio */
+  33% { 
+    --s1-len: 90deg; --s2-len: 90deg; 
+    --h1-pos: 90deg; --h2-pos: 270deg;
+  } /* 2. Both Same Length (1:1) */
+  66% { 
+    --s1-len: 45deg; --s2-len: 135deg; 
+    --h1-pos: 45deg; --h2-pos: 220deg;
+  } /* 3. 1:3 Line Ratio, 1:3.5 Gap Ratio */
+}
+
 @keyframes rotate-border {
-  from {
-    --border-angle: 0deg;
-  }
-  to {
-    --border-angle: 360deg;
-  }
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
 }
 
 @keyframes rotate-border-reverse {
-  from {
-    --border-angle-reverse: 0deg;
-  }
-  to {
-    --border-angle-reverse: -360deg;
-  }
+  0% { --border-angle-reverse: 0deg; }
+  48% { --border-angle-reverse: -180deg; }
+  52% { --border-angle-reverse: -180deg; } /* Professional pause at midpoint */
+  100% { --border-angle-reverse: -360deg; }
 }
 
 .bootloader-border {
@@ -103,142 +137,75 @@
   pointer-events: none;
 }
 
-.textpad-container {
+@keyframes rotateGradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.input-wrapper {
+  background-color: transparent;
+  border-radius: var(--global-radius);
   position: relative;
-  border-radius: 28px;
-  background: transparent;
+  padding: 1.5px;
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-border-container {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--global-radius);
+  overflow: hidden;
+  pointer-events: none;
+  background-color: #131314;
+}
+
+.input-border-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, #4285f4, #ea4335, #fbbc04, #34a853, #4285f4);
+  -webkit-mask-image: conic-gradient(
+    transparent 0deg, 
+    black 144deg, 
+    transparent 144deg, 
+    transparent 180deg, 
+    transparent 180deg, 
+    black 324deg, 
+    transparent 324deg, 
+    transparent 360deg
+  );
+  mask-image: conic-gradient(
+    transparent 0deg, 
+    black 144deg, 
+    transparent 144deg, 
+    transparent 180deg, 
+    transparent 180deg, 
+    black 324deg, 
+    transparent 324deg, 
+    transparent 360deg
+  );
+  animation: rotateGradient 4s linear infinite;
+}
+
+.inner-input {
+  background-color: #1e1f20;
+  position: relative;
   z-index: 1;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--global-radius) - 1px);
+  display: flex;
+  flex-direction: column;
 }
 
-/* The main animated border - Refined for Gemini-like "Comet" effect */
-.textpad-container::before {
-  content: "";
-  position: absolute;
-  inset: -1.5px;
-  border-radius: 29.5px;
-  background: conic-gradient(
-    from var(--border-angle),
-    transparent 0%,
-    transparent 10%,
-    #4285f4 15%,
-    #4285f4 20%,
-    #34a853 25%,
-    transparent 30%,
-    transparent 60%,
-    #ea4335 65%,
-    #ea4335 70%,
-    #fbbc05 75%,
-    transparent 80%,
-    transparent 100%
-  );
-  z-index: -2;
-  pointer-events: none;
-  opacity: var(--border-opacity, 1);
-  animation: rotate-border 6s linear infinite;
-}
 
-/* Outer parallel line - Refined "Chasing" effect */
-.textpad-outer-line {
-  position: absolute;
-  inset: -9px;
-  border-radius: 37px;
-  background: conic-gradient(
-    from var(--border-angle-reverse),
-    transparent 0%,
-    transparent 15%,
-    #00f2ff 20%,
-    #00f2ff 30%,
-    transparent 35%,
-    transparent 65%,
-    #bd00ff 70%,
-    #bd00ff 80%,
-    transparent 85%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 0;
-  opacity: calc(var(--glow-opacity) * var(--border-opacity, 1) * 0.9);
-  transition: opacity 0.6s ease;
-  animation: rotate-border-reverse 8s linear infinite;
-}
-
-/* Outer parallel line cover (Solid Black) */
-.textpad-outer-line::before {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 35px;
-  background: #030712; /* Darker black for better contrast */
-  z-index: -1;
-}
-
-.group:focus-within .textpad-outer-line {
-  opacity: var(--glow-opacity);
-}
-
-/* The Glowing Aura */
-.textpad-container::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 31px;
-  background: conic-gradient(
-    from var(--border-angle),
-    transparent 0%,
-    transparent 5%,
-    #4285f4 7%,
-    #9b72cb 15%,
-    #ea4335 25%,
-    #fbbc05 35%,
-    #34a853 43%,
-    transparent 50%,
-    transparent 55%,
-    #4285f4 57%,
-    #9b72cb 65%,
-    #ea4335 75%,
-    #fbbc05 85%,
-    #34a853 93%,
-    transparent 100%
-  );
-  filter: blur(12px);
-  opacity: 0;
-  z-index: -3;
-  transition:
-    opacity 0.6s ease,
-    filter 0.6s ease;
-  pointer-events: none;
-}
-
-.textpad-container:focus-within::after {
-  opacity: var(--glow-opacity);
-  filter: blur(16px);
-}
-
-.textpad-container * {
-  transition:
-    background 0.3s ease-in-out,
-    box-shadow 0.3s ease-in-out,
-    border-color 0.3s ease-in-out,
-    color 0.3s ease-in-out;
-}
-
-.textpad-inner-cover {
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.05),
-    0 10px 40px -10px rgba(0, 0, 0, 0.6);
-}
-
-.textpad-container:focus-within .textpad-inner-cover {
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    0 25px 50px -15px rgba(0, 0, 0, 0.7);
-}
-
-.textpad-container:focus-within {
-  filter: drop-shadow(0 0 25px rgba(66, 133, 244, 0.2));
-  transform: translateY(-3px) scale(1.005);
-}
 html,
 body {
   height: 100%;
@@ -308,6 +275,16 @@ html.awakened-mode-active {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-500/50 dark:bg-white/15;
+}
+
+@media (max-width: 768px) {
+  .hide-scrollbar-mobile::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Global Button & Interactive Element Refinements */
@@ -525,16 +502,28 @@ a:focus-visible {
 @keyframes border-entry {
   0% {
     opacity: 0;
-    scale: 0.8;
+    transform: scale(0.9) translateY(10px);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02) translateY(-2px);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
-    scale: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
   }
 }
 
 .textpad-entry-anim {
-  animation: border-entry 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: border-entry 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes comet-glow {
+  0%, 100% { filter: brightness(1) blur(0px); }
+  50% { filter: brightness(1.3) blur(1px); }
 }
 
 @keyframes input-glow {
@@ -890,7 +879,7 @@ a:focus-visible {
     inset 0 0 20px rgba(0, 242, 255, 0.05);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 24px;
+  border-radius: var(--radius-3xl);
   transition: all 0.3s ease;
 }
 

@@ -4,6 +4,7 @@ import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
+import { SettingsModal } from './components/SettingsModal';
 import { useSettings } from './contexts/SettingsContext';
 import { useChat } from './contexts/ChatContext';
 import { InfinityLogo, HeaderInfinityLogo } from './components/Logos';
@@ -56,6 +57,7 @@ export default function App() {
     theme, setTheme, 
     bgStyle, setBgStyle, 
     commanderName, setCommanderName, 
+    avatarUrl, setAvatarUrl,
     modelMode, setModelMode, 
     tone, setTone,
     isAwakened, setIsAwakened,
@@ -184,8 +186,6 @@ export default function App() {
     deleteSession(id);
   }, [deleteSession]);
 
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'advanced'>('general');
-
   const handleExportChat = () => {
     if (!currentSession || currentSession.messages.length === 0) return;
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentSession.messages, null, 2));
@@ -228,7 +228,6 @@ export default function App() {
     setAwakening({ id: Date.now(), phase: 'moving-in', startX, startY, width: rect.width, height: rect.height, isDeactivating: isAwakened });
     
     setTimeout(() => {
-      setIsAwakened(!isAwakened);
       if (isAwakened) {
            // Deactivating
            setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
@@ -240,8 +239,15 @@ export default function App() {
               setAwakening(null);
            }, 4000);
         } else {
-           // Activating
-           setAwakening(prev => prev ? { ...prev, phase: 'prompt' } : null);
+           // Activating - Skip prompt, go straight to shockwave
+           setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
+           setTimeout(() => {
+             setIsAwakened(true);
+             setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
+           }, 2500);
+           setTimeout(() => {
+             setAwakening(null);
+           }, 4000);
         }
     }, 1500);
   };
@@ -273,6 +279,7 @@ export default function App() {
         message={message}
         isAwakened={isAwakened}
         commanderName={commanderName}
+        avatarUrl={avatarUrl}
         copiedId={copiedId}
         onCopy={copyToClipboard}
         onEdit={message.role === 'user' ? (text) => {
@@ -291,7 +298,7 @@ export default function App() {
         showAvatars={showAvatars}
       />
     ));
-  }, [currentSession?.messages, isAwakened, commanderName, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, textReveal, animationSpeed, accentColor, messageDensity, showAvatars, setInput, currentSessionId, deleteMessage]);
+  }, [currentSession?.messages, isAwakened, commanderName, avatarUrl, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, textReveal, animationSpeed, accentColor, messageDensity, showAvatars, setInput, currentSessionId, deleteMessage]);
 
   if (isBooting) {
     return (
@@ -333,17 +340,13 @@ export default function App() {
 
 
   const fontClass = fontStyle === 'sans' ? 'font-sans' : fontStyle === 'serif' ? 'font-serif' : 'font-mono';
-  const radiusVar = borderRadius === 'sharp' ? '0px' : borderRadius === 'pill' ? '9999px' : '0.75rem';
+  const radiusVar = borderRadius === 'sharp' ? '0px' : borderRadius === 'pill' ? '9999px' : '16px';
   const appWidthClass = appWidth === 'narrow' ? 'max-w-2xl' : appWidth === 'wide' ? 'max-w-6xl' : 'max-w-4xl';
   const glowOpacity = glowIntensity === 'low' ? '0.2' : glowIntensity === 'high' ? '0.8' : '0.5';
 
   return (
     <div 
       className={`w-full h-[100dvh] relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
-      style={{ 
-        '--global-radius': radiusVar,
-        '--glow-opacity': glowOpacity,
-      } as React.CSSProperties}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
       {/* 1. Background Layer (Fixed, never moves) */}
@@ -353,9 +356,6 @@ export default function App() {
       {awakening && (
         <div className="fixed inset-0 z-[100000] pointer-events-none">
           <div className="bootloader-border" />
-          <div 
-            className={`absolute inset-0 transition-all duration-1000 pointer-events-auto ${awakening.phase === 'prompt' ? 'backdrop-blur-xl bg-black/40' : 'backdrop-blur-none bg-transparent pointer-events-none'}`}
-          />
           
           <div className="screen-flash-overlay" style={{ opacity: awakening.phase === 'shockwave' ? undefined : 0, animation: awakening.phase === 'shockwave' ? 'screen-flash 3s ease-out forwards' : 'none' }} />
           
@@ -387,30 +387,6 @@ export default function App() {
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-[spin-aura_3s_linear_infinite]" style={{ background: 'conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)' }}></div>
              <img src={"https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
           </div>
-
-          <div className={`fixed inset-0 z-[100005] flex flex-col items-center justify-center pointer-events-none transition-opacity duration-1000 ${awakening.phase === 'prompt' ? 'opacity-100' : 'opacity-0'}`}>
-             <div className={`flex flex-col items-center gap-8 pointer-events-auto transition-transform duration-1000 ${awakening.phase === 'prompt' ? 'translate-y-[18vh]' : 'translate-y-[23vh]'}`}>
-                <h2 className="text-sm sm:text-2xl font-black text-white tracking-[2px] sm:tracking-[8px] text-center drop-shadow-[0_0_25px_rgba(0,242,255,1)] font-montserrat animate-[pulse-text_2s_infinite] max-w-[90vw] mx-auto leading-relaxed">
-                  ARE YOU READY FOR AWAKENING?
-                </h2>
-                <div className="flex gap-8">
-                   <button 
-                     onClick={() => handleAwakeningResponse(true)}
-                     className="px-10 py-3 bg-cyan-500/10 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-50 font-bold tracking-[0.2em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] hover:border-cyan-400 group relative overflow-hidden"
-                   >
-                     <span className="relative z-10">YES</span>
-                     <div className="absolute inset-0 bg-cyan-400/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                   </button>
-                   <button 
-                     onClick={() => handleAwakeningResponse(false)}
-                     className="px-10 py-3 bg-rose-500/10 hover:bg-rose-500/30 border border-rose-400/50 text-rose-50 font-bold tracking-[0.2em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(244,63,94,0.4)] hover:border-rose-400 group relative overflow-hidden"
-                   >
-                     <span className="relative z-10">NO</span>
-                     <div className="absolute inset-0 bg-rose-400/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                   </button>
-                </div>
-             </div>
-          </div>
         </div>
       )}
 
@@ -430,471 +406,12 @@ export default function App() {
       )}
 
       {/* Settings Modal - Full Screen Refined */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-[99999] bg-slate-50/95 dark:bg-[#050508]/95 backdrop-blur-2xl animate-in fade-in duration-300 overflow-y-auto custom-scrollbar transform-gpu overscroll-contain">
-          <div className="absolute inset-0 bg-slate-50/50 dark:bg-[#050508]/50 backdrop-blur-3xl -z-10" />
-          <div className="w-full min-h-full max-w-6xl mx-auto flex flex-col md:flex-row relative">
-            
-            {/* Close Button */}
-            <button 
-              onClick={() => setIsSettingsOpen(false)} 
-              className="absolute top-4 right-4 md:top-6 md:right-6 p-2.5 rounded-full bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300/80 dark:hover:bg-white/20 transition-colors z-[100] shadow-md backdrop-blur-md"
-            >
-              <X className="w-5 h-5 md:w-6 md:h-6 text-slate-700 dark:text-slate-200" />
-            </button>
-
-            {/* Settings Sidebar */}
-            <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 p-6 flex flex-col gap-6 shrink-0">
-              <div className="flex flex-col items-center text-center gap-3 mt-3">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white dark:border-[#0a0a0c] shadow-md relative ring-4 ring-cyan-500/5">
-                  <img src={"https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} alt="Commander Avatar" className="w-full h-full object-cover" />
-                </div>
-                <div className="mt-2">
-                  <h2 className="text-lg font-montserrat font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{commanderName}</h2>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest">guest@loki.prime</p>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5 mt-2">
-                <button 
-                  onClick={() => setActiveSettingsTab('general')}
-                  className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'general' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
-                >
-                  <UserIcon className="w-5 h-5" />
-                  General
-                </button>
-                <button 
-                  onClick={() => setActiveSettingsTab('advanced')}
-                  className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all font-bold text-[0.8rem] text-left uppercase tracking-wider ${activeSettingsTab === 'advanced' ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'}`}
-                >
-                  <Sliders className="w-5 h-5" />
-                  Advanced
-                </button>
-              </div>
-            </div>
-
-            {/* Settings Content - Scrollable area */}
-            <div className="flex-1 p-6 md:p-10">
-              <div className="max-w-2xl mx-auto pb-20">
-                
-                {activeSettingsTab === 'general' && (
-                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                    <section className="space-y-6">
-                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Identity & Appearance</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Commander Name</label>
-                          <input 
-                            type="text" 
-                            value={commanderName}
-                            onChange={(e) => setCommanderName(e.target.value)}
-                            className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-[0.85rem] text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-sm"
-                            placeholder="Enter Commander Name..."
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Accent Color</label>
-                          <div className="flex gap-2 p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl h-[50px] items-center px-3">
-                            {(['cyan', 'violet', 'emerald', 'rose'] as const).map((color) => (
-                              <button
-                                key={color}
-                                onClick={() => setAccentColor(color)}
-                                className={`w-6 h-6 rounded-full transition-all transform hover:scale-110 ${accentColor === color ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-white scale-110' : 'opacity-60'}`}
-                                style={{ backgroundColor: color === 'cyan' ? '#06b6d4' : color === 'violet' ? '#8b5cf6' : color === 'emerald' ? '#10b981' : '#f43f5e' }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Holographic Background</label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {(['default', 'nebula', 'cyber-grid'] as const).map((style) => (
-                            <button
-                              key={style}
-                              onClick={() => setBgStyle(style)}
-                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${bgStyle === style ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
-                            >
-                              {style.replace('-', ' ').toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Interface Theme</label>
-                        <div className="flex gap-3">
-                          <button 
-                            onClick={() => setTheme('light')}
-                            className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'light' ? 'bg-amber-500/10 border-amber-500/50 text-amber-600' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
-                          >
-                            <Sun className="w-5 h-5" /> LIGHT
-                          </button>
-                          <button 
-                            onClick={() => setTheme('dark')}
-                            className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-xl border font-bold text-[0.8rem] transition-all ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500'}`}
-                          >
-                            <Moon className="w-5 h-5" /> DARK
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Assistant Tone</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {(['formal', 'casual', 'happy', 'custom'] as const).map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setTone(t)}
-                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${tone === t ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
-                            >
-                              {t.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Model Core</label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { id: 'pro', label: 'PRO THINKING' },
-                            { id: 'fast', label: 'FAST CORE' },
-                            { id: 'happy', label: 'HAPPY MODEL' }
-                          ].map((m) => (
-                            <button
-                              key={m.id}
-                              onClick={() => setModelMode(m.id as any)}
-                              className={`py-3 text-[0.7rem] font-bold rounded-xl border transition-all ${modelMode === m.id ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#0a0a0c] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'}`}
-                            >
-                              {m.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Font Style</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['sans', 'serif', 'mono'] as const).map((style) => (
-                            <button
-                              key={style}
-                              onClick={() => setFontStyle(style)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${fontStyle === style ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {style.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Font Size</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['small', 'medium', 'large'] as const).map((size) => (
-                            <button
-                              key={size}
-                              onClick={() => setFontSize(size)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${fontSize === size ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {size.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">App Width</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['narrow', 'normal', 'wide'] as const).map((width) => (
-                            <button
-                              key={width}
-                              onClick={() => setAppWidth(width)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${appWidth === width ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {width.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Glow Intensity</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['low', 'medium', 'high'] as const).map((intensity) => (
-                            <button
-                              key={intensity}
-                              onClick={() => setGlowIntensity(intensity)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${glowIntensity === intensity ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {intensity.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Border Radius</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['sharp', 'rounded', 'pill'] as const).map((radius) => (
-                            <button
-                              key={radius}
-                              onClick={() => setBorderRadius(radius)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${borderRadius === radius ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {radius.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Text Reveal Animation</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['none', 'fade', 'typewriter'] as const).map((reveal) => (
-                            <button
-                              key={reveal}
-                              onClick={() => setTextReveal(reveal)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${textReveal === reveal ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {reveal.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Animation Speed</label>
-                        <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                          {(['slow', 'normal', 'fast'] as const).map((speed) => (
-                            <button
-                              key={speed}
-                              onClick={() => setAnimationSpeed(speed)}
-                              className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${animationSpeed === speed ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                              {speed.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="space-y-6 pt-10 border-t border-slate-200 dark:border-white/5">
-                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">Chat Experience</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Message Density</label>
-                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                            {(['compact', 'comfortable'] as const).map((density) => (
-                              <button
-                                key={density}
-                                onClick={() => setMessageDensity(density)}
-                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${messageDensity === density ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                              >
-                                {density.toUpperCase()}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Bubble Style</label>
-                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                            {(['glass', 'solid'] as const).map((style) => (
-                              <button
-                                key={style}
-                                onClick={() => setBubbleStyle(style)}
-                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${bubbleStyle === style ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                              >
-                                {style.toUpperCase()}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                          <div>
-                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Enter to Send</span>
-                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Instant transmission.</span>
-                          </div>
-                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${enterToSend ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setEnterToSend(!enterToSend)}>
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${enterToSend ? 'left-5.5' : 'left-0.5'}`} />
-                          </div>
-                        </label>
-
-                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                          <div>
-                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Sound Effects</span>
-                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">System audio.</span>
-                          </div>
-                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${soundEnabled ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setSoundEnabled(!soundEnabled)}>
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${soundEnabled ? 'left-5.5' : 'left-0.5'}`} />
-                          </div>
-                        </label>
-
-                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                          <div>
-                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Animations</span>
-                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Visual effects.</span>
-                          </div>
-                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${messageAnimation ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setMessageAnimation(!messageAnimation)}>
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${messageAnimation ? 'left-5.5' : 'left-0.5'}`} />
-                          </div>
-                        </label>
-
-                        <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                          <div>
-                            <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Show Avatars</span>
-                            <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Profile icons.</span>
-                          </div>
-                          <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${showAvatars ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setShowAvatars(!showAvatars)}>
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${showAvatars ? 'left-5.5' : 'left-0.5'}`} />
-                          </div>
-                        </label>
-                      </div>
-                    </section>
-
-                    <section className="pt-10 border-t border-slate-200 dark:border-white/5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <button 
-                          onClick={handleExportChat}
-                          className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-[0.8rem] hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/5 uppercase tracking-wider"
-                        >
-                          <Download className="w-5 h-5" /> Export History
-                        </button>
-                      </div>
-                    </section>
-                  </div>
-                )}
-
-                {activeSettingsTab === 'advanced' && (
-                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                    <section className="space-y-6">
-                      <h3 className="text-2xl font-montserrat font-bold text-slate-900 dark:text-white tracking-tight">AI Core Parameters</h3>
-                      
-                      <div className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Thinking Mode</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">High intelligence reasoning.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${thinkingMode ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setThinkingMode(!thinkingMode)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${thinkingMode ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Search Grounding</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Real-time web data.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${searchGrounding ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setSearchGrounding(!searchGrounding)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${searchGrounding ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-
-                          <label className="flex items-center justify-between cursor-pointer p-4 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-cyan-500/50 transition-all">
-                            <div>
-                              <span className="text-[0.85rem] font-black text-slate-900 dark:text-white block uppercase tracking-wide">Live Audio</span>
-                              <span className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">Conversational voice.</span>
-                            </div>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${liveAudioEnabled ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} onClick={() => setLiveAudioEnabled(!liveAudioEnabled)}>
-                              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-md ${liveAudioEnabled ? 'left-5.5' : 'left-0.5'}`} />
-                            </div>
-                          </label>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Image Generation Size</label>
-                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                            {(['1K', '2K', '4K'] as const).map((size) => (
-                              <button
-                                key={size}
-                                onClick={() => setImageSize(size)}
-                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${imageSize === size ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                              >
-                                {size}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Response Length</label>
-                          <div className="flex p-1 bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl">
-                            {(['short', 'balanced', 'detailed'] as const).map((len) => (
-                              <button
-                                key={len}
-                                onClick={() => setResponseLength(len)}
-                                className={`flex-1 py-2.5 text-[0.7rem] font-bold rounded-lg transition-all ${responseLength === len ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                              >
-                                {len.toUpperCase()}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Typing Speed (ms)</label>
-                            <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{typingSpeed}ms</span>
-                          </div>
-                          <input 
-                            type="range" min="0" max="100" step="5" 
-                            value={typingSpeed} onChange={(e) => setTypingSpeed(parseInt(e.target.value))}
-                            className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                          />
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Temperature</label>
-                            <span className="text-[0.7rem] font-black text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg">{temperature.toFixed(1)}</span>
-                          </div>
-                          <input 
-                            type="range" min="0" max="2" step="0.1" 
-                            value={temperature} onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                            className="w-full accent-cyan-500 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[0.7rem] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">System Instructions</label>
-                          <textarea 
-                            value={systemInstruction}
-                            onChange={(e) => setSystemInstruction(e.target.value)}
-                            className="w-full bg-white dark:bg-[#0a0a0c] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all h-40 resize-none text-[0.8rem] custom-scrollbar shadow-sm leading-relaxed font-medium"
-                            placeholder="Define the AI's core persona..."
-                          />
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="pt-10 border-t border-slate-200 dark:border-white/5">
-                      <button 
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
-                            clearAllSessions();
-                            setIsSettingsOpen(false);
-                          }
-                        }}
-                        className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-red-500 font-black text-[0.8rem] uppercase tracking-wider hover:bg-red-500/10 transition-all shadow-sm"
-                      >
-                        <Trash2 className="w-5 h-5" /> Wipe All Data
-                      </button>
-                    </section>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        onExportChat={handleExportChat}
+        onClearAllChats={clearAllSessions}
+      />
 
       {/* 3. Main Content Layer (Flex Column) */}
       <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
@@ -930,7 +447,7 @@ export default function App() {
               whileHover={{ filter: "brightness(1.2)" }}
               type="button"
               onClick={handleCreateNewSession}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest"
             >
               <Plus className="w-4 h-4" />
               NEW AWAKENING
@@ -948,7 +465,7 @@ export default function App() {
                   setCurrentSessionId(session.id);
                   if (window.innerWidth < 768) setIsSidebarOpen(false);
                 }}
-                className={`group relative flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${
+                className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
                   currentSessionId === session.id 
                     ? isAwakened 
                       ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40 backdrop-blur-md'
@@ -991,7 +508,7 @@ export default function App() {
                     clearAllSessions();
                   }
                 }}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all border border-transparent"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent"
               >
                 <Trash2 className="w-4 h-4" />
                 CLEAR ALL TIMELINES
@@ -1001,7 +518,7 @@ export default function App() {
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => setIsTasksOpen(true)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
               <CheckCircle2 className="w-4 h-4" />
               TASK LIST
@@ -1010,7 +527,7 @@ export default function App() {
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
               <Settings className="w-4 h-4" />
               SYSTEM SETTINGS
@@ -1026,7 +543,7 @@ export default function App() {
               {!isSidebarOpen && (
                 <button 
                   onClick={() => setIsSidebarOpen(true)}
-                  className="p-2 sm:p-2.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-colors text-slate-600 dark:text-white"
+                  className="p-2 sm:p-2.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-white"
                 >
                   <PanelLeftOpen className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
