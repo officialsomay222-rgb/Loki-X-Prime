@@ -17,6 +17,8 @@ import {
   Smile,
   Sparkles,
   ChevronUp,
+  ChevronDown,
+  SlidersHorizontal,
   Settings2,
   Paperclip,
 } from "lucide-react";
@@ -694,22 +696,22 @@ export const ChatInput = memo(
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
               >
-                <div className={`relative rounded-3xl transition-all duration-500 overflow-hidden ${isAwakened ? 'p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
+                <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
                   {isAwakened && (
-                    <div 
-                      className="absolute top-1/2 left-1/2 w-[300%] sm:w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_4s_linear_infinite]" 
-                      style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 242, 255, 0.1) 15%, #00f2ff 30%, transparent 30%, transparent 50%, rgba(189, 0, 255, 0.1) 65%, #bd00ff 80%, transparent 80%, transparent 100%)' }}
-                    />
+                    <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
+                      <div 
+                        className="absolute top-1/2 left-1/2 w-[300%] sm:w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_4s_linear_infinite]" 
+                        style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 242, 255, 0.1) 15%, #00f2ff 30%, transparent 30%, transparent 50%, rgba(189, 0, 255, 0.1) 65%, #bd00ff 80%, transparent 80%, transparent 100%)' }}
+                      />
+                    </div>
                   )}
                   <div
-                    className={`relative z-10 rounded-[22px] transition-all duration-500 flex flex-col p-2 sm:p-3 ${
-                      isAwakened ? 'bg-[#050508] border-transparent' : 'bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/10'
-                    } ${
+                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-slate-100 dark:bg-[#1E1F20] border-transparent shadow-sm dark:shadow-none ${
                       isSuccessFlash
                         ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
                         : isRecording
                           ? "shadow-[0_0_20px_rgba(255,255,255,0.5)] animate-pulse border-white/50"
-                          : !isAwakened ? "hover:border-slate-300 dark:hover:border-white/20" : ""
+                          : ""
                     }`}
                   >
                     <textarea
@@ -726,15 +728,15 @@ export const ChatInput = memo(
                             ? "Listening..."
                             : isImageMode
                               ? "Describe the image for LOKI..."
-                              : "Describe your idea to Loki"
+                              : "Ask AI..."
                       }
-                      className="w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-white placeholder:text-slate-500 custom-scrollbar leading-relaxed font-medium"
+                      className="w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium"
                       rows={1}
                       readOnly={isRecording || isTranscribing}
                       disabled={isLoading}
                     />
                     
-                    <div className="flex items-center justify-between mt-1 sm:mt-2 px-1">
+                    <div className="flex items-center justify-between mt-1 sm:mt-2 px-1 relative">
                       {/* Left Side Actions */}
                       <div className="flex items-center gap-1">
                         <input
@@ -746,18 +748,18 @@ export const ChatInput = memo(
                         />
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white transition-all"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3] transition-all"
                           title="Attach file"
                         >
-                          <Paperclip className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <Plus className="w-6 h-6" />
                         </button>
                         
                         <div className="relative options-menu-container">
                           <button
                             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white shadow-lg" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white"}`}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                           >
-                            {getOptionsIcon()}
+                            <SlidersHorizontal className="w-5 h-5" />
                           </button>
 
                           <AnimatePresence>
@@ -766,7 +768,7 @@ export const ChatInput = memo(
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] left-0 bg-white dark:bg-[#050508] border border-slate-200 dark:border-white/20 rounded-2xl p-3 min-w-[200px] sm:min-w-[250px] z-[999] flex flex-col gap-2 shadow-2xl dark:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] left-0 bg-white/90 dark:bg-[#1E1F20]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-3 min-w-[200px] sm:min-w-[250px] z-[999] flex flex-col gap-2 shadow-2xl"
                               >
                                 <div className="px-2 py-1 text-[0.7rem] font-black text-slate-400 dark:text-white/50 uppercase tracking-[0.2em]">
                                   Advanced Core
@@ -775,7 +777,7 @@ export const ChatInput = memo(
                                 <div className="space-y-1">
                                   <button
                                     onClick={() => setThinkingMode(!thinkingMode)}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <Sparkles className="w-4 h-4" />
@@ -784,7 +786,7 @@ export const ChatInput = memo(
                                       </span>
                                     </div>
                                     <div
-                                      className={`w-8 h-4 rounded-full relative transition-colors ${thinkingMode ? "bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
+                                      className={`w-8 h-4 rounded-full relative transition-colors ${thinkingMode ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
                                     >
                                       <div
                                         className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${thinkingMode ? "left-4.5" : "left-0.5"}`}
@@ -796,7 +798,7 @@ export const ChatInput = memo(
                                     onClick={() =>
                                       setSearchGrounding(!searchGrounding)
                                     }
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <Globe className="w-4 h-4" />
@@ -805,7 +807,7 @@ export const ChatInput = memo(
                                       </span>
                                     </div>
                                     <div
-                                      className={`w-8 h-4 rounded-full relative transition-colors ${searchGrounding ? "bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
+                                      className={`w-8 h-4 rounded-full relative transition-colors ${searchGrounding ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
                                     >
                                       <div
                                         className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${searchGrounding ? "left-4.5" : "left-0.5"}`}
@@ -815,7 +817,7 @@ export const ChatInput = memo(
 
                                   <button
                                     onClick={() => setIsImageMode(!isImageMode)}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <ImageIcon className="w-4 h-4" />
@@ -824,7 +826,7 @@ export const ChatInput = memo(
                                       </span>
                                     </div>
                                     <div
-                                      className={`w-8 h-4 rounded-full relative transition-colors ${isImageMode ? "bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
+                                      className={`w-8 h-4 rounded-full relative transition-colors ${isImageMode ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
                                     >
                                       <div
                                         className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${isImageMode ? "left-4.5" : "left-0.5"}`}
@@ -839,28 +841,27 @@ export const ChatInput = memo(
                       </div>
 
                       {/* Right Side Actions */}
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="relative model-menu-container">
+                      <motion.div layout className="flex items-center justify-end gap-1 sm:gap-2 min-w-[140px] sm:min-w-[180px]">
+                        <motion.div layout className="relative model-menu-container">
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                            className={`flex items-center gap-2.5 px-4 py-2 rounded-full transition-all ${isModelMenuOpen ? "bg-slate-200 dark:bg-white/20 text-slate-900 dark:text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white"}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${isModelMenuOpen ? "bg-slate-200 dark:bg-white/20 text-slate-900 dark:text-[#E3E3E3] shadow-md" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                           >
-                            {getModelIcon(modelMode)}
-                            <span className="text-[0.75rem] font-bold uppercase tracking-wider hidden sm:inline">
-                              {modelMode}
+                            <span className="text-sm font-medium">
+                              {modelMode === "pro" ? "Pro" : modelMode === "fast" ? "Fast" : "Happy"}
                             </span>
-                            <ChevronUp
+                            <ChevronDown
                               className={`w-4 h-4 transition-transform duration-300 ${isModelMenuOpen ? "rotate-180" : ""}`}
                             />
                           </button>
-
+                          
                           <AnimatePresence>
                             {isModelMenuOpen && (
                               <motion.div
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] right-0 bg-white dark:bg-[#050508] border border-slate-200 dark:border-white/20 rounded-2xl p-2 min-w-[140px] z-[999] flex flex-col gap-1 shadow-2xl dark:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] right-0 bg-white/90 dark:bg-[#1E1F20]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-2 min-w-[140px] z-[999] flex flex-col gap-1 shadow-2xl"
                               >
                                 {[
                                   { id: "fast", icon: Zap, label: "Fast" },
@@ -870,10 +871,10 @@ export const ChatInput = memo(
                                   <button
                                     key={m.id}
                                     onClick={() => {
-                                      setModelMode(m.id);
+                                      setModelMode(m.id as any);
                                       setIsModelMenuOpen(false);
                                     }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${modelMode === m.id ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"}`}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${modelMode === m.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3]" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <m.icon className="w-4 h-4" />
                                     <span className="text-[0.75rem] font-bold uppercase tracking-wider">
@@ -884,68 +885,15 @@ export const ChatInput = memo(
                               </motion.div>
                             )}
                           </AnimatePresence>
-                        </div>
+                        </motion.div>
 
-                        {/* Merged Mic/Send Button */}
-                        <div className="flex items-center gap-2">
-                          {liveAudioEnabled && !input.trim() && (
-                            <button
-                              onClick={
-                                isLiveSessionActive
-                                  ? stopLiveSession
-                                  : startLiveSession
-                              }
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border ${isLiveSessionActive ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/50 animate-pulse" : "text-slate-500 dark:text-[#888] hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white border-transparent"}`}
-                              title={
-                                isLiveSessionActive
-                                  ? "Stop Live Session"
-                                  : "Start Live Session"
-                              }
-                            >
-                              <Radio
-                                className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiveSessionActive ? "animate-spin" : ""}`}
-                              />
-                            </button>
-                          )}
-
-                          {isRecording && (
-                            <div className="flex items-center gap-[2px] h-4 mr-2">
-                              {[1, 2, 3, 4].map((i) => (
-                                <motion.div
-                                  key={i}
-                                  animate={{
-                                    height: [
-                                      4,
-                                      4 +
-                                        audioVolume *
-                                          12 *
-                                          (i % 2 === 0 ? 1 : 0.7),
-                                      4,
-                                    ],
-                                  }}
-                                  transition={{ duration: 0.2, repeat: Infinity }}
-                                  className="w-[2px] bg-rose-500 rounded-full"
-                                />
-                              ))}
-                            </div>
-                          )}
-
-                          {isLoading ? (
-                            <button
-                              onClick={onStopGeneration}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-100 dark:bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-500/40 border border-rose-200 dark:border-rose-400/50"
-                            >
-                              <Square className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-                            </button>
-                          ) : input.trim() ? (
-                            <button
-                              onClick={handleSend}
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isAwakened ? 'bg-[#ffffff] text-black hover:bg-slate-200 shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200 shadow-md dark:shadow-[0_0_15px_rgba(255,255,255,0.4)]'}`}
-                            >
-                              <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5" />
-                            </button>
-                          ) : (
-                            <button
+                        <AnimatePresence mode="popLayout">
+                          {!input.trim() && !isLoading && (
+                            <motion.button
+                              layout
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
                               onClick={toggleRecording}
                               disabled={isTranscribing}
                               style={{
@@ -956,19 +904,43 @@ export const ChatInput = memo(
                                   ? `scale(${1 + audioVolume * 0.1})`
                                   : undefined,
                               }}
-                              className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-100 dark:bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white"}`}
+                              className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                             >
                               {isTranscribing ? (
-                                <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
+                                <Loader2 className="w-5 h-5 animate-spin" />
                               ) : isRecording ? (
-                                <StopSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <StopSquare className="w-5 h-5" />
                               ) : (
-                                <InfinityMic className="w-6 h-6 sm:w-7 sm:h-7" />
+                                <Mic className="w-5 h-5" />
                               )}
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+
+                        <motion.div layout className="flex items-center justify-center">
+                          {isLoading ? (
+                            <button
+                              onClick={onStopGeneration}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group"
+                              title="Stop Generation"
+                            >
+                              <div className="w-6 h-6 rounded-full border-2 border-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform bg-rose-400/10">
+                                <div className="w-2 h-2 bg-rose-400 rounded-full" />
+                              </div>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleSend}
+                              disabled={!input.trim()}
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${input.trim() ? "text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-200 dark:hover:bg-white/10" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                            >
+                              <Send className="w-5 h-5 ml-0.5" />
                             </button>
                           )}
-                        </div>
-                      </div>
+                        </motion.div>
+                      </motion.div>
+
+
                     </div>
                   </div>
                 </div>

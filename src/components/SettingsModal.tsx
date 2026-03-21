@@ -106,7 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <img src={avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full object-cover border border-slate-300 dark:border-white/20" />
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">{commanderName}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Pro Member</p>
+                <p className="text-xs text-slate-600 dark:text-[#9aa0a6] truncate font-medium">Pro Member</p>
               </div>
             </div>
 
@@ -119,15 +119,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClick={() => handleTabClick(tab.id)}
                   className={`w-full flex items-center justify-between px-4 py-3.5 rounded-full transition-all text-left group ${
                     isActive 
-                      ? 'bg-[#c2e7ff] text-[#001d35] dark:bg-[#004a77] dark:text-[#c2e7ff]' 
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/5'
+                      ? 'bg-slate-200 text-slate-900 dark:bg-white/10 dark:text-white' 
+                      : 'text-slate-700 dark:text-[#bdc1c6] hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#001d35] dark:text-[#c2e7ff]' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors'}`} />
-                    <span className={`text-sm ${isActive ? 'font-medium' : 'font-normal'}`}>{tab.label}</span>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-[#9aa0a6] group-hover:text-slate-900 dark:group-hover:text-white transition-colors'}`} />
+                    <span className={`text-sm ${isActive ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
                   </div>
-                  <ChevronRight className={`w-4 h-4 md:hidden ${isActive ? 'text-[#001d35]/50 dark:text-[#c2e7ff]/50' : 'text-slate-300 dark:text-slate-600'}`} />
+                  <ChevronRight className={`w-4 h-4 md:hidden ${isActive ? 'text-slate-900/50 dark:text-white/50' : 'text-slate-400 dark:text-slate-500'}`} />
                 </button>
               );
             })}
@@ -177,7 +177,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       <div>
                         <button 
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-4 py-2 bg-[#0b57d0] hover:bg-[#0842a0] text-white dark:bg-[#a8c7fa] dark:hover:bg-[#d3e3fd] dark:text-[#062e6f] rounded-full text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-black rounded-full text-sm font-semibold transition-colors"
                         >
                           Change Avatar
                         </button>
@@ -213,17 +213,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       <div className="pt-4">
                         <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-3">Model Mode</label>
                         <div className="flex gap-3">
-                          {['pro', 'lite'].map((m) => (
+                          {['pro', 'fast', 'happy'].map((m) => (
                             <button
                               key={m}
                               onClick={() => setModelMode(m as any)}
-                              className={`flex-1 py-3 rounded-lg border text-sm font-bold capitalize transition-all ${modelMode === m ? 'bg-[#0b57d0] border-[#0b57d0] text-white dark:bg-[#a8c7fa] dark:border-[#a8c7fa] dark:text-[#062e6f] shadow-md' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
+                              className={`flex-1 py-3 rounded-lg border text-sm font-bold capitalize transition-all ${modelMode === m ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-black shadow-md' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
                             >
                               {m}
                             </button>
                           ))}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Pro mode uses advanced reasoning, Lite is faster for simple tasks.</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Pro mode uses advanced reasoning, Fast is for quick tasks, Happy is for a cheerful tone.</p>
                       </div>
                     </div>
                   </section>
@@ -241,7 +241,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={enterToSend} onChange={(e) => setEnterToSend(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -252,7 +252,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -263,7 +263,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
                   </section>
@@ -279,7 +279,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                         <button
                           key={t}
                           onClick={() => setTheme(t as any)}
-                          className={`p-5 rounded-lg border text-base font-semibold capitalize transition-all ${theme === t ? 'bg-[#0b57d0] border-[#0b57d0] text-white dark:bg-[#a8c7fa] dark:border-[#a8c7fa] dark:text-[#062e6f] shadow-lg' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
+                          className={`p-5 rounded-lg border text-base font-semibold capitalize transition-all ${theme === t ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-black shadow-lg' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
                         >
                           {t}
                         </button>
@@ -293,7 +293,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                           <button
                             key={s}
                             onClick={() => setBgStyle(s as any)}
-                            className={`px-4 py-2.5 rounded-lg border text-sm font-medium capitalize transition-all ${bgStyle === s ? 'bg-[#0b57d0] border-[#0b57d0] text-white dark:bg-[#a8c7fa] dark:border-[#a8c7fa] dark:text-[#062e6f] shadow-md' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
+                            className={`px-4 py-2.5 rounded-lg border text-sm font-medium capitalize transition-all ${bgStyle === s ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-black shadow-md' : 'bg-transparent border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/40'}`}
                           >
                             {s}
                           </button>
@@ -497,7 +497,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={showAvatars} onChange={(e) => setShowAvatars(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -508,7 +508,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={messageAnimation} onChange={(e) => setMessageAnimation(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
                   </section>
@@ -607,7 +607,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={isAwakened} onChange={(e) => setIsAwakened(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -618,7 +618,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={searchGrounding} onChange={(e) => setSearchGrounding(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -629,7 +629,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={thinkingMode} onChange={(e) => setThinkingMode(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -640,7 +640,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                         <input type="checkbox" className="sr-only peer" checked={liveAudioEnabled} onChange={(e) => setLiveAudioEnabled(e.target.checked)} />
-                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                       </label>
                     </div>
 
@@ -703,7 +703,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                         </div>
                         <button 
                           onClick={onExportChat}
-                          className="px-4 py-2 bg-[#0b57d0] hover:bg-[#0842a0] text-white dark:bg-[#a8c7fa] dark:hover:bg-[#d3e3fd] dark:text-[#062e6f] rounded-full text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-black rounded-full text-sm font-semibold transition-colors"
                         >
                           Export
                         </button>
@@ -767,7 +767,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
                           <input type="checkbox" className="sr-only peer" checked={true} readOnly />
-                          <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-[#0b57d0] dark:peer-checked:bg-[#a8c7fa]"></div>
+                          <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-slate-900 dark:peer-checked:bg-white"></div>
                         </label>
                       </div>
                     </div>

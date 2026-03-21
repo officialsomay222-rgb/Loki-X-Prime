@@ -117,7 +117,7 @@ const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setComma
   textReveal: 'typewriter',
   appWidth: 'normal',
   glowIntensity: 'medium',
-  isAwakened: true,
+  isAwakened: false,
 };
 
 const SettingsContext = createContext<SettingsState | undefined>(undefined);
@@ -233,7 +233,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('textReveal', setTextReveal as any);
     loadSetting('appWidth', setAppWidth as any);
     loadSetting('glowIntensity', setGlowIntensity as any);
-    loadSetting('isAwakened', setIsAwakened, (val) => val === 'true');
   }, []);
 
   useEffect(() => {
@@ -269,7 +268,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_textReveal', textReveal);
       localStorage.setItem('loki_appWidth', appWidth);
       localStorage.setItem('loki_glowIntensity', glowIntensity);
-      localStorage.setItem('loki_isAwakened', isAwakened.toString());
     } catch (e) {
       console.error('Failed to save settings to localStorage', e);
     }

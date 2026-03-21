@@ -968,9 +968,7 @@ a:focus-visible {
   --rgb-color-1: #00f2ff;
   --rgb-color-2: #bd00ff;
   --rgb-color-3: #ff0055;
-  background-color: #050508 !important;
-  color: #fff !important;
-  /* position: relative; Removed to allow fixed positioning in App.tsx */
+  @apply bg-white dark:bg-[#050508] text-slate-900 dark:text-white;
 }
 
 /* Full-screen RGB Aura - Optimized */

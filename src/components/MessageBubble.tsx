@@ -634,13 +634,13 @@ export const MessageBubble = memo(
                 <HeaderInfinityLogo className="w-full h-full" />
               </div>
             )}
-          <div className="flex items-center gap-2 px-1.5">
-            <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-400 dark:text-[#555] uppercase font-mono">
-              Loki Prime
-            </span>
-            <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-[#444] opacity-60">
-              {formatDate(message.timestamp)}
-            </span>
+            <div className="flex items-center gap-2 px-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase font-mono">
+                Loki Prime
+              </span>
+              <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-slate-500 opacity-60">
+                {formatDate(message.timestamp)}
+              </span>
             {!message.content && !message.audioUrl && (
               <span className={`text-[9px] sm:text-[10px] font-mono ${accentClass} animate-pulse`}>
                 {message.isImage ? "GENERATING..." : "THINKING..."}
@@ -651,7 +651,7 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative transition-all duration-300 ${densityClass} text-[#e0e0e0]`}
+              className={`relative transition-all duration-300 ${densityClass} text-slate-800 dark:text-[#e0e0e0]`}
             >
               <div className={`markdown-body ${fontSizeClass}`}>
                 {message.audioUrl && (
@@ -785,10 +785,10 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative group/bubble transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 bg-[#15151e] border border-white/5 shadow-sm hover:shadow-md overflow-hidden ${
+              className={`relative group/bubble transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 bg-slate-100 dark:bg-[#15151e] border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md overflow-hidden ${
                 bubbleStyle === "glass"
-                  ? `text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm backdrop-blur-md`
-                  : `text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm`
+                  ? `text-slate-900 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm backdrop-blur-md`
+                  : `text-slate-900 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm`
               }`}
             >
               {message.audioUrl && (
