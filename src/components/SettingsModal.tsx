@@ -74,12 +74,18 @@ const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (
 };
 
 const SettingSection = ({ title, children }: any) => (
-  <div className="space-y-3">
+  <motion.div 
+    variants={{
+      hidden: { opacity: 0, y: 20 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+    }}
+    className="space-y-3"
+  >
     {title && <h3 className="px-4 text-[11px] font-bold text-[#717171] uppercase tracking-[0.2em]">{title}</h3>}
-    <div className="bg-[#161616] rounded-2xl overflow-hidden border border-white/5 shadow-sm">
+    <div className="bg-[#161616] rounded-2xl overflow-hidden border border-white/5 shadow-sm transform-gpu">
       {children}
     </div>
-  </div>
+  </motion.div>
 );
 
 const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, danger, noBorder, type, options, min, max, step, onChange, checked, setShowPicker }: any) => {
@@ -229,11 +235,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
           {/* Modal Container */}
           <motion.div 
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "100%" }}
-            transition={{ type: "spring", damping: 35, stiffness: 400, mass: 0.6 }}
-            className="w-full h-full flex flex-col overflow-hidden relative bg-[#0a0a0a] z-10 shadow-2xl will-change-transform"
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} // Custom spring-like easing
+            className="w-full h-full flex flex-col overflow-hidden relative bg-[#0a0a0a] z-10 shadow-2xl transform-gpu"
           >
             
             {/* Header */}
@@ -256,15 +262,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
               
-            <div 
+            <motion.div 
               ref={scrollContainerRef} 
-              className="flex-1 overflow-y-auto p-6 sm:p-12 custom-scrollbar min-h-0 overscroll-contain scroll-smooth"
-              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.05,
+                    delayChildren: 0.1
+                  }
+                }
+              }}
+              className="flex-1 overflow-y-auto p-6 sm:p-12 custom-scrollbar min-h-0 overscroll-contain transform-gpu"
+              style={{ WebkitOverflowScrolling: 'touch' }}
             >
               <div className="max-w-3xl mx-auto space-y-12 pb-32">
             
                 {/* Profile Section - Centered */}
-                <div className="flex flex-col items-center py-6 space-y-4">
+                <motion.div 
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+                  }}
+                  className="flex flex-col items-center py-6 space-y-4"
+                >
                   <div className="relative">
                     <motion.div 
                       whileHover={{ scale: 1.05 }}
@@ -273,12 +297,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       style={{ borderRadius: '9999px' }}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <img 
-                        src={avatarUrl} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                        style={{ borderRadius: '9999px' }}
-                      />
+                      <div className="w-full h-full rounded-full overflow-hidden" style={{ borderRadius: '9999px' }}>
+                        <img 
+                          src={avatarUrl} 
+                          alt="Avatar" 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                        />
+                      </div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40" style={{ borderRadius: '9999px' }}>
                         <Camera className="w-6 h-6 text-white" />
                       </div>
@@ -299,12 +324,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   >
                     Edit Profile
                   </motion.button>
-                </div>
+                </motion.div>
 
                 {/* Promo Card */}
                 <motion.div 
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+                  }}
                   whileHover={{ scale: 1.02 }}
-                  className="bg-gradient-to-br from-[#1d1d1d] to-[#161616] rounded-2xl p-4 flex items-center justify-between border border-white/5 shadow-xl"
+                  className="bg-gradient-to-br from-[#1d1d1d] to-[#161616] rounded-2xl p-4 flex items-center justify-between border border-white/5 shadow-xl transform-gpu"
                 >
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20">
@@ -325,7 +354,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </motion.div>
 
                 {/* General Section */}
-                <SettingSection title="General">
+                <SettingSection title="General" delay={0.2}>
                   <SettingItem 
                     icon={Monitor} 
                     label="Appearance" 
@@ -350,7 +379,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Intelligence Section */}
-                <SettingSection title="Intelligence">
+                <SettingSection title="Intelligence" delay={0.25}>
                   <div className="p-4 space-y-6 border-b border-white/5">
                     <div className="flex items-center gap-4">
                       <Sparkles className="w-5 h-5 text-[#717171]" />
@@ -406,7 +435,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Voice & Input */}
-                <SettingSection title="Voice & Input">
+                <SettingSection title="Voice & Input" delay={0.3}>
                   <SettingItem 
                     icon={Smartphone} 
                     label="Live Audio" 
@@ -426,7 +455,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Visuals */}
-                <SettingSection title="Visuals">
+                <SettingSection title="Visuals" delay={0.35}>
                   <SettingItem 
                     icon={Layout} 
                     label="Message Density" 
@@ -484,7 +513,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Behavior */}
-                <SettingSection title="Behavior">
+                <SettingSection title="Behavior" delay={0.4}>
                   <SettingItem 
                     icon={Zap} 
                     label="Text Reveal" 
@@ -525,7 +554,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Data & Privacy */}
-                <SettingSection title="Data & Privacy">
+                <SettingSection title="Data & Privacy" delay={0.45}>
                   <SettingItem 
                     icon={Download} 
                     label="Export Data" 
@@ -551,7 +580,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* Legal */}
-                <SettingSection title="Legal & Support">
+                <SettingSection title="Legal & Support" delay={0.5}>
                   <SettingItem 
                     icon={FileText} 
                     label="Terms of Use" 
@@ -571,7 +600,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 {/* System */}
-                <SettingSection>
+                <SettingSection delay={0.55}>
                   <SettingItem 
                     icon={LogOut} 
                     label="Reset All Settings" 
@@ -581,13 +610,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   />
                 </SettingSection>
 
-                <div className="text-center space-y-1 py-4">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="text-center space-y-1 py-4"
+                >
                   <p className="text-[10px] text-[#717171] uppercase tracking-widest font-bold">Loki Prime X v2.5.0</p>
                   <p className="text-[10px] text-[#444]">Made with ❤️ by Loki Team</p>
-                </div>
+                </motion.div>
 
               </div>
-            </div>
+            </motion.div>
 
             {/* Overlays Container */}
             <AnimatePresence mode="wait">

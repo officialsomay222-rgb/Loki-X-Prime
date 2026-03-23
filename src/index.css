@@ -209,6 +209,7 @@ body {
   width: 100%;
   overflow: hidden; /* Prevent scroll on body itself */
   overscroll-behavior: none; /* Prevent bounce */
+  scroll-behavior: smooth;
 }
 
 ::selection {
@@ -255,6 +256,7 @@ html.awakened-mode-active {
   will-change: scroll-position;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 242, 255, 0.2) transparent;
+  scroll-behavior: smooth;
 }
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

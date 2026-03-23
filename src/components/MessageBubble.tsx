@@ -625,8 +625,12 @@ export const MessageBubble = memo(
 
     if (message.role === "model") {
       return (
-        <div
-          className={`flex flex-col ${gapClass} w-full px-2 sm:px-4 ${messageAnimation ? "animate-in fade-in slide-in-from-bottom-4 duration-150" : ""}`}
+        <motion.div
+          layout
+          initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+          className={`flex flex-col ${gapClass} w-full px-2 sm:px-4`}
         >
           <div className="flex items-center gap-3">
             {showAvatars && (
@@ -749,13 +753,17 @@ export const MessageBubble = memo(
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       );
     }
 
     return (
-      <div
-        className={`flex justify-end w-full px-2 sm:px-4 ${messageAnimation ? "animate-in fade-in slide-in-from-bottom-4 duration-150" : ""}`}
+      <motion.div
+        layout
+        initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+        className={`flex justify-end w-full px-2 sm:px-4`}
       >
         <div className={`flex flex-col ${gapClass} max-w-[95%] sm:max-w-[85%] items-end`}>
           <div className="flex items-center gap-2 px-1.5">
@@ -845,7 +853,7 @@ export const MessageBubble = memo(
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   },
 );

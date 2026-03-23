@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
@@ -462,18 +462,25 @@ export default function App() {
       {/* 3. Main Content Layer (Flex Column) */}
       <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
         {/* Sidebar Overlay for Mobile */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md z-40 md:hidden transition-opacity"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md z-40 md:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Sidebar */}
-        <div 
-          className={`fixed inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transition-transform duration-300 ease-in-out will-change-transform ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        <motion.div 
+          initial={false}
+          animate={{ x: isSidebarOpen ? 0 : '-100%' }}
+          transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.5 }}
+          className="fixed inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu"
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
             <div className="flex items-center gap-2 font-montserrat font-bold text-slate-900 dark:text-white">
@@ -504,43 +511,53 @@ export default function App() {
             <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
               Recent Timelines
             </div>
-            {sessions.map(session => (
-              <div 
-                key={session.id}
-                onClick={() => {
-                  setCurrentSessionId(session.id);
-                  if (window.innerWidth < 768) setIsSidebarOpen(false);
-                }}
-                className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
-                  currentSessionId === session.id 
-                    ? isAwakened 
-                      ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40 backdrop-blur-md'
-                      : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10 backdrop-blur-md' 
-                    : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
-                }`}
-              >
-                {currentSessionId === session.id && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full shadow-[0_0_10px_rgba(0,242,255,1)]" />
-                )}
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${currentSessionId === session.id ? 'text-cyan-600 dark:text-[#00f2ff]' : isAwakened ? 'text-slate-400 group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
-                  <div className="truncate text-sm font-semibold tracking-tight">
-                    {session.title}
-                  </div>
-                </div>
-                <button 
-                  onClick={(e) => handleDeleteSession(e, session.id)}
-                  className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 ${isAwakened ? 'text-slate-400 hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'}`}
-                  title="Delete timeline"
+            <AnimatePresence>
+              {sessions.map((session, index) => (
+                <motion.div 
+                  key={session.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  onClick={() => {
+                    setCurrentSessionId(session.id);
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
+                  className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
+                    currentSessionId === session.id 
+                      ? isAwakened 
+                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40 backdrop-blur-md'
+                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10 backdrop-blur-md' 
+                      : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
+                  }`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  {currentSessionId === session.id && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full shadow-[0_0_10px_rgba(0,242,255,1)]" />
+                  )}
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${currentSessionId === session.id ? 'text-cyan-600 dark:text-[#00f2ff]' : isAwakened ? 'text-slate-400 group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
+                    <div className="truncate text-sm font-semibold tracking-tight">
+                      {session.title}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={(e) => handleDeleteSession(e, session.id)}
+                    className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 ${isAwakened ? 'text-slate-400 hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'}`}
+                    title="Delete timeline"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {sessions.length === 0 && (
-              <div className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
+              >
                 No timelines yet. Initiate an awakening.
-              </div>
+              </motion.div>
             )}
           </div>
 
@@ -579,7 +596,7 @@ export default function App() {
               SYSTEM SETTINGS
             </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
@@ -632,16 +649,21 @@ export default function App() {
                    background: 'conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)',
                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
                  }}></div>
-                 <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" className="w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
+                 <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
+                   <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" className="w-full h-full object-cover" alt="Commander" />
+                 </div>
               </div>
             </div>
           </header>
 
           {/* Chat Area - Scrollable */}
-          <div className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu scroll-smooth ${(!currentSession || currentSession.messages.length === 0) ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
+          <div className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu ${(!currentSession || currentSession.messages.length === 0) ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
             <div className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${(!currentSession || currentSession.messages.length === 0) ? 'justify-center items-center' : 'pt-4 space-y-6 sm:space-y-8'}`}>
               {!currentSession || currentSession.messages.length === 0 ? (
-                <div 
+                <motion.div 
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
                   className="flex flex-col items-center justify-center text-center space-y-8 w-full h-full touch-none select-none"
                   onTouchMove={(e) => e.preventDefault()} // CRITICAL: Stop pull-to-refresh/scroll on empty state
                 >
@@ -663,7 +685,7 @@ export default function App() {
                        <div className="absolute -inset-4 bg-cyan-500/5 blur-xl rounded-full -z-10 animate-pulse"></div>
                      )}
                    </div>
-                </div>
+                </motion.div>
               ) : (
                 <>
                   {renderedMessages}

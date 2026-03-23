@@ -694,7 +694,7 @@ export const ChatInput = memo(
                 className="relative w-full group mx-auto max-w-3xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
               >
                 <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
                   {isAwakened && (
