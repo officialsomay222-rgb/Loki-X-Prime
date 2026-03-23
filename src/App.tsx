@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
@@ -44,11 +45,25 @@ declare global {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [isBooting, setIsBooting] = useState(true); // Enabled booting
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  
+  const isSettingsOpen = searchParams.get('modal') === 'settings';
+  const isTasksOpen = searchParams.get('modal') === 'tasks';
+  const isCommandPaletteOpen = searchParams.get('modal') === 'commands';
+
+  const openModal = useCallback((modalName: string) => {
+    setSearchParams({ modal: modalName });
+  }, [setSearchParams]);
+
+  const closeModal = useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
   const [input, setInput] = useState('');
@@ -93,11 +108,43 @@ export default function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Sync URL -> State
+  useEffect(() => {
+    const match = location.pathname.match(/^\/chat\/(.+)$/);
+    if (match) {
+      const id = match[1];
+      if (currentSessionId !== id) {
+        setCurrentSessionId(id);
+      }
+    } else if (location.pathname === '/') {
+      if (currentSessionId !== null) {
+        setCurrentSessionId(null);
+      }
+    }
+  }, [location.pathname, setCurrentSessionId]);
+
+  // Sync State -> URL
+  useEffect(() => {
+    if (currentSessionId) {
+      if (location.pathname !== `/chat/${currentSessionId}`) {
+        navigate(`/chat/${currentSessionId}`, { replace: true });
+      }
+    } else {
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [currentSessionId, navigate, location.pathname]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsCommandPaletteOpen(prev => !prev);
+        if (isCommandPaletteOpen) {
+          closeModal();
+        } else {
+          openModal('commands');
+        }
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault();
@@ -106,7 +153,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [createNewSession]);
+  }, [createNewSession, isCommandPaletteOpen, openModal, closeModal]);
 
   const [showSkip, setShowSkip] = useState(false);
 
@@ -130,7 +177,7 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     
     if (urlParams.get('settings') === 'true') {
-      setIsSettingsOpen(true);
+      openModal('settings');
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -153,7 +200,7 @@ export default function App() {
       }
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [openModal]);
 
   useEffect(() => {
     // Auto-close sidebar on mobile initially
@@ -347,7 +394,7 @@ export default function App() {
     <div 
       className={`w-full h-[100dvh] relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
-      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}
       <AwakenedBackground isAwakened={isAwakened} bgStyle={bgStyle} theme={theme} />
 
@@ -394,7 +441,7 @@ export default function App() {
         <div className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative w-full max-w-md">
             <button 
-              onClick={() => setIsTasksOpen(false)}
+              onClick={closeModal}
               className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
             >
               <X className="w-6 h-6" />
@@ -407,7 +454,7 @@ export default function App() {
       {/* Settings Modal - Full Screen Refined */}
       <SettingsModal 
         isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)} 
+        onClose={closeModal} 
         onExportChat={handleExportChat}
         onClearAllChats={clearAllSessions}
       />
@@ -516,7 +563,7 @@ export default function App() {
             <motion.button 
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
-              onClick={() => setIsTasksOpen(true)}
+              onClick={() => openModal('tasks')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -525,7 +572,7 @@ export default function App() {
             <motion.button 
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
-              onClick={() => setIsSettingsOpen(true)}
+              onClick={() => openModal('settings')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
               <Settings className="w-4 h-4" />
