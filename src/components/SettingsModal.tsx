@@ -27,7 +27,7 @@ const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (
       exit={{ opacity: 0, scale: 0.95 }}
       className="absolute inset-0 z-[120] bg-[#0a0a0a] flex flex-col"
     >
-      <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0">
+      <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a] sticky top-0">
         <motion.button 
           whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
           whileTap={{ scale: 0.9 }}
@@ -77,7 +77,7 @@ const SettingSection = ({ title, children }: any) => (
   <motion.div 
     variants={{
       hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+      visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } }
     }}
     className="space-y-3"
   >
@@ -230,20 +230,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
           />
 
           {/* Modal Container */}
           <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} // Custom spring-like easing
-            className="w-full h-full flex flex-col overflow-hidden relative bg-[#0a0a0a] z-10 shadow-2xl transform-gpu"
+            exit={{ opacity: 0, y: 10, scale: 0.99 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full h-full flex flex-col overflow-hidden relative bg-[#0a0a0a] z-10 shadow-2xl transform-gpu will-change-transform"
           >
             
             {/* Header */}
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 shrink-0 bg-[#0a0a0a]/95 backdrop-blur-2xl sticky top-0 z-20">
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 shrink-0 bg-[#0a0a0a] sticky top-0 z-20">
               <div className="flex items-center gap-4">
                 <motion.button 
                   whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
@@ -262,23 +262,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
               
-            <motion.div 
-              ref={scrollContainerRef} 
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.05,
-                    delayChildren: 0.1
+              <motion.div 
+                ref={scrollContainerRef} 
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.02,
+                      delayChildren: 0.05
+                    }
                   }
-                }
-              }}
-              className="flex-1 overflow-y-auto p-6 sm:p-12 custom-scrollbar min-h-0 overscroll-contain transform-gpu"
-              style={{ WebkitOverflowScrolling: 'touch' }}
-            >
+                }}
+                className="flex-1 overflow-y-auto p-6 sm:p-12 custom-scrollbar min-h-0 overscroll-contain transform-gpu"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
               <div className="max-w-3xl mx-auto space-y-12 pb-32">
             
                 {/* Profile Section - Centered */}
@@ -611,13 +611,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </SettingSection>
 
                 <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6, duration: 0.4 }}
-                  className="text-center space-y-1 py-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="text-center space-y-4 py-12 border-t border-white/5 mt-8"
                 >
-                  <p className="text-[10px] text-[#717171] uppercase tracking-widest font-bold">Loki Prime X v2.5.0</p>
-                  <p className="text-[10px] text-[#444]">Made with ❤️ by Loki Team</p>
+                  <p className="text-[9px] text-[#717171] uppercase tracking-[0.4em] font-black opacity-40">Loki Prime X v2.5.0</p>
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] text-[#666] font-bold uppercase tracking-[0.2em]">Crafted with passion by</span>
+                    <span className="text-base sm:text-lg font-black bg-gradient-to-r from-white via-blue-400 to-white bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-shimmer">
+                      Somay a.k.a. 🜲—͟͞ ✧𓄂 𓆩❍Ꮿꪀꫀ𝚁☠︎𓆪🥀
+                    </span>
+                  </div>
                 </motion.div>
 
               </div>
@@ -645,7 +650,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   exit={{ opacity: 0, y: 20 }}
                   className="absolute inset-0 z-[120] bg-[#0a0a0a] flex flex-col"
                 >
-                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0">
+                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a] sticky top-0">
                     <motion.button 
                       whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                       whileTap={{ scale: 0.9 }}
@@ -692,7 +697,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   exit={{ opacity: 0, y: 20 }}
                   className="absolute inset-0 z-[120] bg-[#0a0a0a] flex flex-col"
                 >
-                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0">
+                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a] sticky top-0">
                     <motion.button 
                       whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                       whileTap={{ scale: 0.9 }}
@@ -735,7 +740,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   exit={{ opacity: 0, y: 20 }}
                   className="absolute inset-0 z-[120] bg-[#0a0a0a] flex flex-col"
                 >
-                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0">
+                  <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-[#0a0a0a] sticky top-0">
                     <motion.button 
                       whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                       whileTap={{ scale: 0.9 }}
@@ -777,13 +782,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-[130] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6"
+                  className="absolute inset-0 z-[130] bg-black/95 flex items-center justify-center p-6"
                 >
                   <motion.div 
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-[#161616] rounded-[32px] p-8 max-w-sm w-full border border-white/10 shadow-2xl"
+                    className="bg-[#0a0a0a] rounded-[32px] p-8 max-w-sm w-full border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,1)]"
                   >
                     <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Trash2 className="w-8 h-8 text-red-500" />
@@ -831,7 +836,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       left: showPicker.rect ? Math.min(showPicker.rect.right - 200, window.innerWidth - 216) : '50%',
                       transform: showPicker.rect ? 'none' : 'translate(-50%, -50%)'
                     }}
-                    className="w-[200px] bg-[#1a1a1a] rounded-[24px] p-1.5 border border-white/10 shadow-2xl ring-1 ring-black/50"
+                    className="w-[210px] bg-[#0a0a0a] rounded-[24px] p-2 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,1)] ring-1 ring-white/5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="px-3 py-2 border-b border-white/5 mb-1">

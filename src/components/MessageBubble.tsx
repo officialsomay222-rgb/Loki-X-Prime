@@ -117,14 +117,24 @@ const MarkdownImage = ({ node, ...props }: any) => {
           </div>
         )}
 
-        {/* Loading Placeholder */}
+        {/* Loading Placeholder (Premade Canvas) */}
         {!isLoaded && !hasError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/50 backdrop-blur-sm z-20">
-            <div className="w-32 h-16 mb-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-20 border border-white/5">
+            <div className="w-40 h-20 mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
               <InfinityLogo />
             </div>
-            <div className="text-[10px] font-mono text-white tracking-[0.3em] uppercase animate-pulse drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
-              Loading Image...
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-[11px] font-black text-white tracking-[0.4em] uppercase animate-pulse drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                Loading Image
+              </div>
+              <div className="w-32 h-0.5 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-blue-500"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -133,7 +143,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
       {/* Fullscreen Modal */}
       {isFullscreen && (
         <div
-          className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300"
+          className="fixed inset-0 z-[99999] bg-black/95 flex items-center justify-center animate-in fade-in duration-300"
           onClick={() => setIsFullscreen(false)}
         >
           <button
@@ -170,7 +180,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
                 link.click();
                 document.body.removeChild(link);
               }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:text-white border border-white/50 transition-all backdrop-blur-md z-50 flex items-center gap-2 font-bold tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:text-white border border-white/50 transition-all z-50 flex items-center gap-2 font-bold tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -478,7 +488,7 @@ const AudioPlayer = ({
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 bg-black/20 dark:bg-black/40 backdrop-blur-md rounded-lg p-2 pr-4 shadow-inner w-[260px] sm:w-[300px] border border-white/10 group/player">
+    <div className="flex items-center gap-3 bg-black/40 dark:bg-black/60 rounded-lg p-2 pr-4 shadow-inner w-[260px] sm:w-[300px] border border-white/10 group/player">
       <button
         onClick={togglePlay}
         className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30"
@@ -617,6 +627,7 @@ export const MessageBubble = memo(
 
     const densityClass = messageDensity === 'compact' ? 'py-1' : 'py-2';
     const gapClass = messageDensity === 'compact' ? 'gap-1' : 'gap-2';
+    const bubblePadding = messageDensity === 'compact' ? 'px-3 py-1.5 sm:px-4 sm:py-2' : 'px-4 py-3 sm:px-5 sm:py-4';
     
     const accentHex = '#ffffff';
     const accentClass = 'text-white';
@@ -630,7 +641,7 @@ export const MessageBubble = memo(
           initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-          className={`flex flex-col ${gapClass} w-full px-2 sm:px-4`}
+          className={`flex flex-col ${gapClass} w-full px-2 sm:px-4 gpu-accelerate`}
         >
           <div className="flex items-center gap-3">
             {showAvatars && (
@@ -655,9 +666,9 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative transition-all duration-300 ${densityClass} text-slate-800 dark:text-[#e0e0e0]`}
+              className={`relative content-auto transition-all duration-300 ${densityClass} text-slate-800/90 dark:text-white/90`}
             >
-              <div className={`markdown-body ${fontSizeClass}`}>
+              <div className={`markdown-body ${fontSizeClass} bg-transparent p-1`}>
                 {message.audioUrl && (
                   <div className="mb-3">
                     <AudioPlayer url={message.audioUrl} autoPlay={false} />
@@ -732,7 +743,7 @@ export const MessageBubble = memo(
               <div className="absolute -right-2 sm:-right-4 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
                   onClick={() => onCopy(message.content, message.id)}
-                  className={`p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass} backdrop-blur-sm`}
+                  className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass}`}
                   title="Copy text"
                 >
                   {copiedId === message.id ? (
@@ -763,7 +774,7 @@ export const MessageBubble = memo(
         initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-        className={`flex justify-end w-full px-2 sm:px-4`}
+        className={`flex justify-end w-full px-2 sm:px-4 gpu-accelerate`}
       >
         <div className={`flex flex-col ${gapClass} max-w-[95%] sm:max-w-[85%] items-end`}>
           <div className="flex items-center gap-2 px-1.5">
@@ -793,10 +804,10 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative group/bubble transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 bg-slate-100 dark:bg-[#15151e] border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md overflow-hidden ${
+              className={`relative group/bubble content-auto transition-all duration-500 ${bubblePadding} backdrop-blur-2xl border shadow-lg hover:shadow-xl overflow-hidden ${
                 bubbleStyle === "glass"
-                  ? `text-slate-900 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm backdrop-blur-md`
-                  : `text-slate-900 dark:text-slate-200 rounded-xl sm:rounded-2xl rounded-tr-sm`
+                  ? "bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-2xl sm:rounded-3xl rounded-tr-sm"
+                  : "bg-slate-100/40 dark:bg-white/10 border-slate-200/50 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-xl sm:rounded-2xl rounded-tr-sm"
               }`}
             >
               {message.audioUrl && (
@@ -820,7 +831,7 @@ export const MessageBubble = memo(
                   <>
                     <button
                       onClick={() => onCopy(message.content, message.id)}
-                      className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white backdrop-blur-sm"
+                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                       title="Copy text"
                     >
                       {copiedId === message.id ? (
@@ -832,7 +843,7 @@ export const MessageBubble = memo(
                     {onEdit && (
                       <button
                         onClick={() => onEdit(message.content)}
-                        className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white backdrop-blur-sm"
+                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                         title="Edit message"
                       >
                         <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -856,4 +867,25 @@ export const MessageBubble = memo(
       </motion.div>
     );
   },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.message.id === nextProps.message.id &&
+      prevProps.message.content === nextProps.message.content &&
+      prevProps.message.status === nextProps.message.status &&
+      prevProps.message.isImage === nextProps.message.isImage &&
+      prevProps.message.audioUrl === nextProps.message.audioUrl &&
+      prevProps.message.isVoiceResponse === nextProps.message.isVoiceResponse &&
+      prevProps.commanderName === nextProps.commanderName &&
+      prevProps.avatarUrl === nextProps.avatarUrl &&
+      prevProps.copiedId === nextProps.copiedId &&
+      prevProps.bubbleStyle === nextProps.bubbleStyle &&
+      prevProps.fontSize === nextProps.fontSize &&
+      prevProps.messageAnimation === nextProps.messageAnimation &&
+      prevProps.textReveal === nextProps.textReveal &&
+      prevProps.animationSpeed === nextProps.animationSpeed &&
+      prevProps.accentColor === nextProps.accentColor &&
+      prevProps.messageDensity === nextProps.messageDensity &&
+      prevProps.showAvatars === nextProps.showAvatars
+    );
+  }
 );

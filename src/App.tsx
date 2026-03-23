@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ChatInput } from './components/ChatInput';
+import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
@@ -45,28 +44,25 @@ declare global {
 }
 
 export default function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const [isBooting, setIsBooting] = useState(true); // Enabled booting
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
   
-  const isSettingsOpen = searchParams.get('modal') === 'settings';
-  const isTasksOpen = searchParams.get('modal') === 'tasks';
-  const isCommandPaletteOpen = searchParams.get('modal') === 'commands';
+  const isSettingsOpen = activeModal === 'settings';
+  const isTasksOpen = activeModal === 'tasks';
+  const isCommandPaletteOpen = activeModal === 'commands';
 
   const openModal = useCallback((modalName: string) => {
-    setSearchParams({ modal: modalName });
-  }, [setSearchParams]);
+    setActiveModal(modalName);
+  }, []);
 
   const closeModal = useCallback(() => {
-    setSearchParams({});
-  }, [setSearchParams]);
+    setActiveModal(null);
+  }, []);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
-  const [input, setInput] = useState('');
   
   const { 
     theme, setTheme, 
@@ -106,35 +102,7 @@ export default function App() {
   const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Sync URL -> State
-  useEffect(() => {
-    const match = location.pathname.match(/^\/chat\/(.+)$/);
-    if (match) {
-      const id = match[1];
-      if (currentSessionId !== id) {
-        setCurrentSessionId(id);
-      }
-    } else if (location.pathname === '/') {
-      if (currentSessionId !== null) {
-        setCurrentSessionId(null);
-      }
-    }
-  }, [location.pathname, setCurrentSessionId]);
-
-  // Sync State -> URL
-  useEffect(() => {
-    if (currentSessionId) {
-      if (location.pathname !== `/chat/${currentSessionId}`) {
-        navigate(`/chat/${currentSessionId}`, { replace: true });
-      }
-    } else {
-      if (location.pathname !== '/') {
-        navigate('/', { replace: true });
-      }
-    }
-  }, [currentSessionId, navigate, location.pathname]);
+  const inputRef = useRef<ChatInputHandle>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -195,7 +163,7 @@ export default function App() {
       // Handle share target
       const initialMessage = [shareText, shareUrl].filter(Boolean).join('\n');
       if (initialMessage && inputRef.current) {
-        inputRef.current.value = initialMessage;
+        inputRef.current.setInput(initialMessage);
         // Trigger synthetic change event if needed by ChatInput
       }
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -217,6 +185,28 @@ export default function App() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
   }, [currentSession?.messages.length, currentSessionId, autoScroll]);
+
+  // Debounce scroll events to prevent checkerboarding and lag
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      if (!document.body.classList.contains('is-scrolling')) {
+        document.body.classList.add('is-scrolling');
+      }
+      
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        document.body.classList.remove('is-scrolling');
+      }, 150); // 150ms debounce
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
 
   const handleSendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: boolean | string) => {
     await sendMessage(text, isImageMode, typeof audioUrl === 'string' ? audioUrl : undefined);
@@ -329,7 +319,7 @@ export default function App() {
         copiedId={copiedId}
         onCopy={copyToClipboard}
         onEdit={message.role === 'user' ? (text) => {
-          setInput(text);
+          inputRef.current?.setInput(text);
           inputRef.current?.focus();
         } : undefined}
         onDelete={(id) => currentSessionId && deleteMessage(currentSessionId, id)}
@@ -344,7 +334,7 @@ export default function App() {
         showAvatars={showAvatars}
       />
     ));
-  }, [currentSession?.messages, isAwakened, commanderName, avatarUrl, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, textReveal, animationSpeed, accentColor, messageDensity, showAvatars, setInput, currentSessionId, deleteMessage]);
+  }, [currentSession?.messages, isAwakened, commanderName, avatarUrl, copiedId, copyToClipboard, formatDate, bubbleStyle, fontSize, messageAnimation, textReveal, animationSpeed, accentColor, messageDensity, showAvatars, currentSessionId, deleteMessage]);
 
   if (isBooting) {
     return (
@@ -362,7 +352,7 @@ export default function App() {
             {showSkip && (
               <button 
                 onClick={() => setIsBooting(false)}
-                className="mt-6 px-4 py-2 border border-cyan-500/30 rounded-lg text-cyan-500 text-[10px] font-bold tracking-[2px] hover:bg-cyan-500/10 transition-all animate-pulse"
+                className="mt-6 px-4 py-2 border border-cyan-500/30 rounded-lg text-cyan-500 text-[10px] font-bold tracking-[2px] hover:bg-cyan-500/10 transition-all animate-pulse gpu-accelerate"
               >
                 FORCE START SYSTEM
               </button>
@@ -438,7 +428,7 @@ export default function App() {
 
       {/* Tasks Modal */}
       {isTasksOpen && (
-        <div className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="relative w-full max-w-md">
             <button 
               onClick={closeModal}
@@ -469,7 +459,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md z-40 md:hidden"
+              className="fixed inset-0 bg-slate-900/85 dark:bg-black/85 z-40 md:hidden gpu-accelerate"
               onClick={() => setIsSidebarOpen(false)}
             />
           )}
@@ -480,7 +470,7 @@ export default function App() {
           initial={false}
           animate={{ x: isSidebarOpen ? 0 : '-100%' }}
           transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.5 }}
-          className="fixed inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu"
+          className="fixed inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu content-auto gpu-accelerate"
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
             <div className="flex items-center gap-2 font-montserrat font-bold text-slate-900 dark:text-white">
@@ -500,7 +490,7 @@ export default function App() {
               whileHover={{ filter: "brightness(1.2)" }}
               type="button"
               onClick={handleCreateNewSession}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest gpu-accelerate"
             >
               <Plus className="w-4 h-4" />
               NEW AWAKENING
@@ -526,8 +516,8 @@ export default function App() {
                   className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
                     currentSessionId === session.id 
                       ? isAwakened 
-                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40 backdrop-blur-md'
-                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10 backdrop-blur-md' 
+                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
+                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10' 
                       : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
                   }`}
                 >
@@ -708,8 +698,6 @@ export default function App() {
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
-              input={input}
-              setInput={setInput}
             />
           </div>
         </div>

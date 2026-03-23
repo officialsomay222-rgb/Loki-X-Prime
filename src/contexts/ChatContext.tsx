@@ -50,6 +50,7 @@ const generateId = () => {
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
   const { 
@@ -330,15 +331,14 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         let lastUpdateTime = Date.now();
         let pendingUpdate = false;
 
-        const updateState = async (cleanResponse: string) => {
-          const updatedSession = await localDb.sessions.get(currentSessionId);
-          if (updatedSession) {
-            const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
-            if (msgIndex !== -1) {
-              updatedSession.messages[msgIndex].content = cleanResponse;
-              await localDb.sessions.put(updatedSession);
-            }
-          }
+        const updateState = (cleanResponse: string) => {
+          setStreamingMessage({
+            id: modelMessageId,
+            role: 'model',
+            content: cleanResponse,
+            timestamp: new Date(),
+            isImage: false
+          });
         };
 
         for await (const chunk of responseStream) {
@@ -347,7 +347,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
             const now = Date.now();
             if (now - lastUpdateTime > 50) {
               let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-              await updateState(cleanResponse);
+              updateState(cleanResponse);
               lastUpdateTime = now;
               pendingUpdate = false;
             } else {
@@ -358,14 +358,35 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
         if (pendingUpdate) {
           let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-          await updateState(cleanResponse);
+          updateState(cleanResponse);
         }
+
+        // Final update to Dexie
+        const finalSession = await localDb.sessions.get(currentSessionId);
+        if (finalSession) {
+          const msgIndex = finalSession.messages.findIndex(m => m.id === modelMessageId);
+          if (msgIndex !== -1) {
+            finalSession.messages[msgIndex].content = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
+            await localDb.sessions.put(finalSession);
+          }
+        }
+        setStreamingMessage(null);
       }
 
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         console.log('Generation stopped by user');
+        // Save partial response on abort
+        const finalSession = await localDb.sessions.get(currentSessionId);
+        if (finalSession && streamingMessage) {
+          const msgIndex = finalSession.messages.findIndex(m => m.id === modelMessageId);
+          if (msgIndex !== -1) {
+            finalSession.messages[msgIndex].content = streamingMessage.content;
+            await localDb.sessions.put(finalSession);
+          }
+        }
+        setStreamingMessage(null);
       } else {
         console.error("Error sending message:", error);
         const updatedSession = await localDb.sessions.get(currentSessionId);
@@ -376,6 +397,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
             await localDb.sessions.put(updatedSession);
           }
         }
+        setStreamingMessage(null);
       }
     } finally {
       setIsLoading(false);
@@ -383,10 +405,23 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
   }, [currentSessionId, isLoading, modelMode, getFullSystemInstruction, temperature, topP, topK, imageSize, setTone, thinkingMode, searchGrounding, responseLength]);
 
+  const modifiedSessions = React.useMemo(() => {
+    if (!streamingMessage || !currentSessionId) return sessions;
+    return sessions.map(s => {
+      if (s.id === currentSessionId) {
+        return {
+          ...s,
+          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
+        };
+      }
+      return s;
+    });
+  }, [sessions, streamingMessage, currentSessionId]);
+
   const contextValue = React.useMemo(() => ({
-    sessions, currentSessionId, isLoading,
+    sessions: modifiedSessions, currentSessionId, isLoading,
     createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession
-  }), [sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, sendMessage, stopGeneration, renameSession]);
+  }), [modifiedSessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession]);
 
   return (
     <ChatContext.Provider value={contextValue}>

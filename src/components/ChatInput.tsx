@@ -28,6 +28,12 @@ import { transcribeAudio, connectLiveSession } from "../services/geminiService";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfinityMic } from "./Logos";
 
+export interface ChatInputHandle {
+  focus: () => void;
+  setInput: (text: string) => void;
+  value: string;
+}
+
 interface ChatInputProps {
   isLoading: boolean;
   modelMode: string;
@@ -41,13 +47,11 @@ interface ChatInputProps {
   currentSessionId: string | null;
   onStopGeneration?: () => void;
   enterToSend: boolean;
-  input: string;
-  setInput: (value: string) => void;
   isAwakened?: boolean;
 }
 
 export const ChatInput = memo(
-  forwardRef<HTMLTextAreaElement, ChatInputProps>(
+  forwardRef<ChatInputHandle, ChatInputProps>(
     (
       {
         isLoading,
@@ -58,12 +62,11 @@ export const ChatInput = memo(
         currentSessionId,
         onStopGeneration,
         enterToSend,
-        input,
-        setInput,
         isAwakened,
       },
       ref,
     ) => {
+      const [input, setInput] = useState("");
       const [isOptionsOpen, setIsOptionsOpen] = useState(false);
       const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
       const [isImageMode, setIsImageMode] = useState(false);
@@ -78,8 +81,23 @@ export const ChatInput = memo(
       const mediaRecorderRef = useRef<MediaRecorder | null>(null);
       const audioChunksRef = useRef<Blob[]>([]);
       const internalRef = useRef<HTMLTextAreaElement>(null);
-      const inputRef =
-        (ref as React.MutableRefObject<HTMLTextAreaElement>) || internalRef;
+      const inputRef = internalRef;
+      
+      React.useImperativeHandle(ref, () => ({
+        focus: () => {
+          internalRef.current?.focus();
+        },
+        setInput: (text: string) => {
+          setInput(text);
+        },
+        get value() {
+          return input;
+        },
+        set value(text: string) {
+          setInput(text);
+        }
+      }), [input]);
+
       const fileInputRef = useRef<HTMLInputElement>(null);
       const [audioVolume, setAudioVolume] = useState<number>(0);
       const audioContextRef = useRef<AudioContext | null>(null);
@@ -622,7 +640,7 @@ export const ChatInput = memo(
             className="max-w-4xl mx-auto relative rounded-2xl"
           >
             {micError && (
-              <div className="absolute -top-16 left-0 right-0 mx-auto w-fit px-4 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm rounded-lg backdrop-blur-md shadow-lg flex flex-col items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
+              <div className="absolute -top-16 left-0 right-0 mx-auto w-fit px-4 py-3 bg-rose-900 border border-rose-500/30 text-rose-100 text-xs sm:text-sm rounded-lg shadow-lg flex flex-col items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
                 <div className="flex items-center gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -667,7 +685,7 @@ export const ChatInput = memo(
               </div>
             )}
             {transcriptionError && (
-              <div className="absolute -top-16 left-0 right-0 mx-auto w-fit px-4 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm rounded-lg backdrop-blur-md shadow-lg flex flex-col items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
+              <div className="absolute -top-16 left-0 right-0 mx-auto w-fit px-4 py-3 bg-rose-900 border border-rose-500/30 text-rose-100 text-xs sm:text-sm rounded-lg shadow-lg flex flex-col items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-50">
                 <div className="flex items-center gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -706,7 +724,7 @@ export const ChatInput = memo(
                     </div>
                   )}
                   <div
-                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-slate-100 dark:bg-[#1E1F20] border-transparent shadow-sm dark:shadow-none ${
+                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-slate-100/20 dark:bg-white/5 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
                       isSuccessFlash
                         ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
                         : isRecording
@@ -768,7 +786,7 @@ export const ChatInput = memo(
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] left-0 bg-white/90 dark:bg-[#1E1F20]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-3 min-w-[200px] sm:min-w-[250px] z-[999] flex flex-col gap-2 shadow-2xl"
+                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] left-0 bg-white dark:bg-[#1E1F20] border border-slate-200 dark:border-white/10 rounded-2xl p-3 min-w-[200px] sm:min-w-[250px] z-[999] flex flex-col gap-2 shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
                               >
                                 <div className="px-2 py-1 text-[0.7rem] font-black text-slate-400 dark:text-white/50 uppercase tracking-[0.2em]">
                                   Advanced Core
@@ -861,7 +879,7 @@ export const ChatInput = memo(
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] right-0 bg-white/90 dark:bg-[#1E1F20]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-2 min-w-[140px] z-[999] flex flex-col gap-1 shadow-2xl"
+                                className="absolute bottom-[calc(100%+10px)] sm:bottom-[calc(100%+14px)] right-0 bg-white dark:bg-[#1E1F20] border border-slate-200 dark:border-white/10 rounded-2xl p-2 min-w-[140px] z-[999] flex flex-col gap-1 shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
                               >
                                 {[
                                   { id: "fast", icon: Zap, label: "Fast" },
