@@ -390,6 +390,7 @@ export const ChatInput = memo(
           analyserRef.current = analyser;
 
           const dataArray = new Float32Array(analyser.fftSize);
+          let lastVolumeUpdate = 0;
 
           const checkSilence = () => {
             if (mediaRecorder.state !== "recording") return;
@@ -402,8 +403,12 @@ export const ChatInput = memo(
             }
             const rms = Math.sqrt(sumSquares / dataArray.length);
 
-            // Always update volume for visual feedback
-            setAudioVolume(Math.min(1, rms * 50));
+            // Throttle volume state updates to 10fps to prevent industrial CPU lag
+            const now = Date.now();
+            if (now - lastVolumeUpdate > 100) {
+              setAudioVolume(Math.min(1, rms * 50));
+              lastVolumeUpdate = now;
+            }
 
             const silenceThreshold = 0.015;
 

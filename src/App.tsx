@@ -1,15 +1,17 @@
-import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, memo, useMemo, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
-import { CommandPalette } from './components/CommandPalette';
-import { SettingsModal } from './components/SettingsModal';
+
+const CommandPalette = lazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const SettingsModal = lazy(() => import('./components/SettingsModal').then(m => ({ default: m.SettingsModal })));
 import { useSettings } from './contexts/SettingsContext';
 import { useChat } from './contexts/ChatContext';
 import { InfinityLogo, HeaderInfinityLogo } from './components/Logos';
 import { format, isToday } from 'date-fns';
-import { TaskWidget } from './features/tasks/components/TaskWidget';
+const TaskWidget = lazy(() => import('./features/tasks/components/TaskWidget').then(m => ({ default: m.TaskWidget })));
+
 import { 
   Plus, 
   MessageSquare, 
@@ -384,7 +386,9 @@ export default function App() {
     <div 
       className={`w-full h-[100dvh] relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
-      <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
+      <Suspense fallback={null}>
+        <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
+      </Suspense>
       {/* 1. Background Layer (Fixed, never moves) */}
       <AwakenedBackground isAwakened={isAwakened} bgStyle={bgStyle} theme={theme} />
 
@@ -436,18 +440,22 @@ export default function App() {
             >
               <X className="w-6 h-6" />
             </button>
-            <TaskWidget />
+            <Suspense fallback={<div className="p-8 text-center text-white/50 animate-pulse">Initializing Interface...</div>}>
+              <TaskWidget />
+            </Suspense>
           </div>
         </div>
       )}
 
-      {/* Settings Modal - Full Screen Refined */}
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={closeModal} 
-        onExportChat={handleExportChat}
-        onClearAllChats={clearAllSessions}
-      />
+      {/* Settings Modal - Lazy Loaded */}
+      <Suspense fallback={null}>
+        <SettingsModal 
+          isOpen={isSettingsOpen} 
+          onClose={closeModal} 
+          onExportChat={handleExportChat}
+          onClearAllChats={clearAllSessions}
+        />
+      </Suspense>
 
       {/* 3. Main Content Layer (Flex Column) */}
       <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
