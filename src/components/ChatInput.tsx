@@ -724,7 +724,7 @@ export const ChatInput = memo(
                     </div>
                   )}
                   <div
-                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-slate-100/20 dark:bg-white/5 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
+                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-white/10 dark:bg-white/5 backdrop-blur-2xl border border-white/5 group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(0,242,255,0.2)] dark:shadow-none ${
                       isSuccessFlash
                         ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
                         : isRecording
@@ -950,7 +950,7 @@ export const ChatInput = memo(
                             <button
                               onClick={handleSend}
                               disabled={!input.trim()}
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${input.trim() ? "text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-200 dark:hover:bg-white/10" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${input.trim() ? "text-slate-900 dark:text-white bg-slate-200 dark:bg-white/10 hover:bg-cyan-500 hover:text-white hover:shadow-[0_0_20px_rgba(0,242,255,0.4)] hover:scale-110 active:scale-95" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
                             >
                               <Send className="w-5 h-5 ml-0.5" />
                             </button>

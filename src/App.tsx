@@ -505,10 +505,12 @@ export default function App() {
               {sessions.map((session, index) => (
                 <motion.div 
                   key={session.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -20, scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.4, type: "spring", bounce: 0.3, delay: index * 0.05 }}
                   onClick={() => {
                     setCurrentSessionId(session.id);
                     if (window.innerWidth < 768) setIsSidebarOpen(false);
@@ -516,8 +518,8 @@ export default function App() {
                   className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
                     currentSessionId === session.id 
                       ? isAwakened 
-                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
-                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10' 
+                        ? 'bg-cyan-500/20 text-white shadow-[0_0_20px_rgba(0,242,255,0.25)] border border-cyan-500/40'
+                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-lg border border-cyan-200/50 dark:border-white/10' 
                       : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
                   }`}
                 >
@@ -554,8 +556,8 @@ export default function App() {
           <div className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2">
             {sessions.length > 0 && (
               <motion.button 
-                whileTap={{ scale: 0.97 }}
-                whileHover={{ filter: "brightness(1.2)" }}
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
                 onClick={() => {
                   if (window.confirm('Are you sure you want to clear all timelines?')) {
                     clearAllSessions();
@@ -568,8 +570,8 @@ export default function App() {
               </motion.button>
             )}
             <motion.button 
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ filter: "brightness(1.2)" }}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
               onClick={() => openModal('tasks')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
@@ -577,8 +579,8 @@ export default function App() {
               TASK LIST
             </motion.button>
             <motion.button 
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ filter: "brightness(1.2)" }}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
               onClick={() => openModal('settings')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >

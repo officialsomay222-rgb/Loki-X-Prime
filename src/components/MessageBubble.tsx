@@ -804,10 +804,10 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative group/bubble content-auto transition-all duration-500 ${bubblePadding} backdrop-blur-2xl border shadow-lg hover:shadow-xl overflow-hidden ${
+              className={`relative group/bubble content-auto transition-all duration-500 ${bubblePadding} backdrop-blur-2xl border shadow-lg hover:shadow-2xl overflow-hidden hover:border-cyan-500/20 ${
                 bubbleStyle === "glass"
-                  ? "bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-2xl sm:rounded-3xl rounded-tr-sm"
-                  : "bg-slate-100/40 dark:bg-white/10 border-slate-200/50 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-xl sm:rounded-2xl rounded-tr-sm"
+                  ? "bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border-white/20 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-2xl sm:rounded-3xl rounded-tr-sm"
+                  : "bg-gradient-to-br from-cyan-800/60 to-blue-800/60 border-cyan-500/50 text-white rounded-xl sm:rounded-2xl rounded-tr-sm"
               }`}
             >
               {message.audioUrl && (
