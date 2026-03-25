@@ -42,6 +42,7 @@ interface ChatInputProps {
     text: string,
     isImageMode?: boolean,
     audioUrl?: string,
+    attachments?: { data: string, mimeType: string }[]
   ) => void;
   onDeleteSession: (e: React.MouseEvent, id: string) => void;
   currentSessionId: string | null;
@@ -98,19 +99,49 @@ export const ChatInput = memo(
         }
       }), [input]);
 
+      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>([]);
       const fileInputRef = useRef<HTMLInputElement>(null);
       const [audioVolume, setAudioVolume] = useState<number>(0);
       const audioContextRef = useRef<AudioContext | null>(null);
       const analyserRef = useRef<AnalyserNode | null>(null);
       const silenceStartRef = useRef<number | null>(null);
 
-      const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-          // Handle file upload logic here
-          console.log("Files selected:", files);
-          // You can add logic to display selected files or pass them to the parent component
+          const newAttachments = [...attachments];
+          for (let i = 0; i < files.length; i++) {
+            if (newAttachments.length >= 10) break; // Max 10 images
+            const file = files[i];
+            if (file.type.startsWith('image/')) {
+              const url = URL.createObjectURL(file);
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              await new Promise<void>((resolve) => {
+                reader.onload = () => {
+                  const base64Data = (reader.result as string).split(',')[1];
+                  newAttachments.push({
+                    data: base64Data,
+                    mimeType: file.type,
+                    url: url
+                  });
+                  resolve();
+                };
+              });
+            }
+          }
+          setAttachments(newAttachments);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
         }
+      };
+      
+      const removeAttachment = (index: number) => {
+        const newAttachments = [...attachments];
+        URL.revokeObjectURL(newAttachments[index].url);
+        newAttachments.splice(index, 1);
+        setAttachments(newAttachments);
       };
       const animationFrameRef = useRef<number | null>(null);
       const hasSpokenRef = useRef<boolean>(false);
@@ -195,9 +226,10 @@ export const ChatInput = memo(
       };
 
       const handleSend = () => {
-        if (!input.trim() || isLoading) return;
-        onSendMessage(input.trim(), isImageMode);
+        if ((!input.trim() && attachments.length === 0) || isLoading) return;
+        onSendMessage(input.trim(), isImageMode, undefined, attachments);
         setInput("");
+        setAttachments([]);
         if (inputRef.current) {
           inputRef.current.style.height = "auto";
         }
@@ -737,6 +769,21 @@ export const ChatInput = memo(
                           : ""
                     }`}
                   >
+                    {attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 px-2 pb-2">
+                        {attachments.map((att, index) => (
+                          <div key={index} className="relative group w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm">
+                            <img src={att.url} alt={`attachment-${index}`} className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeAttachment(index)}
+                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <textarea
                       ref={inputRef}
                       value={input}

@@ -103,7 +103,7 @@ app.post("/api/tts", async (req, res) => {
 });
 
 app.post("/api/chat", async (req, res) => {
-  const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding } = req.body;
+  const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
 
   if (!message || !mode) {
     return res.status(400).json({ error: "Message and mode are required" });
@@ -128,10 +128,12 @@ app.post("/api/chat", async (req, res) => {
 
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
 
-      if (mode === "fast") {
-        // Fast mode uses Gemini 3.1 Flash Lite as requested
+      const hasAttachments = attachments && attachments.length > 0;
+
+      if (mode === "fast" || hasAttachments) {
+        // Fast mode or when attachments are present uses Gemini
         if (!apiKey) {
-          throw new Error("Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Fast Model.");
+          throw new Error("Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model.");
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -166,7 +168,27 @@ app.post("/api/chat", async (req, res) => {
             }
           });
         }
-        contents.push({ role: 'user', parts: [{ text: message }] });
+        
+        const userParts: any[] = [];
+        if (hasAttachments) {
+          attachments.forEach((att: any) => {
+            userParts.push({
+              inlineData: {
+                data: att.data,
+                mimeType: att.mimeType
+              }
+            });
+          });
+        }
+        if (message && message.trim().length > 0) {
+          userParts.push({ text: message });
+        } else if (hasAttachments) {
+          userParts.push({ text: "Please analyze this image." });
+        } else {
+          userParts.push({ text: " " });
+        }
+        
+        contents.push({ role: 'user', parts: userParts });
 
         const responseStream = await ai.models.generateContentStream({
           model: modelName,

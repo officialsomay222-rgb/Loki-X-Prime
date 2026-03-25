@@ -815,6 +815,15 @@ export const MessageBubble = memo(
                   <AudioPlayer url={message.audioUrl} autoPlay={false} />
                 </div>
               )}
+              {message.attachments && message.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {message.attachments.map((att, index) => (
+                    <div key={index} className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/20 shadow-sm">
+                      <img src={`data:${att.mimeType};base64,${att.data}`} alt={`attachment-${index}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
               {message.content && (
                 <div
                   className={`whitespace-pre-wrap ${userFontSizeClass} leading-relaxed font-medium`}
@@ -874,6 +883,7 @@ export const MessageBubble = memo(
       prevProps.message.status === nextProps.message.status &&
       prevProps.message.isImage === nextProps.message.isImage &&
       prevProps.message.audioUrl === nextProps.message.audioUrl &&
+      prevProps.message.attachments === nextProps.message.attachments &&
       prevProps.message.isVoiceResponse === nextProps.message.isVoiceResponse &&
       prevProps.commanderName === nextProps.commanderName &&
       prevProps.avatarUrl === nextProps.avatarUrl &&

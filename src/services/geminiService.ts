@@ -17,6 +17,7 @@ export const generateChatResponse = async (params: {
   temperature?: number;
   topP?: number;
   topK?: number;
+  attachments?: { data: string, mimeType: string }[];
 }) => {
   const response = await fetch("/api/chat", {
     method: "POST",
@@ -35,7 +36,8 @@ export const generateChatResponse = async (params: {
       topP: params.topP,
       topK: params.topK,
       thinkingMode: params.thinkingMode,
-      searchGrounding: params.searchGrounding
+      searchGrounding: params.searchGrounding,
+      attachments: params.attachments
     }),
   });
 

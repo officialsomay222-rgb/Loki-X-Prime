@@ -17,6 +17,7 @@ export type Message = {
   isImage?: boolean;
   audioUrl?: string;
   isVoiceResponse?: boolean;
+  attachments?: { data: string, mimeType: string }[];
 };
 
 export type ChatSession = {
@@ -36,7 +37,7 @@ interface ChatState {
   clearAllSessions: () => void;
   clearSessionMessages: (id: string) => void;
   setCurrentSessionId: (id: string) => void;
-  sendMessage: (text: string, isImageMode?: boolean, audioUrl?: string) => void;
+  sendMessage: (text: string, isImageMode?: boolean, audioUrl?: string, attachments?: { data: string, mimeType: string }[]) => void;
   stopGeneration: () => void;
   renameSession: (id: string, title: string) => void;
 }
@@ -227,8 +228,8 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
   }, []);
 
-  const sendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string) => {
-    if ((!text.trim() && !audioUrl) || !currentSessionId || isLoading) return;
+  const sendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string, attachments?: { data: string, mimeType: string }[]) => {
+    if ((!text.trim() && !audioUrl && (!attachments || attachments.length === 0)) || !currentSessionId || isLoading) return;
 
     // Tone change logic
     const toneMatch = text.match(/change my tone to (formal|casual|happy|custom)/i);
@@ -261,7 +262,8 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       timestamp: new Date(),
       status: 'sent',
       isImage: isImageMode,
-      audioUrl: persistentAudioUrl || undefined
+      audioUrl: persistentAudioUrl || undefined,
+      attachments: attachments
     };
     
     const processedText = isVoiceRequest ? `[VOICE_INPUT] ${text.trim()}` : text.trim();
@@ -324,7 +326,8 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
           systemInstruction: `${getFullSystemInstruction()}\n\nIMPORTANT: If the user input starts with [VOICE_INPUT], you are receiving a voice message. Bypass extensive reasoning or research. Keep your response concise, conversational, and direct. Provide a text answer as requested by the user.`,
           temperature,
           topP,
-          topK
+          topK,
+          attachments
         });
 
         let fullResponse = "";

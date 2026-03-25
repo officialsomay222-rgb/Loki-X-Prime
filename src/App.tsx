@@ -208,8 +208,8 @@ export default function App() {
     };
   }, []);
 
-  const handleSendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: boolean | string) => {
-    await sendMessage(text, isImageMode, typeof audioUrl === 'string' ? audioUrl : undefined);
+  const handleSendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: boolean | string, attachments?: { data: string, mimeType: string }[]) => {
+    await sendMessage(text, isImageMode, typeof audioUrl === 'string' ? audioUrl : undefined, attachments);
     if (window.innerWidth >= 768) {
       setTimeout(() => {
         inputRef.current?.focus();
