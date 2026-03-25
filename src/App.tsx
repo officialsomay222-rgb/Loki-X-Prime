@@ -1,24 +1,17 @@
-import React, { useState, useRef, useEffect, memo, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
-
-const CommandPalette = lazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
-const SettingsModal = lazy(() => import('./components/SettingsModal').then(m => ({ default: m.SettingsModal })));
+import { CommandPalette } from './components/CommandPalette';
+import { SettingsModal } from './components/SettingsModal';
 import { useSettings } from './contexts/SettingsContext';
 import { useChat } from './contexts/ChatContext';
-import { toast } from './contexts/ToastContext';
 import { InfinityLogo, HeaderInfinityLogo } from './components/Logos';
 import { format, isToday } from 'date-fns';
-const TaskWidget = lazy(() => import('./features/tasks/components/TaskWidget').then(m => ({ default: m.TaskWidget })));
-
+import { TaskWidget } from './features/tasks/components/TaskWidget';
 import { 
   Plus, 
-  MoreVertical,
-  ChevronDown,
-  Share2,
-  Pin, 
   MessageSquare, 
   Settings, 
   Trash2, 
@@ -27,7 +20,6 @@ import {
   User as UserIcon,
   Sun,
   Moon,
-  Zap,
   X,
   Image as ImageIcon,
   Palette,
@@ -53,7 +45,6 @@ declare global {
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
 
   const [isBooting, setIsBooting] = useState(true); // Enabled booting
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
@@ -112,8 +103,7 @@ export default function App() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<ChatInputHandle>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -254,7 +244,6 @@ export default function App() {
   const copyToClipboard = useCallback((text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    toast.success('Copied to Clipboard');
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
 
@@ -395,9 +384,7 @@ export default function App() {
     <div 
       className={`w-full h-[100dvh] relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
-      <Suspense fallback={null}>
-        <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
-      </Suspense>
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}
       <AwakenedBackground isAwakened={isAwakened} bgStyle={bgStyle} theme={theme} />
 
@@ -409,18 +396,19 @@ export default function App() {
           <div className="screen-flash-overlay" style={{ opacity: awakening.phase === 'shockwave' ? undefined : 0, animation: awakening.phase === 'shockwave' ? 'screen-flash 3s ease-out forwards' : 'none' }} />
           
           {awakening.phase === 'shockwave' && (
-            <div className="absolute inset-0 z-50 overflow-hidden bg-black/90 backdrop-blur-3xl animate-in fade-in duration-500">
-              <video
-                src="https://file.garden/aaZ8z-HZC2m4M4bB/231792.mp4"
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-100"
-                style={{ filter: 'contrast(1.2) brightness(1.2)' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80 pointer-events-none" />
-            </div>
+            <>
+              <div className="shockwave-core" style={{ left: '50%', top: '35%' }} />
+              <div className="rgb-shockwave rgb-shockwave-1" style={{ left: '50%', top: '35%' }} />
+              <div className="rgb-shockwave rgb-shockwave-2" style={{ left: '50%', top: '35%' }} />
+              <div className="rgb-shockwave rgb-shockwave-3" style={{ left: '50%', top: '35%' }} />
+              <div className="rgb-shockwave rgb-shockwave-glitch" style={{ left: '50%', top: '35%' }} />
+              <div className="light-streak" style={{ left: '50%', top: '35%' }} />
+              <div className="particle-burst" style={{ left: '50%', top: '35%' }}>
+                {[...Array(16)].map((_, i) => (
+                  <div key={i} className="particle" style={{ '--angle': `${i * 22.5}deg` } as any} />
+                ))}
+              </div>
+            </>
           )}
 
           <div 
@@ -448,22 +436,18 @@ export default function App() {
             >
               <X className="w-6 h-6" />
             </button>
-            <Suspense fallback={<div className="p-8 text-center text-white/50 animate-pulse">Initializing Interface...</div>}>
-              <TaskWidget />
-            </Suspense>
+            <TaskWidget />
           </div>
         </div>
       )}
 
-      {/* Settings Modal - Lazy Loaded */}
-      <Suspense fallback={null}>
-        <SettingsModal 
-          isOpen={isSettingsOpen} 
-          onClose={closeModal} 
-          onExportChat={handleExportChat}
-          onClearAllChats={clearAllSessions}
-        />
-      </Suspense>
+      {/* Settings Modal - Full Screen Refined */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={closeModal} 
+        onExportChat={handleExportChat}
+        onClearAllChats={clearAllSessions}
+      />
 
       {/* 3. Main Content Layer (Flex Column) */}
       <div className={`flex-1 flex flex-col min-h-0 z-10 relative ${isSidebarOpen ? 'md:pl-72' : ''} transition-all duration-300`}>
@@ -513,30 +497,28 @@ export default function App() {
             </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 custom-scrollbar touch-pan-y transform-gpu overscroll-contain">
-            <div className="text-[0.65rem] font-bold text-slate-400 dark:text-[#6b6b80] uppercase tracking-[0.25em] mb-4 px-3 mt-2">
+          <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar touch-pan-y transform-gpu overscroll-contain">
+            <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
               Recent Timelines
             </div>
             <AnimatePresence>
               {sessions.map((session, index) => (
                 <motion.div 
                   key={session.id}
-                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  transition={{ duration: 0.4, type: "spring", bounce: 0.3, delay: index * 0.05 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
                   onClick={() => {
                     setCurrentSessionId(session.id);
                     if (window.innerWidth < 768) setIsSidebarOpen(false);
                   }}
-                  className={`group relative flex items-center justify-between px-3 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 mb-1 ${
+                  className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
                     currentSessionId === session.id 
                       ? isAwakened 
-                        ? 'bg-cyan-500/20 text-white shadow-[0_0_20px_rgba(0,242,255,0.15)] border border-cyan-500/40'
-                        : 'bg-slate-200/60 dark:bg-[#1E1F20] text-slate-900 dark:text-white font-medium' 
-                      : `hover:bg-slate-100/80 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-400 hover:text-white' : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'}`
+                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
+                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10' 
+                      : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
                   }`}
                 >
                   {currentSessionId === session.id && (
@@ -544,7 +526,7 @@ export default function App() {
                   )}
                   <div className="flex items-center gap-3 overflow-hidden">
                     <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${currentSessionId === session.id ? 'text-cyan-600 dark:text-[#00f2ff]' : isAwakened ? 'text-slate-400 group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
-                    <div className="flex-1 min-w-0 truncate text-sm font-semibold tracking-tight text-left">
+                    <div className="truncate text-sm font-semibold tracking-tight">
                       {session.title}
                     </div>
                   </div>
@@ -572,12 +554,11 @@ export default function App() {
           <div className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2">
             {sessions.length > 0 && (
               <motion.button 
-                whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
+                whileTap={{ scale: 0.97 }}
+                whileHover={{ filter: "brightness(1.2)" }}
                 onClick={() => {
                   if (window.confirm('Are you sure you want to clear all timelines?')) {
                     clearAllSessions();
-                    toast.success('All Timelines Cleared');
                   }
                 }}
                 className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent"
@@ -587,8 +568,8 @@ export default function App() {
               </motion.button>
             )}
             <motion.button 
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => openModal('tasks')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
@@ -596,8 +577,8 @@ export default function App() {
               TASK LIST
             </motion.button>
             <motion.button 
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.02, filter: "brightness(1.2)" }}
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => openModal('settings')}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
             >
@@ -610,7 +591,7 @@ export default function App() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
           {/* Header */}
-          <header className={`h-16 sm:h-20 flex items-center justify-between px-3 sm:px-8 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 shrink-0 transition-all duration-500 z-20  ${isAwakened ? "bg-[#050b14]/80 border-b border-cyan-500/20 shadow-[0_4px_30px_rgba(0,242,255,0.1)] backdrop-blur-xl" : "bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/5"}`}>
+          <header className="h-16 sm:h-20 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               {!isSidebarOpen && (
                 <button 
@@ -666,18 +647,15 @@ export default function App() {
           </header>
 
           {/* Chat Area - Scrollable */}
-          <div 
-            ref={scrollContainerRef}
-
-            className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative w-full transform-gpu overscroll-contain"
-          >
-            <div className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 min-h-full flex flex-col ${(!currentSession || currentSession.messages.length === 0) ? 'justify-center items-center py-10' : 'pt-4 space-y-6 sm:space-y-8'}`}>
+          <div className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu ${(!currentSession || currentSession.messages.length === 0) ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
+            <div className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${(!currentSession || currentSession.messages.length === 0) ? 'justify-center items-center' : 'pt-4 space-y-6 sm:space-y-8'}`}>
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 w-full select-none"
+                  className="flex flex-col items-center justify-center text-center space-y-8 w-full h-full touch-none select-none"
+                  onTouchMove={(e) => e.preventDefault()} // CRITICAL: Stop pull-to-refresh/scroll on empty state
                 >
                    <div className={`relative flex justify-center items-center transition-all duration-700 ${isAwakened ? 'w-full max-w-[480px] sm:max-w-[700px] aspect-[2/1]' : 'w-full max-w-[200px] sm:max-w-[280px] aspect-[2/1]'}`}>
                       {isAwakened ? (
@@ -689,52 +667,14 @@ export default function App() {
                         <InfinityLogo />
                       )}
                    </div>
-                   <div className="relative text-center w-full px-4">
-                     <h2 className="text-2xl sm:text-4xl font-semibold text-slate-800 dark:text-[#E3E3E3] tracking-tight leading-snug mb-2 transition-all duration-1000">
-                        {isAwakened ? 'System Awakened.' : `Good afternoon, ${commanderName}.`}
-                     </h2>
-                     <p className={`text-slate-500 dark:text-[#8e8e93] text-sm sm:text-base font-medium transition-all duration-1000 ${isAwakened ? 'text-cyan-400 animate-pulse' : ''}`}>
-                        How can I help you today?
+                   <div className="relative">
+                     <p className={`text-slate-500 dark:text-[#6b6b80] tracking-[4px] sm:tracking-[8px] text-[0.65rem] sm:text-xs font-montserrat font-bold uppercase drop-shadow-sm px-4 transition-all duration-1000 ${isAwakened ? 'text-cyan-300 animate-pulse' : 'opacity-80 hover:opacity-100'}`} style={isAwakened ? { textShadow: '0 0 15px rgba(0,242,255,0.6)' } : {}}>
+                        {isAwakened ? 'SYSTEM AWAKENED. AWAITING INPUT.' : `AWAITING COMMAND, ${commanderName.toUpperCase()}.`}
                      </p>
                      {isAwakened && (
-                       <div className="absolute -inset-10 bg-cyan-500/10 blur-3xl rounded-full -z-10 animate-pulse"></div>
+                       <div className="absolute -inset-4 bg-cyan-500/5 blur-xl rounded-full -z-10 animate-pulse"></div>
                      )}
                    </div>
-
-                   <motion.div 
-                     initial="hidden"
-                     animate="visible"
-                     variants={{
-                       hidden: { opacity: 0 },
-                       visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
-                     }}
-                     className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-4xl px-4 mt-8 sm:mt-12"
-                   >
-                     {[
-                       { icon: FileText, label: "Summarize a complex document" },
-                       { icon: Zap, label: "Explain quantum computing simply" },
-                       { icon: ImageIcon, label: "Generate an image of a cyberpunk city" }
-                     ].map((action, i) => (
-                       <motion.button
-                         key={i}
-                         variants={{
-                           hidden: { opacity: 0, y: 20 },
-                           visible: { opacity: 1, y: 0 }
-                         }}
-                         onClick={() => handleSendMessage(action.label)}
-                         className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-3xl bg-white/50 dark:bg-[#161616]/60 border border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-[#1e1e1e] backdrop-blur-3xl transition-all text-left group overflow-hidden shadow-sm dark:shadow-none hover:shadow-md"
-                       >
-                         <div className="p-2 sm:p-3 bg-slate-100 dark:bg-white/5 rounded-2xl group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 transition-colors shrink-0">
-                           <action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" />
-                         </div>
-                         <div className="flex flex-col justify-center h-full sm:mt-2">
-                           <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors line-clamp-2 leading-relaxed">
-                             {action.label}
-                           </span>
-                         </div>
-                       </motion.button>
-                     ))}
-                   </motion.div>
                 </motion.div>
               ) : (
                 <>

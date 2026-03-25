@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { db } from '@/src/db';
 import { type Task } from '../schemas/taskSchema';
-import { toast } from '../../../contexts/ToastContext';
+import { toast } from 'sonner';
 
 interface TaskState {
   tasks: Task[];

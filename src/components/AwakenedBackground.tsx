@@ -20,11 +20,11 @@ export const AwakenedBackground = memo(({ isAwakened, bgStyle, theme }: Awakened
       {isAwakened && (
         <>
           {/* Cosmic Aura */}
-          <div className="absolute inset-[-50px] opacity-80 mix-blend-screen animate-[cosmic-aura-pulse_4s_ease-in-out_infinite_alternate] will-change-opacity gpu-accelerate"
+          <div className="absolute inset-[-50px] opacity-80 mix-blend-screen animate-[cosmic-aura-pulse_4s_ease-in-out_infinite_alternate] will-change-opacity"
                style={{ background: 'radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 242, 255, 0.1) 70%, rgba(189, 0, 255, 0.05) 100%)' }} />
           
           {/* Nebula Effect */}
-          <div className="absolute inset-0 opacity-100 gpu-accelerate"
+          <div className="absolute inset-0 opacity-100"
                style={{ 
                  background: `
                    radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.08), transparent 70%),

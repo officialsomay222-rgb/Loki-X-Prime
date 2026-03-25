@@ -8,7 +8,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { GlobalInteractionProvider } from './contexts/GlobalInteractionContext';
 import { registerSW } from 'virtual:pwa-register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ToastProvider } from './contexts/ToastContext';
+import { Toaster } from 'sonner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,9 +36,8 @@ createRoot(document.getElementById('root')!).render(
         <SettingsProvider>
           <GlobalInteractionProvider>
             <ChatProvider>
-              <ToastProvider>
-                <App />
-              </ToastProvider>
+              <App />
+              <Toaster theme="dark" position="top-center" />
             </ChatProvider>
           </GlobalInteractionProvider>
         </SettingsProvider>

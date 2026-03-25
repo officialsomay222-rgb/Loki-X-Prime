@@ -30,23 +30,10 @@ import { useSmoothStream } from "../hooks/useSmoothStream";
 // Extract components to prevent re-creation on every render
 const MarkdownCode = ({ node, inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || "");
-  const [copied, setCopied] = useState(false);
-
   return !inline && match ? (
-    <div className="my-4 rounded-xl overflow-hidden border border-white/20 bg-black/40 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-md relative group/code transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,242,255,0.15)] hover:border-white/30">
-      <div className="bg-black/80 text-xs text-slate-400 px-4 py-2 flex justify-between items-center border-b border-white/10">
-        <span className="font-mono uppercase tracking-wider text-[10px]">{match[1]}</span>
-        <button 
-          onClick={() => {
-            navigator.clipboard.writeText(String(children).replace(/\n$/, ""));
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-          className="p-1.5 rounded-md bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition-all duration-200 flex items-center gap-1.5 opacity-0 group-hover/code:opacity-100 active:scale-95"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-          <span className="text-[10px] uppercase tracking-wider">{copied ? 'Copied' : 'Copy'}</span>
-        </button>
+    <div className="rounded-md overflow-hidden my-4 border border-white/10 shadow-lg">
+      <div className="bg-black/80 text-xs text-slate-400 px-4 py-1.5 flex justify-between items-center border-b border-white/5">
+        <span>{match[1]}</span>
       </div>
       <SyntaxHighlighter
         {...props}
@@ -54,13 +41,13 @@ const MarkdownCode = ({ node, inline, className, children, ...props }: any) => {
         style={vscDarkPlus}
         language={match[1]}
         PreTag="div"
-        customStyle={{ margin: 0, background: "transparent", padding: "1rem" }}
+        customStyle={{ margin: 0, background: "#0d0d12", padding: "1rem" }}
       />
     </div>
   ) : (
     <code
       {...props}
-      className={`${className} bg-black/20 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-white font-mono text-sm border border-white/5`}
+      className={`${className} bg-black/20 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-white font-mono text-sm`}
     >
       {children}
     </code>
@@ -666,7 +653,7 @@ export const MessageBubble = memo(
               <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase font-mono">
                 Loki Prime
               </span>
-              <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-slate-500 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-slate-500 opacity-60">
                 {formatDate(message.timestamp)}
               </span>
             {!message.content && !message.audioUrl && (
@@ -753,10 +740,10 @@ export const MessageBubble = memo(
 
             {/* Copy & Delete Buttons */}
             {message.content && (
-              <div className="absolute -right-2 sm:-right-4 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+              <div className="absolute -right-2 sm:-right-4 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
                   onClick={() => onCopy(message.content, message.id)}
-                  className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass} hover:scale-110 active:scale-95 transition-all duration-200`}
+                  className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass}`}
                   title="Copy text"
                 >
                   {copiedId === message.id ? (
@@ -768,7 +755,7 @@ export const MessageBubble = memo(
                 {onDelete && (
                   <button
                     onClick={() => onDelete(message.id)}
-                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm hover:scale-110 active:scale-95 transition-all duration-200"
+                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm"
                     title="Delete message"
                   >
                     <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -794,7 +781,7 @@ export const MessageBubble = memo(
             <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-500 dark:text-[#888] uppercase">
               {commanderName}
             </span>
-            <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 dark:text-[#6b6b80] opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 dark:text-[#6b6b80]">
               {formatDate(message.timestamp)}
             </span>
             {message.status === "pending" && (
@@ -817,10 +804,10 @@ export const MessageBubble = memo(
 
           <div className="relative group w-full">
             <div
-              className={`relative group/bubble content-auto transition-all duration-500 ${bubblePadding} backdrop-blur-2xl border shadow-lg hover:shadow-2xl overflow-hidden hover:border-cyan-500/20 ${
+              className={`relative group/bubble content-auto transition-all duration-500 ${bubblePadding} backdrop-blur-2xl border shadow-lg hover:shadow-xl overflow-hidden ${
                 bubbleStyle === "glass"
-                  ? "bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border-white/20 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-2xl sm:rounded-3xl rounded-tr-sm"
-                  : "bg-gradient-to-br from-cyan-800/60 to-blue-800/60 border-cyan-500/50 text-white rounded-xl sm:rounded-2xl rounded-tr-sm"
+                  ? "bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-2xl sm:rounded-3xl rounded-tr-sm"
+                  : "bg-slate-100/40 dark:bg-white/10 border-slate-200/50 dark:border-white/10 text-slate-900/90 dark:text-white/90 rounded-xl sm:rounded-2xl rounded-tr-sm"
               }`}
             >
               {message.audioUrl && (
@@ -844,7 +831,7 @@ export const MessageBubble = memo(
                   <>
                     <button
                       onClick={() => onCopy(message.content, message.id)}
-                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                       title="Copy text"
                     >
                       {copiedId === message.id ? (
@@ -856,7 +843,7 @@ export const MessageBubble = memo(
                     {onEdit && (
                       <button
                         onClick={() => onEdit(message.content)}
-                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                         title="Edit message"
                       >
                         <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
