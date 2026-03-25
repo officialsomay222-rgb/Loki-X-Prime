@@ -139,7 +139,7 @@
 .bootloader-border {
   position: fixed;
   inset: 0;
-  border: 4px solid transparent;
+  border: 2px solid transparent;
   background: conic-gradient(
       from var(--border-angle),
       #ff0000 0%,
@@ -165,7 +165,7 @@
   content: "";
   position: absolute;
   inset: -4px;
-  border: 4px solid transparent;
+  border: 2px solid transparent;
   background: inherit;
   -webkit-mask: inherit;
   mask: inherit;
@@ -590,22 +590,22 @@ a:focus-visible {
 /* Awakening Animation - Masterpiece Level */
 @keyframes shockwave-expand-rgb {
   0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.8);
+    transform: translate(-50%, -50%) translateZ(0) scale(0.1);
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(35);
+    transform: translate(-50%, -50%) translateZ(0) scale(20);
     opacity: 0;
   }
 }
 
 @keyframes shockwave-glitch {
   0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.8);
+    transform: translate(-50%, -50%) translateZ(0) scale(0.1);
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(45);
+    transform: translate(-50%, -50%) translateZ(0) scale(25);
     opacity: 0;
   }
 }
@@ -616,31 +616,26 @@ a:focus-visible {
     opacity: 1;
   }
   100% {
-    transform: rotate(var(--angle)) translateY(600px) translateZ(0) scale(0);
+    transform: rotate(var(--angle)) translateY(100vh) translateZ(0) scale(0);
     opacity: 0;
   }
 }
 
 @keyframes core-explode {
   0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.5);
+    transform: translate(-50%, -50%) translateZ(0) scale(0);
     opacity: 1;
-    filter: brightness(2);
   }
   100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(20);
+    transform: translate(-50%, -50%) translateZ(0) scale(15);
     opacity: 0;
-    filter: brightness(1);
   }
 }
 
 @keyframes screen-flash {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 @keyframes avatar-to-center {
@@ -648,19 +643,19 @@ a:focus-visible {
     transform: translate(var(--start-x), var(--start-y)) translateZ(0) scale(1);
     opacity: 0;
   }
+  10% { opacity: 1; }
   100% {
-    transform: translate(calc(50vw - 50%), calc(35vh - 50%)) translateZ(0)
-      scale(3.5);
+    transform: translate(calc(50vw - 50%), calc(35vh - 50%)) translateZ(0) scale(3.5);
     opacity: 1;
   }
 }
 
 @keyframes avatar-to-origin {
   0% {
-    transform: translate(calc(50vw - 50%), calc(35vh - 50%)) translateZ(0)
-      scale(3.5);
+    transform: translate(calc(50vw - 50%), calc(35vh - 50%)) translateZ(0) scale(3.5);
     opacity: 1;
   }
+  90% { opacity: 1; }
   100% {
     transform: translate(var(--start-x), var(--start-y)) translateZ(0) scale(1);
     opacity: 0;
@@ -699,25 +694,13 @@ a:focus-visible {
 }
 
 @keyframes rgb-shift-1 {
-  0% {
-    transform: translate(-2px, 0);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(-4px, 2px);
-    opacity: 0.5;
-  }
+  0% { transform: translate(-2px, 0); opacity: 0.8; }
+  100% { transform: translate(-4px, 2px); opacity: 0.5; }
 }
 
 @keyframes rgb-shift-2 {
-  0% {
-    transform: translate(2px, 0);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(4px, -2px);
-    opacity: 0.5;
-  }
+  0% { transform: translate(2px, 0); opacity: 0.8; }
+  100% { transform: translate(4px, -2px); opacity: 0.5; }
 }
 
 .avatar-awakening {
@@ -727,22 +710,24 @@ a:focus-visible {
   z-index: 100000;
   will-change: transform;
   border-radius: 50%;
-  box-shadow: 0 0 40px rgba(0, 242, 255, 0.4);
-  transform: translateZ(0);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.6);
+  transform: translateZ(0); /* Hardware accelerated */
 }
 
 .avatar-moving-in {
-  animation: avatar-to-center 1.5s ease-in-out forwards;
+  /* Intense snap animation */
+  animation: avatar-to-center 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .avatar-moving-out {
-  animation: avatar-to-origin 1.5s ease-in-out forwards;
+  /* Intense snap out */
+  animation: avatar-to-origin 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .rgb-shockwave {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 5;
@@ -751,18 +736,9 @@ a:focus-visible {
 }
 
 @keyframes success-flash-glow {
-  0% {
-    border-color: rgba(16, 185, 129, 0.2);
-    box-shadow: 0 0 0 rgba(16, 185, 129, 0);
-  }
-  50% {
-    border-color: rgba(16, 185, 129, 1);
-    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
-  }
-  100% {
-    border-color: rgba(16, 185, 129, 0.2);
-    box-shadow: 0 0 0 rgba(16, 185, 129, 0);
-  }
+  0% { border-color: rgba(16, 185, 129, 0.2); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+  50% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
+  100% { border-color: rgba(16, 185, 129, 0.2); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .success-flash {
@@ -774,39 +750,42 @@ a:focus-visible {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 4px solid rgba(0, 242, 255, 0.5);
+  border: 2px solid rgba(0, 242, 255, 0.5);
+  box-shadow: inset 0 0 15px rgba(0,242,255,0.2), 0 0 20px rgba(0,242,255,0.4);
 }
 
 .rgb-shockwave-1 {
-  animation: shockwave-expand-rgb 3s ease-out both;
+  /* Extreme ease snap for shockwave */
+  animation: shockwave-expand-rgb 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .rgb-shockwave-1::before {
-  border-color: rgba(0, 242, 255, 0.8);
+  border-color: rgba(0, 242, 255, 1);
 }
 
 .rgb-shockwave-2 {
-  animation: shockwave-expand-rgb 3.5s ease-out both;
-  animation-delay: 0.2s;
+  animation: shockwave-expand-rgb 3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.1s;
 }
 .rgb-shockwave-2::before {
-  border-color: rgba(189, 0, 255, 0.4);
+  border-color: rgba(189, 0, 255, 0.8);
 }
 
 .rgb-shockwave-3 {
-  animation: shockwave-expand-rgb 4s ease-out both;
-  animation-delay: 0.4s;
+  animation: shockwave-expand-rgb 3.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
 }
 .rgb-shockwave-3::before {
-  border-color: rgba(255, 0, 85, 0.2);
+  border-color: rgba(255, 0, 85, 0.6);
 }
 
 .rgb-shockwave-glitch {
-  animation: shockwave-glitch 2.5s ease-out both;
+  animation: shockwave-glitch 2s cubic-bezier(0.16, 1, 0.3, 1) both;
   z-index: 99999;
 }
 .rgb-shockwave-glitch::before {
-  background: rgba(0, 242, 255, 0.05);
-  border: 2px solid rgba(0, 242, 255, 0.5);
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, transparent 60%);
+  border: 1px solid rgba(0, 242, 255, 0.5);
+  box-shadow: none;
 }
 
 .particle-burst {
@@ -818,40 +797,33 @@ a:focus-visible {
 
 .particle {
   position: absolute;
-  width: 3px;
-  height: 20px;
+  width: 2px;
+  height: 40px;
   background: linear-gradient(to bottom, #fff, #00f2ff, transparent);
   border-radius: 2px;
-  animation: particle-fly 2.5s ease-out forwards;
-  box-shadow: 0 0 5px #00f2ff;
+  animation: particle-fly 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 0 8px #00f2ff;
 }
 
 .shockwave-core {
   position: fixed;
-  width: 192px;
-  height: 192px;
+  width: 250px;
+  height: 250px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #ffffff 0%,
-    rgba(0, 242, 255, 0.5) 40%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, #ffffff 0%, rgba(0, 242, 255, 0.8) 30%, transparent 70%);
+  mix-blend-mode: screen;
   pointer-events: none;
   z-index: 99998;
-  animation: core-explode 3s ease-out both;
+  animation: core-explode 2s cubic-bezier(0.16, 1, 0.3, 1) both;
   transform: translateZ(0);
 }
 
 .screen-flash-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  mix-blend-mode: screen;
   pointer-events: none;
-  z-index: 99996;
-  will-change: opacity;
-  animation: screen-flash 3s ease-out forwards;
-  transform: translateZ(0);
 }
 
 .font-montserrat {
