@@ -844,7 +844,7 @@ export const MessageBubble = memo(
                   <>
                     <button
                       onClick={() => onCopy(message.content, message.id)}
-                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
+                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       title="Copy text"
                     >
                       {copiedId === message.id ? (
@@ -856,7 +856,7 @@ export const MessageBubble = memo(
                     {onEdit && (
                       <button
                         onClick={() => onEdit(message.content)}
-                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
+                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         title="Edit message"
                       >
                         <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

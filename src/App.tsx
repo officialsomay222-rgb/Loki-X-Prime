@@ -15,6 +15,10 @@ const TaskWidget = lazy(() => import('./features/tasks/components/TaskWidget').t
 
 import { 
   Plus, 
+  MoreVertical,
+  ChevronDown,
+  Share2,
+  Pin, 
   MessageSquare, 
   Settings, 
   Trash2, 
@@ -49,6 +53,7 @@ declare global {
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
 
   const [isBooting, setIsBooting] = useState(true); // Enabled booting
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
@@ -716,13 +721,12 @@ export default function App() {
                        hidden: { opacity: 0 },
                        visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
                      }}
-                     className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full max-w-3xl px-4 mt-8 sm:mt-12"
+                     className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-4xl px-4 mt-8 sm:mt-12"
                    >
                      {[
-                       { icon: ImageIcon, label: "Generate an image of a cyberpunk city" },
                        { icon: FileText, label: "Summarize a complex document" },
                        { icon: Zap, label: "Explain quantum computing simply" },
-                       { icon: Type, label: "Write a professional email" }
+                       { icon: ImageIcon, label: "Generate an image of a cyberpunk city" }
                      ].map((action, i) => (
                        <motion.button
                          key={i}
@@ -731,12 +735,12 @@ export default function App() {
                            visible: { opacity: 1, y: 0 }
                          }}
                          onClick={() => handleSendMessage(action.label)}
-                         className="flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white/50 dark:bg-[#161616]/60 border border-slate-200/50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-[#1e1e1e] backdrop-blur-md transition-all text-left group overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-none"
+                         className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-3xl bg-white/50 dark:bg-[#161616]/60 border border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-[#1e1e1e] backdrop-blur-3xl transition-all text-left group overflow-hidden shadow-sm dark:shadow-none hover:shadow-md"
                        >
-                         <div className="p-2 sm:p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors shrink-0">
-                           <action.icon className="w-5 h-5 text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                         <div className="p-2 sm:p-3 bg-slate-100 dark:bg-white/5 rounded-2xl group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 transition-colors shrink-0">
+                           <action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" />
                          </div>
-                         <div className="flex flex-col justify-center h-full">
+                         <div className="flex flex-col justify-center h-full sm:mt-2">
                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors line-clamp-2 leading-relaxed">
                              {action.label}
                            </span>

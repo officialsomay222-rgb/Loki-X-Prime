@@ -770,7 +770,7 @@ export const ChatInput = memo(
                       />
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-all"
+                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all"
                         title="Attach file"
                       >
                         <Plus className="w-6 h-6" />
@@ -779,7 +779,7 @@ export const ChatInput = memo(
                       <div className="relative options-menu-container">
                         <button
                           onClick={() => setIsOptionsOpen(!isOptionsOpen)}
-                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"}`}
+                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"}`}
                         >
                           <SlidersHorizontal className="w-5 h-5" />
                         </button>
@@ -926,7 +926,7 @@ export const ChatInput = memo(
                                 ? `scale(${1 + audioVolume * 0.1})`
                                 : undefined,
                             }}
-                            className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"}`}
+                            className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"}`}
                           >
                             {isTranscribing ? (
                               <Loader2 className="w-5 h-5 animate-spin" />
