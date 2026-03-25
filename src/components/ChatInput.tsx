@@ -719,7 +719,7 @@ export const ChatInput = memo(
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
             >
-              <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
+              <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[1.5px] sm:p-[2px] shadow-[0_0_10px_rgba(0,255,255,0.15)] sm:shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
                 {isAwakened && (
                   <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
                     <div
@@ -729,7 +729,7 @@ export const ChatInput = memo(
                   </div>
                 )}
                 <div
-                  className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-3xl border border-black/5 dark:border-white/10 shadow-sm group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(0,242,255,0.2)] dark:shadow-none ${isSuccessFlash
+                  className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-3xl border ${isAwakened ? 'border-cyan-500/30' : 'border-black/5 dark:border-white/10'} shadow-sm group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(0,242,255,0.2)] dark:shadow-none ${isSuccessFlash
                       ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
                       : isRecording
                         ? "shadow-[0_0_20px_rgba(255,255,255,0.5)] animate-pulse border-white/50"
@@ -770,7 +770,7 @@ export const ChatInput = memo(
                       />
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all"
+                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all duration-300 ease-out"
                         title="Attach file"
                       >
                         <Plus className="w-6 h-6" />

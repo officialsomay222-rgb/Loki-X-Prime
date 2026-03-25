@@ -517,8 +517,8 @@ export default function App() {
             </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar touch-pan-y transform-gpu overscroll-contain">
-            <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 custom-scrollbar touch-pan-y transform-gpu overscroll-contain">
+            <div className="text-[0.65rem] font-bold text-slate-400 dark:text-[#6b6b80] uppercase tracking-[0.25em] mb-4 px-3 mt-2">
               Recent Timelines
             </div>
             <AnimatePresence>
@@ -528,19 +528,19 @@ export default function App() {
                   initial={{ opacity: 0, x: -20, scale: 0.95 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                   transition={{ duration: 0.4, type: "spring", bounce: 0.3, delay: index * 0.05 }}
                   onClick={() => {
                     setCurrentSessionId(session.id);
                     if (window.innerWidth < 768) setIsSidebarOpen(false);
                   }}
-                  className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
+                  className={`group relative flex items-center justify-between px-3 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 mb-1 ${
                     currentSessionId === session.id 
                       ? isAwakened 
-                        ? 'bg-cyan-500/20 text-white shadow-[0_0_20px_rgba(0,242,255,0.25)] border border-cyan-500/40'
-                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-lg border border-cyan-200/50 dark:border-white/10' 
-                      : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
+                        ? 'bg-cyan-500/20 text-white shadow-[0_0_20px_rgba(0,242,255,0.15)] border border-cyan-500/40'
+                        : 'bg-slate-200/60 dark:bg-[#1E1F20] text-slate-900 dark:text-white font-medium' 
+                      : `hover:bg-slate-100/80 dark:hover:bg-white/5 border border-transparent ${isAwakened ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
                   }`}
                 >
                   {currentSessionId === session.id && (
@@ -681,16 +681,15 @@ export default function App() {
               }
               lastScrollY.current = currentScrollY;
             }}
-            className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu pt-${isHeaderVisible ? '0' : '0'} ${(!currentSession || currentSession.messages.length === 0) ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+            className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative w-full transform-gpu overscroll-contain"
           >
-            <div className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${(!currentSession || currentSession.messages.length === 0) ? 'justify-center items-center' : 'pt-4 space-y-6 sm:space-y-8'}`}>
+            <div className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 min-h-full flex flex-col ${(!currentSession || currentSession.messages.length === 0) ? 'justify-center items-center py-10' : 'pt-4 space-y-6 sm:space-y-8'}`}>
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="flex flex-col items-center justify-center text-center space-y-8 w-full h-full touch-none select-none"
-                  onTouchMove={(e) => e.preventDefault()} // CRITICAL: Stop pull-to-refresh/scroll on empty state
+                  className="flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 w-full select-none"
                 >
                    <div className={`relative flex justify-center items-center transition-all duration-700 ${isAwakened ? 'w-full max-w-[480px] sm:max-w-[700px] aspect-[2/1]' : 'w-full max-w-[200px] sm:max-w-[280px] aspect-[2/1]'}`}>
                       {isAwakened ? (
