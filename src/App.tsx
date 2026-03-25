@@ -470,7 +470,7 @@ export default function App() {
           initial={false}
           animate={{ x: isSidebarOpen ? 0 : '-100%' }}
           transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.5 }}
-          className="fixed inset-y-0 left-0 z-50 w-72 glass-panel premium-shadow border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu content-auto gpu-accelerate"
+          className="fixed inset-y-0 left-0 z-50 w-72 bg-[#f8fafc] dark:bg-[#0a0a0a] shadow-2xl border-y-0 border-l-0 border-r border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu content-auto gpu-accelerate"
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
             <div className="flex items-center gap-2 font-montserrat font-bold text-slate-900 dark:text-white">

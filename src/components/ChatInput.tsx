@@ -714,17 +714,22 @@ export const ChatInput = memo(
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
               >
-                <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.2)]' : 'p-0 bg-transparent'}`}>
+                <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened ? 'p-[2px] shadow-[0_0_40px_rgba(0,242,255,0.3)]' : 'p-0 bg-transparent'}`}>
                   {isAwakened && (
                     <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
                       <div 
-                        className="absolute top-1/2 left-1/2 w-[300%] sm:w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_4s_linear_infinite]" 
-                        style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 242, 255, 0.1) 15%, #00f2ff 30%, transparent 30%, transparent 50%, rgba(189, 0, 255, 0.1) 65%, #bd00ff 80%, transparent 80%, transparent 100%)' }}
+                        className="absolute top-1/2 left-1/2 w-[300%] sm:w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 animate-[spin_3s_linear_infinite]" 
+                        style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 242, 255, 0.4) 15%, #00f2ff 30%, transparent 30%, transparent 50%, rgba(189, 0, 255, 0.4) 65%, #bd00ff 80%, transparent 80%, transparent 100%)' }}
                       />
+                      <div className="absolute inset-0 rounded-[32px] shadow-[inset_0_0_20px_rgba(0,242,255,0.5)] animate-pulse" style={{ animationDuration: '2s' }} />
                     </div>
                   )}
                   <div
-                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 bg-slate-100/20 dark:bg-white/5 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
+                    className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
+                      isAwakened 
+                        ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 ${isFocused ? 'shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]' : 'shadow-[inset_0_0_30px_rgba(0,242,255,0.1)]'}` 
+                        : "bg-slate-100/20 dark:bg-white/5"
+                    } ${
                       isSuccessFlash
                         ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
                         : isRecording
@@ -748,7 +753,7 @@ export const ChatInput = memo(
                               ? "Describe the image for LOKI..."
                               : "Ask AI..."
                       }
-                      className="w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium"
+                      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
                       rows={1}
                       readOnly={isRecording || isTranscribing}
                       disabled={isLoading}
