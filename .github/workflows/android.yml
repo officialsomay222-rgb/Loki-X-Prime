@@ -18,11 +18,19 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22' # Updated to avoid deprecation warning
+        node-version: '24' # Using latest to remove warnings
         cache: 'npm'
 
-    - name: List Files (Debug)
-      run: ls -R # This will help us see if the 'android' folder exists on GitHub
+    - name: Check Directory Structure
+      run: |
+        echo "Current directory content:"
+        ls -la
+        if [ -d "android" ]; then
+          echo "Android folder found!"
+        else
+          echo "ERROR: Android folder NOT found. Please push the 'android' folder to GitHub."
+          exit 1
+        fi
 
     - name: Install Web Dependencies
       run: npm install
