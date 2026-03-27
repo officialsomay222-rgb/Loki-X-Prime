@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    # YAHAN SABSE BADA CHANGE HAI: ubuntu-latest ki jagah ubuntu-22.04
     runs-on: ubuntu-22.04
 
     steps:
@@ -34,16 +33,17 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Download Original Wrapper (Bypass Corruption)
+      - name: Generate Perfect Wrapper
         working-directory: android
+        # Wget ka dhoka khatam, ab system se original file banwayenge
         run: |
-          mkdir -p gradle/wrapper
-          wget https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.2
           chmod +x gradlew
 
-      - name: Build APK (Stable Server Mode)
+      - name: Build APK (Fingers Crossed)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --no-build-cache --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --max-workers=1 --no-parallel
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
