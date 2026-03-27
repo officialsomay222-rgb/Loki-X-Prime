@@ -1,54 +1,53 @@
-name: Android CI
+name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ] # Yahan apni branch ka naam check kar lena
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Install Web Dependencies
-      run: npm install
+      - name: Nuke Corrupt Cache and Wrapper
+        run: |
+          rm -rf ~/.gradle/caches/
+          rm -f android/gradle/wrapper/gradle-wrapper.jar
 
-    - name: Build Web App
-      run: npm run build
+      - name: Setup Exact Gradle 8.2 (Fresh)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.2'
+          cache-disabled: true
 
-    - name: Sync Capacitor
-      run: npx cap sync android
+      - name: Install Dependencies
+        run: npm install
 
-    - name: Aggressively Clean Corruption
-      run: |
-        rm -rf ~/.gradle/caches/
-        rm -f android/gradle/wrapper/gradle-wrapper.jar
+      - name: Sync Capacitor
+        run: npx cap sync android
 
-    - name: Build Android APK with System Gradle
-      working-directory: android
-      run: gradle assembleDebug --no-daemon --refresh-dependencies
+      - name: Build APK with Fresh Gradle 8.2
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: loki-prime-x-debug
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
