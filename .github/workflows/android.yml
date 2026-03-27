@@ -5,9 +5,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# YEH SABSE ZAROORI LINE HAI: Gradle ko ekdum naya ghar de rahe hain
+# Yahan hum naya folder aur 4GB extra RAM de rahe hain Gradle ko
 env:
   GRADLE_USER_HOME: ${{ github.workspace }}/.custom-gradle-home
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx4g -XX:MaxMetaspaceSize=512m'"
 
 jobs:
   build:
@@ -44,10 +45,10 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK (Isolated Cache & Refresh)
+      - name: Build APK (Maximum Safety Mode)
         working-directory: android
-        # --refresh-dependencies zabardasti saari files nayi layega
-        run: gradle assembleDebug --no-daemon --refresh-dependencies
+        # Saare safety checks ek saath lagaye hain
+        run: gradle assembleDebug --no-daemon --no-parallel --max-workers=1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
