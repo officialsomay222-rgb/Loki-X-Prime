@@ -61,6 +61,9 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+
     - name: Build Android APK
       working-directory: android
       # Using requested flags to force clean build and avoid locking issues
