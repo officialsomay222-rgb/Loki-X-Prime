@@ -56,6 +56,13 @@ jobs:
         validate-wrappers: false
         cache-disabled: true # Completely disable to avoid using corrupted cache
 
+    - name: Delete Corrupt Wrapper File
+      run: rm -f android/gradle/wrapper/gradle-wrapper.jar
+
+    - name: Regenerate Wrapper
+      working-directory: android
+      run: gradle wrapper
+
     - name: Sync Capacitor
       run: npx cap sync android
 
