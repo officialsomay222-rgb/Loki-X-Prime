@@ -17,6 +17,8 @@ export function useSmoothStream(
   const contentRef = useRef(content);
   const displayedRef = useRef(content);
   const isLowEnd = useRef(isLowEndDevice());
+  const rafRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(0);
 
   useEffect(() => {
     contentRef.current = content;
@@ -35,22 +37,38 @@ export function useSmoothStream(
       return;
     }
 
-    const charsPerTick = speed === "fast" ? 8 : speed === "slow" ? 2 : 4;
+    const charsPerTick = speed === "fast" ? 12 : speed === "slow" ? 3 : 6;
+    const updateInterval = 40; // ~25fps, balances smoothness and CPU load
 
-    const intervalId = window.setInterval(() => {
-      if (displayedRef.current.length < contentRef.current.length) {
-        const nextContent = contentRef.current.substring(
-          0,
-          displayedRef.current.length + charsPerTick,
-        );
-        setDisplayedContent(nextContent);
-        displayedRef.current = nextContent;
-      } else {
-        clearInterval(intervalId);
+    const animate = (timestamp: number) => {
+      if (timestamp - lastUpdateRef.current >= updateInterval) {
+        if (displayedRef.current.length < contentRef.current.length) {
+          const nextContent = contentRef.current.substring(
+            0,
+            displayedRef.current.length + charsPerTick,
+          );
+          setDisplayedContent(nextContent);
+          displayedRef.current = nextContent;
+          lastUpdateRef.current = timestamp;
+        } else {
+          // Done animating
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          return;
+        }
       }
-    }, 30); // ~33fps, reduces ReactMarkdown parsing load
+      rafRef.current = requestAnimationFrame(animate);
+    };
 
-    return () => clearInterval(intervalId);
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(animate);
+    }
+
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
   }, [content, speed, enabled]);
 
   return displayedContent;

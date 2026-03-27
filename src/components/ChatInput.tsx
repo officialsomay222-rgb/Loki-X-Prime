@@ -105,7 +105,7 @@ export const ChatInput = memo(
 
       const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>([]);
       const fileInputRef = useRef<HTMLInputElement>(null);
-      const [audioVolume, setAudioVolume] = useState<number>(0);
+      const micButtonRef = useRef<HTMLButtonElement>(null);
       const audioContextRef = useRef<AudioContext | null>(null);
       const analyserRef = useRef<AnalyserNode | null>(null);
       const silenceStartRef = useRef<number | null>(null);
@@ -440,8 +440,12 @@ export const ChatInput = memo(
             }
             const rms = Math.sqrt(sumSquares / dataArray.length);
 
-            // Always update volume for visual feedback
-            setAudioVolume(Math.min(1, rms * 50));
+            // Always update volume for visual feedback directly via DOM
+            const volume = Math.min(1, rms * 50);
+            if (micButtonRef.current) {
+              micButtonRef.current.style.boxShadow = `0 0 ${10 + volume * 30}px rgba(244,63,94,${0.2 + volume * 0.4})`;
+              micButtonRef.current.style.transform = `scale(${1 + volume * 0.1})`;
+            }
 
             const silenceThreshold = 0.015;
 
@@ -512,7 +516,10 @@ export const ChatInput = memo(
           audioContextRef.current = null;
         }
         silenceStartRef.current = null;
-        setAudioVolume(0);
+        if (micButtonRef.current) {
+          micButtonRef.current.style.boxShadow = '';
+          micButtonRef.current.style.transform = '';
+        }
       };
 
       const toggleRecording = () => {
@@ -945,20 +952,13 @@ export const ChatInput = memo(
                         <AnimatePresence mode="popLayout">
                           {!input.trim() && !isLoading && (
                             <motion.button
+                              ref={micButtonRef}
                               layout
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
                               onClick={toggleRecording}
                               disabled={isTranscribing}
-                              style={{
-                                boxShadow: isRecording
-                                  ? `0 0 ${10 + audioVolume * 30}px rgba(244,63,94,${0.2 + audioVolume * 0.4})`
-                                  : undefined,
-                                transform: isRecording
-                                  ? `scale(${1 + audioVolume * 0.1})`
-                                  : undefined,
-                              }}
                               className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                             >
                               {isTranscribing ? (
