@@ -24,12 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Nuke Corrupt Cache and Wrapper
-        run: |
-          rm -rf ~/.gradle/caches/
-          rm -f android/gradle/wrapper/gradle-wrapper.jar
-
-      - name: Setup Exact Gradle 8.2 (Fresh)
+      - name: Setup Exact Gradle 8.2
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.2'
@@ -44,9 +39,9 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK with Fresh Gradle 8.2
+      - name: Build APK without Concurrency
         working-directory: android
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon --no-parallel --max-workers=1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
