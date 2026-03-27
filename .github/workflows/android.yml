@@ -5,14 +5,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# Yahan hum naya folder aur 4GB extra RAM de rahe hain Gradle ko
-env:
-  GRADLE_USER_HOME: ${{ github.workspace }}/.custom-gradle-home
-  GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx4g -XX:MaxMetaspaceSize=512m'"
-
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # YAHAN SABSE BADA CHANGE HAI: ubuntu-latest ki jagah ubuntu-22.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout source
@@ -29,13 +25,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Exact Gradle 8.2
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.2'
-          cache-disabled: true
-          validate-wrappers: false
-
       - name: Install Dependencies
         run: npm install
 
@@ -45,10 +34,16 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK (Maximum Safety Mode)
+      - name: Download Original Wrapper (Bypass Corruption)
         working-directory: android
-        # Saare safety checks ek saath lagaye hain
-        run: gradle assembleDebug --no-daemon --no-parallel --max-workers=1
+        run: |
+          mkdir -p gradle/wrapper
+          wget https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
+          chmod +x gradlew
+
+      - name: Build APK (Stable Server Mode)
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --no-build-cache --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
