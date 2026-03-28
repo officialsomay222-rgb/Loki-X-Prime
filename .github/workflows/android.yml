@@ -1,6 +1,10 @@
 name: Android Build
 
 on:
+  # Ab yeh automatic chalega har naye commit par
+  push:
+    branches: [ "main", "master" ]
+  # Manual button bhi rakha hai, just in case kabhi zaroorat pade
   workflow_dispatch:
 
 jobs:
@@ -19,7 +23,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '21'
 
       - name: Setup Gradle
@@ -44,9 +48,8 @@ jobs:
           rm -f android/gradle/wrapper/gradle-wrapper.jar
 
       - name: Build Android App
-        run: |
-          cd android
-          gradle assembleDebug --no-daemon --refresh-dependencies
+        working-directory: android
+        run: gradle assembleDebug --no-daemon --refresh-dependencies
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
