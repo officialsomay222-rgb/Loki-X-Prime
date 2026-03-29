@@ -47,7 +47,8 @@ declare global {
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
-  const [isBooting, setIsBooting] = useState(true); // Enabled booting
+  const [isBooting, setIsBooting] = useState(true);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
   
   const isSettingsOpen = activeModal === 'settings';
@@ -153,15 +154,16 @@ export default function App() {
   }, [createNewSession, isCommandPaletteOpen, openModal, closeModal]);
 
   const [showSkip, setShowSkip] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsBooting(false);
-    }, 1500);
+    }, 4000);
     
     const skipTimer = setTimeout(() => {
       setShowSkip(true);
-    }, 3000);
+    }, 1500);
 
     return () => {
       clearTimeout(timer);
@@ -219,7 +221,13 @@ export default function App() {
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
     
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.classList && target.classList.contains('overflow-y-auto')) {
+        const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 400;
+        setShowScrollToBottom(!isNearBottom);
+      }
+
       if (!document.body.classList.contains('is-scrolling')) {
         document.body.classList.add('is-scrolling');
       }
@@ -658,6 +666,25 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
+              {currentSession && currentSession.messages.length > 0 && (
+                <motion.button 
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (isConfirmingClear) {
+                      if (currentSessionId) clearSessionMessages(currentSessionId);
+                      setIsConfirmingClear(false);
+                    } else {
+                      setIsConfirmingClear(true);
+                      setTimeout(() => setIsConfirmingClear(false), 3000);
+                    }
+                  }}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-2 group ${isConfirmingClear ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.4)]' : 'hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white'}`}
+                  title={isConfirmingClear ? "Click again to confirm" : "Clear timeline"}
+                >
+                  <RotateCcw className={`w-5 h-5 ${isConfirmingClear ? 'animate-spin' : 'group-hover:rotate-[-45deg] transition-transform'}`} />
+                  {isConfirmingClear && <span className="text-[10px] font-black tracking-tighter hidden sm:inline">CONFIRM?</span>}
+                </motion.button>
+              )}
               <div 
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? 'opacity-0' : 'opacity-100'}`} 
                 title={commanderName}
@@ -714,6 +741,23 @@ export default function App() {
               )}
             </div>
           </div>
+
+          {/* Scroll to Bottom Button */}
+          <AnimatePresence>
+            {showScrollToBottom && currentSession && currentSession.messages.length > 0 && (
+              <motion.button
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                onClick={() => {
+                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="absolute bottom-24 right-4 sm:right-8 z-30 p-3 rounded-full bg-cyan-600 text-white shadow-lg hover:bg-cyan-500 transition-all border border-white/20"
+              >
+                <Download className="w-5 h-5 rotate-180" />
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Input Area - Flex Item (Not Absolute) */}
           <div className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}>
