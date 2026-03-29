@@ -8,12 +8,7 @@ const config: CapacitorConfig = {
     url: 'https://loki-x-prime.vercel.app',
     cleartext: true,
     allowNavigation: ['loki-x-prime.vercel.app']
-  },
-  plugins: {
-    CapacitorHttp: {
-      enabled: true,
-    },
-  },
+  }
 };
 
 export default config;

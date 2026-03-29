@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type, ThinkingLevel, Modality } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
 
 const getApiKey = () => {
   let key = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
@@ -37,7 +36,6 @@ export const generateChatResponse = async (params: {
   attachments?: { data: string, mimeType: string }[];
 }) => {
   const hasAttachments = params.attachments && params.attachments.length > 0;
-  const isCapacitor = Capacitor.isNativePlatform();
 
   if (params.mode === "fast" || hasAttachments) {
     const apiKey = getApiKey();
@@ -47,92 +45,6 @@ export const generateChatResponse = async (params: {
         yield { text: "Commander, your Google AI API key is missing. Please set VITE_GEMINI_API_KEY in your environment variables to activate my full intelligence. For now, I'm running in demo mode." };
       }
       return mockStream();
-    }
-
-    // Use CapacitorHttp on native platforms to bypass CORS
-    if (isCapacitor) {
-      let modelName = params.searchGrounding ? "gemini-3-flash-preview" : "gemini-3.1-flash-lite-preview";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
-      
-      const contents: any[] = [];
-      if (params.history && Array.isArray(params.history)) {
-        params.history.forEach((msg: any) => {
-          if (msg.content) {
-            contents.push({
-              role: msg.role === 'model' ? 'model' : 'user',
-              parts: [{ text: msg.content }]
-            });
-          }
-        });
-      }
-      
-      const userParts: any[] = [];
-      if (hasAttachments) {
-        params.attachments!.forEach((att: any) => {
-          userParts.push({
-            inlineData: {
-              data: att.data,
-              mimeType: att.mimeType
-            }
-          });
-        });
-      }
-      if (params.message && params.message.trim().length > 0) {
-        userParts.push({ text: params.message });
-      } else if (hasAttachments) {
-        userParts.push({ text: "Please analyze this image." });
-      } else {
-        userParts.push({ text: " " });
-      }
-      contents.push({ role: 'user', parts: userParts });
-
-      const config: any = {
-        systemInstruction: { parts: [{ text: params.systemInstruction }] },
-        generationConfig: {
-          temperature: params.temperature || 0.7,
-          topP: params.topP || 0.95,
-          topK: params.topK || 64,
-        }
-      };
-
-      if (params.searchGrounding) {
-        config.tools = [{ googleSearch: {} }];
-      }
-
-      if (params.thinkingMode) {
-        config.thinkingConfig = { thinkingLevel: "HIGH" };
-      }
-
-      const response = await CapacitorHttp.post({
-        url,
-        headers: { 'Content-Type': 'application/json' },
-        data: {
-          contents,
-          ...config
-        },
-        responseType: 'text'
-      });
-
-      if (response.status !== 200) {
-        throw new Error(`Gemini API Error (${response.status}): ${response.data}`);
-      }
-
-      // Parse SSE stream from text response (CapacitorHttp doesn't support streaming directly)
-      async function* streamResponse() {
-        const lines = response.data.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const json = JSON.parse(line.substring(6));
-              const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) yield { text };
-            } catch (e) {
-              // Ignore parse errors for partial chunks
-            }
-          }
-        }
-      }
-      return streamResponse();
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -209,43 +121,6 @@ export const generateChatResponse = async (params: {
         yield { text: "Commander, your Groq API key is missing. Please set VITE_GROQ_API_KEY to enable Llama models. Running in demo mode." };
       }
       return mockStream();
-    }
-
-    if (isCapacitor) {
-      const modelName = params.mode === "pro" ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
-      const messages = [
-        { role: "system", content: params.systemInstruction },
-        ...(params.history || []).map((msg: any) => ({
-          role: msg.role === "model" ? "assistant" : "user",
-          content: msg.content
-        })),
-        { role: "user", content: params.message }
-      ];
-
-      const response = await CapacitorHttp.post({
-        url: 'https://api.groq.com/openai/v1/chat/completions',
-        headers: {
-          'Authorization': `Bearer ${groqKey}`,
-          'Content-Type': 'application/json'
-        },
-        data: {
-          model: modelName,
-          messages,
-          temperature: params.temperature || 0.7,
-          top_p: params.topP || 0.95,
-          stream: false // CapacitorHttp doesn't support streaming well
-        }
-      });
-
-      if (response.status !== 200) {
-        throw new Error(`Groq API Error (${response.status}): ${response.data}`);
-      }
-
-      async function* streamResponse() {
-        const content = response.data.choices?.[0]?.message?.content || "";
-        if (content) yield { text: content };
-      }
-      return streamResponse();
     }
 
     const groq = new Groq({ apiKey: groqKey, dangerouslyAllowBrowser: true });
