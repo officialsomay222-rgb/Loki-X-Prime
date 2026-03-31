@@ -237,7 +237,7 @@ export const transcribeAudio = async (audioBase64: string, mimeType: string) => 
     file: file,
     model: 'whisper-large-v3-turbo',
     response_format: 'json',
-    prompt: 'The following is a conversation in English and Hinglish (Hindi written in the Latin alphabet). Please transcribe exactly as spoken, keeping Hinglish words in Latin script. Examples: "Haan bhai, kya haal hai?", "Theek hai."',
+    prompt: 'The following is a conversation in Hindi, Hinglish, and English. Please transcribe exactly as spoken. Keep Hinglish words in Latin script, and transcribe pure Hindi in Devanagari if appropriate, or Latin script. Examples: "Haan bhai, kya haal hai?", "Theek hai.", "Hello, how are you?"',
   });
 
   return transcription.text;

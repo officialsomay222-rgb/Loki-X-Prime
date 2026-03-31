@@ -376,9 +376,6 @@ export const ChatInput = memo(
 
           mediaRecorder.start();
           setIsRecording(true);
-          if (window.innerWidth < 1024) {
-            setIsVoiceOverlayOpen(true);
-          }
           hasSpokenRef.current = false;
 
           // 3. Robust Silence Detection (RMS) - Always active
@@ -452,7 +449,6 @@ export const ChatInput = memo(
       };
 
       const stopRecording = () => {
-        setIsVoiceOverlayOpen(false);
         // Stop Web Speech API if active
         if (recognitionRef.current) {
           recognitionRef.current.stop();
@@ -1015,13 +1011,10 @@ export const ChatInput = memo(
             isOpen={isVoiceOverlayOpen}
             onClose={() => {
               setIsVoiceOverlayOpen(false);
-              stopRecording();
             }}
             onHold={() => {
               // Pause/Hold logic can be added here if needed
-              // For now, it just stops recording as requested
               setIsVoiceOverlayOpen(false);
-              stopRecording();
             }}
           />
         </div>
