@@ -39,19 +39,19 @@ export default defineConfig(({ mode }) => {
           },
           icons: [
             {
-              src: '/assets/icon.png',
+              src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any maskable'
             },
             {
-              src: '/assets/icon.png',
+              src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable'
             },
             {
-              src: '/assets/icon.png',
+              src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
               sizes: '1024x1024',
               type: 'image/png',
               purpose: 'any maskable'
@@ -59,14 +59,14 @@ export default defineConfig(({ mode }) => {
           ],
           screenshots: [
             {
-              src: '/assets/icon.png',
+              src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
               sizes: '1024x1024',
               type: 'image/png',
               form_factor: 'wide',
               label: 'Loki Prime X Interface'
             },
             {
-              src: '/assets/icon.png',
+              src: 'https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png',
               sizes: '1024x1024',
               type: 'image/png',
               form_factor: 'narrow',

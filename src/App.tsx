@@ -27,7 +27,6 @@ import {
   Sliders,
   FileText,
   Download,
-  RotateCcw,
   Type,
   Volume2,
   Rocket,
@@ -61,21 +60,6 @@ export default function App() {
 
   const closeModal = useCallback(() => {
     setActiveModal(null);
-  }, []);
-
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
   }, []);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -393,14 +377,6 @@ export default function App() {
             <p className="text-[#6b6b80] tracking-[6px] text-sm animate-[pulse-text_1.5s_infinite] font-montserrat font-bold uppercase">
               INITIALIZING SYSTEM
             </p>
-            {showSkip && (
-              <button 
-                onClick={() => setIsBooting(false)}
-                className="mt-6 px-4 py-2 border border-cyan-500/30 rounded-lg text-cyan-500 text-[10px] font-bold tracking-[2px] hover:bg-cyan-500/10 transition-all animate-pulse gpu-accelerate"
-              >
-                FORCE START SYSTEM
-              </button>
-            )}
          </div>
          <div className="mt-auto mb-8">
             <h1 className="text-2xl sm:text-3xl font-black tracking-[0.3em] font-montserrat uppercase animate-[rgb-text_4s_linear_infinite] drop-shadow-[0_0_15px_rgba(0,242,255,0.8)]" style={{
@@ -465,7 +441,7 @@ export default function App() {
             } as any}
           >
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
-             <img src={"/assets/icon.png"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
+             <img src={"https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
           </div>
         </div>
       )}
@@ -666,25 +642,6 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
-              {currentSession && currentSession.messages.length > 0 && (
-                <motion.button 
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    if (isConfirmingClear) {
-                      if (currentSessionId) clearSessionMessages(currentSessionId);
-                      setIsConfirmingClear(false);
-                    } else {
-                      setIsConfirmingClear(true);
-                      setTimeout(() => setIsConfirmingClear(false), 3000);
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-all flex items-center gap-2 group ${isConfirmingClear ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.4)]' : 'hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white'}`}
-                  title={isConfirmingClear ? "Click again to confirm" : "Clear timeline"}
-                >
-                  <RotateCcw className={`w-5 h-5 ${isConfirmingClear ? 'animate-spin' : 'group-hover:rotate-[-45deg] transition-transform'}`} />
-                  {isConfirmingClear && <span className="text-[10px] font-black tracking-tighter hidden sm:inline">CONFIRM?</span>}
-                </motion.button>
-              )}
               <div 
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? 'opacity-0' : 'opacity-100'}`} 
                 title={commanderName}
@@ -697,7 +654,7 @@ export default function App() {
                    }}></div>
                  )}
                  <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
-                   <img src="/assets/icon.png" className="w-full h-full object-cover" alt="Commander" />
+                   <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" className="w-full h-full object-cover" alt="Commander" />
                  </div>
               </div>
             </div>
@@ -761,23 +718,6 @@ export default function App() {
 
           {/* Input Area - Flex Item (Not Absolute) */}
           <div className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}>
-            {/* Offline Banner */}
-            <AnimatePresence>
-              {isOffline && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="w-full max-w-3xl mx-auto mb-2 px-4"
-                >
-                  <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-md rounded-xl py-2 px-4 flex items-center justify-center gap-2 text-rose-500 dark:text-rose-400 text-sm font-medium shadow-[0_0_15px_rgba(244,63,94,0.1)]">
-                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    No Internet Connection - Chat Disabled
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <ChatInput
               ref={inputRef}
               isAwakened={isAwakened}
@@ -789,7 +729,6 @@ export default function App() {
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
-              isOffline={isOffline}
             />
           </div>
         </div>

@@ -53,7 +53,6 @@ interface ChatInputProps {
   onStopGeneration?: () => void;
   enterToSend: boolean;
   isAwakened?: boolean;
-  isOffline?: boolean;
 }
 
 export const ChatInput = memo(
@@ -69,7 +68,6 @@ export const ChatInput = memo(
         onStopGeneration,
         enterToSend,
         isAwakened,
-        isOffline,
       },
       ref,
     ) => {
@@ -756,9 +754,7 @@ export const ChatInput = memo(
                       onFocus={() => setIsFocused(true)}
                       onBlur={() => setIsFocused(false)}
                       placeholder={
-                        isOffline
-                          ? "Offline Mode"
-                          : isTranscribing
+                        isTranscribing
                           ? "Transcribing..."
                           : isRecording
                             ? "Listening..."
@@ -766,15 +762,15 @@ export const ChatInput = memo(
                               ? "Describe the image for LOKI..."
                               : "Ask AI..."
                       }
-                      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''} ${isOffline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
                       rows={1}
-                      readOnly={isRecording || isTranscribing || isOffline}
-                      disabled={isLoading || isOffline}
+                      readOnly={isRecording || isTranscribing}
+                      disabled={isLoading}
                     />
                     
                     <div className="flex items-center justify-between mt-1 sm:mt-2 px-1 relative">
                       {/* Left Side Actions */}
-                      <div className={`flex items-center gap-1 ${isOffline ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <div className="flex items-center gap-1">
                         <input
                           type="file"
                           ref={fileInputRef}
@@ -877,7 +873,7 @@ export const ChatInput = memo(
                       </div>
 
                       {/* Right Side Actions */}
-                      <motion.div layout className={`flex items-center justify-end gap-1 sm:gap-2 min-w-[140px] sm:min-w-[180px] ${isOffline ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <motion.div layout className="flex items-center justify-end gap-1 sm:gap-2 min-w-[140px] sm:min-w-[180px]">
                         <motion.div layout className="relative model-menu-container">
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
