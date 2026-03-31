@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { InfinityMic } from "./Logos";
 import { Capacitor } from '@capacitor/core';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
+import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
 export interface ChatInputHandle {
   focus: () => void;
@@ -78,6 +79,7 @@ export const ChatInput = memo(
       const [isRecording, setIsRecording] = useState(false);
       const [isTranscribing, setIsTranscribing] = useState(false);
       const [isFocused, setIsFocused] = useState(false);
+      const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
       const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
       const [transcriptionError, setTranscriptionError] = useState<
@@ -374,6 +376,9 @@ export const ChatInput = memo(
 
           mediaRecorder.start();
           setIsRecording(true);
+          if (window.innerWidth < 1024) {
+            setIsVoiceOverlayOpen(true);
+          }
           hasSpokenRef.current = false;
 
           // 3. Robust Silence Detection (RMS) - Always active
@@ -447,6 +452,7 @@ export const ChatInput = memo(
       };
 
       const stopRecording = () => {
+        setIsVoiceOverlayOpen(false);
         // Stop Web Speech API if active
         if (recognitionRef.current) {
           recognitionRef.current.stop();
@@ -873,11 +879,15 @@ export const ChatInput = memo(
                       </div>
 
                       {/* Right Side Actions */}
-                      <motion.div layout className="flex items-center justify-end gap-1 sm:gap-2 min-w-[140px] sm:min-w-[180px]">
+                      <motion.div layout className="flex items-center justify-end gap-1 sm:gap-2">
                         <motion.div layout className="relative model-menu-container">
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${isModelMenuOpen ? "bg-slate-200 dark:bg-white/20 text-slate-900 dark:text-[#E3E3E3] shadow-md" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${
+                              isModelMenuOpen 
+                                ? "bg-slate-200 dark:bg-white/20 border-transparent text-slate-900 dark:text-[#E3E3E3] shadow-md" 
+                                : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
+                            }`}
                           >
                             <span className="text-sm font-medium">
                               {modelMode === "pro" ? "Pro" : modelMode === "fast" ? "Fast" : "Happy"}
@@ -919,56 +929,79 @@ export const ChatInput = memo(
                           </AnimatePresence>
                         </motion.div>
 
+                        <motion.button
+                          layout
+                          ref={micButtonRef}
+                          onClick={toggleRecording}
+                          disabled={isTranscribing}
+                          className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border ${
+                            isRecording 
+                              ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 
+                              : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
+                          }`}
+                        >
+                          {isTranscribing ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : isRecording ? (
+                            <StopSquare className="w-5 h-5" />
+                          ) : (
+                            <Mic className="w-5 h-5" />
+                          )}
+                        </motion.button>
+
                         <AnimatePresence mode="popLayout">
-                          {!input.trim() && !isLoading && (
+                          {!(input.trim() || attachments.length > 0) && !isLoading ? (
                             <motion.button
-                              ref={micButtonRef}
+                              key="live-conv-btn"
                               layout
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
-                              onClick={toggleRecording}
-                              disabled={isTranscribing}
-                              className={`mic-button-trigger w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all overflow-hidden ${isRecording ? "bg-rose-500/20 text-rose-500" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
+                              onClick={() => setIsVoiceOverlayOpen(true)}
+                              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
                             >
-                              {isTranscribing ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                              ) : isRecording ? (
-                                <StopSquare className="w-5 h-5" />
-                              ) : (
-                                <Mic className="w-5 h-5" />
-                              )}
+                              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 11v3M12 7v10M16 10v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                                <path d="M19 4l0.5 1.5L21 6l-1.5 0.5L19 8l-0.5-1.5L17 6l1.5-0.5L19 4z" fill="currentColor"/>
+                              </svg>
                             </motion.button>
+                          ) : (
+                            <motion.div 
+                              key="send-btn"
+                              layout 
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              className="shrink-0 flex items-center justify-center"
+                            >
+                              {isLoading ? (
+                                <button
+                                  onClick={onStopGeneration}
+                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group"
+                                  title="Stop Generation"
+                                >
+                                  <div className="w-6 h-6 rounded-full border-2 border-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform bg-rose-400/10">
+                                    <div className="w-2 h-2 bg-rose-400 rounded-full" />
+                                  </div>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={handleSend}
+                                  disabled={!(input.trim() || attachments.length > 0)}
+                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${(input.trim() || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                                >
+                                  {sendButtonIcon === 'arrow' ? (
+                                    <ArrowRight className="w-5 h-5" />
+                                  ) : sendButtonIcon === 'rocket' ? (
+                                    <Rocket className="w-5 h-5 ml-0.5" />
+                                  ) : (
+                                    <Send className="w-5 h-5 ml-0.5" />
+                                  )}
+                                </button>
+                              )}
+                            </motion.div>
                           )}
                         </AnimatePresence>
-
-                        <motion.div layout className="flex items-center justify-center">
-                          {isLoading ? (
-                            <button
-                              onClick={onStopGeneration}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group"
-                              title="Stop Generation"
-                            >
-                              <div className="w-6 h-6 rounded-full border-2 border-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform bg-rose-400/10">
-                                <div className="w-2 h-2 bg-rose-400 rounded-full" />
-                              </div>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleSend}
-                              disabled={!input.trim()}
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${input.trim() ? "text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-200 dark:hover:bg-white/10" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
-                            >
-                              {sendButtonIcon === 'arrow' ? (
-                                <ArrowRight className="w-5 h-5" />
-                              ) : sendButtonIcon === 'rocket' ? (
-                                <Rocket className="w-5 h-5 ml-0.5" />
-                              ) : (
-                                <Send className="w-5 h-5 ml-0.5" />
-                              )}
-                            </button>
-                          )}
-                        </motion.div>
                       </motion.div>
 
 
@@ -977,6 +1010,20 @@ export const ChatInput = memo(
                 </div>
               </motion.div>
           </motion.div>
+          
+          <LiveVoiceOverlay
+            isOpen={isVoiceOverlayOpen}
+            onClose={() => {
+              setIsVoiceOverlayOpen(false);
+              stopRecording();
+            }}
+            onHold={() => {
+              // Pause/Hold logic can be added here if needed
+              // For now, it just stops recording as requested
+              setIsVoiceOverlayOpen(false);
+              stopRecording();
+            }}
+          />
         </div>
       );
     },
