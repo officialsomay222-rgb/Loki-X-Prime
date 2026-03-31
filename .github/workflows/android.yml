@@ -35,8 +35,24 @@ jobs:
       - name: Build web app
         run: npm run build
 
-      - name: Generate Android Icons
-        run: npx @capacitor/assets generate --android
+      - name: Auto-Fix Missing Android Files & Icons
+        run: |
+          # 1. Create root assets folder and copy image so Capacitor finds it
+          mkdir -p assets
+          cp public/assets/icon.png assets/icon.png || true
+          
+          # 2. Recreate missing strings.xml for App Name
+          mkdir -p android/app/src/main/res/values
+          cat <<EOF > android/app/src/main/res/values/strings.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Loki Prime X</string>
+              <string name="title_activity_main">Loki Prime X</string>
+          </resources>
+          EOF
+          
+          # 3. Generate Android Native Icons
+          npx @capacitor/assets generate --android
 
       - name: Capacitor Sync
         run: npx cap sync android
