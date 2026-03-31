@@ -465,7 +465,7 @@ export default function App() {
             } as any}
           >
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
-             <img src={"https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
+             <img src={"/assets/icon.png"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
           </div>
         </div>
       )}
@@ -697,7 +697,7 @@ export default function App() {
                    }}></div>
                  )}
                  <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
-                   <img src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg" className="w-full h-full object-cover" alt="Commander" />
+                   <img src="/assets/icon.png" className="w-full h-full object-cover" alt="Commander" />
                  </div>
               </div>
             </div>
@@ -718,7 +718,7 @@ export default function App() {
                       {isAwakened ? (
                         <div className="relative w-full h-full krishna-awakened-sticker flex items-center justify-center">
                           <div className="absolute inset-0 devil-sticker-border opacity-100"></div>
-                          <img src="https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png" alt="Loki Prime Logo" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,242,255,0.4)]" />
+                          <img src="/assets/icon.png" alt="Loki Prime Logo" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,242,255,0.4)]" />
                         </div>
                       ) : (
                         <InfinityLogo />
