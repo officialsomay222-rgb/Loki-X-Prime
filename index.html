@@ -18,6 +18,10 @@
         padding: 0;
         background-color: #08080c;
         overflow: hidden; /* Prevent scroll on body, handle in app */
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
       }
       #root {
         height: 100%;
@@ -37,7 +41,7 @@
   </head>
   <body>
     <div id="root">
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #08080c; color: #6b6b80; font-family: 'Montserrat', sans-serif; text-align: center; padding: 20px;">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background-color: #08080c; color: #6b6b80; font-family: 'Montserrat', sans-serif; text-align: center; padding: 20px;">
         <div style="width: 40px; height: 40px; border: 2px solid #00f2ff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
         <p style="letter-spacing: 4px; font-size: 12px; font-weight: bold; margin: 0;">INITIALIZING CORE...</p>
         <style>

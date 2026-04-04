@@ -19,15 +19,19 @@ const queryClient = new QueryClient({
   },
 });
 
-const updateSW = registerSW({
-  onNeedRefresh() {
-    console.log('New content available. Reloading...');
-    updateSW(true);
-  },
-  onOfflineReady() {
-    console.log('App is ready to work offline');
-  },
-});
+try {
+  const updateSW = registerSW({
+    onNeedRefresh() {
+      console.log('New content available. Reloading...');
+      updateSW(true);
+    },
+    onOfflineReady() {
+      console.log('App is ready to work offline');
+    },
+  });
+} catch (e) {
+  console.warn('PWA service worker registration failed (expected in some iframe environments):', e);
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

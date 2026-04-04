@@ -402,7 +402,7 @@ export default function App() {
 
   return (
     <div 
-      className={`w-full h-[100dvh] relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
+      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}

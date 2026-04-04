@@ -70,11 +70,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   } = useSettings();
 
   // Load sessions using Dexie live query
-  const sessions = useLiveQuery(
-    () => localDb.sessions.orderBy('updatedAt').reverse().toArray(),
+  const rawSessions = useLiveQuery(
+    async () => {
+      try {
+        return await localDb.sessions.orderBy('updatedAt').reverse().toArray();
+      } catch (error) {
+        console.warn('Failed to load sessions from IndexedDB (expected in some iframe environments):', error);
+        return [];
+      }
+    },
     [],
     []
   );
+
+  const sessions = rawSessions || [];
 
   const sessionsRef = useRef(sessions);
   useEffect(() => {
@@ -83,12 +92,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const createNewSession = useCallback(async () => {
     const sessionId = generateId();
-    await localDb.sessions.add({
-      id: sessionId,
-      title: 'New Awakening',
-      messages: [],
-      updatedAt: new Date()
-    });
+    try {
+      await localDb.sessions.add({
+        id: sessionId,
+        title: 'New Awakening',
+        messages: [],
+        updatedAt: new Date()
+      });
+    } catch (e) {
+      console.warn('Failed to save new session to IndexedDB:', e);
+    }
     setCurrentSessionId(sessionId);
   }, []);
 
@@ -106,13 +119,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Create initial session on mount if needed
   useEffect(() => {
     const init = async () => {
-      const count = await localDb.sessions.count();
-      if (count === 0) {
-        createNewSession();
+      try {
+        const count = await localDb.sessions.count();
+        if (count === 0) {
+          createNewSession();
+        }
+      } catch (e) {
+        console.warn('Failed to count sessions in IndexedDB:', e);
+        if (sessions.length === 0) {
+          createNewSession();
+        }
       }
     };
     init();
-  }, [createNewSession]);
+  }, [createNewSession, sessions.length]);
 
   const getFullSystemInstruction = useCallback(() => {
     let modeInstruction = '';
