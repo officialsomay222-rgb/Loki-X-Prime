@@ -607,6 +607,12 @@ a:focus-visible {
   transform: translateY(-2px);
 }
 
+.low-end-device .input-container-focus:focus-within {
+  animation: none;
+  transform: none;
+  border-color: rgba(0, 242, 255, 0.5);
+}
+
 /* Awakening Animation - God Level */
 @keyframes shockwave-expand-rgb {
   0% {
@@ -689,6 +695,10 @@ a:focus-visible {
 
 .animate-screen-quake {
   animation: screen-quake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.low-end-device .animate-screen-quake {
+  animation: none;
 }
 
 @keyframes shockwave-glitch {
@@ -906,6 +916,10 @@ a:focus-visible {
   transform: translateZ(0);
 }
 
+.low-end-device .particle-burst {
+  display: none;
+}
+
 .particle {
   position: absolute;
   width: 3px;
@@ -955,6 +969,12 @@ a:focus-visible {
   transform: translateZ(0);
 }
 
+.low-end-device .glass-panel {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  @apply bg-white/80 dark:bg-black/80;
+}
+
 .premium-shadow {
   box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
 }
@@ -962,11 +982,24 @@ a:focus-visible {
   box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
 }
 
+.low-end-device .premium-shadow {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+}
+.low-end-device .dark .premium-shadow {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+}
+
 .glass-button {
   @apply bg-white/70 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 border border-slate-200/40 dark:border-white/10 transition-all duration-300 shadow-sm hover:shadow-md;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transform: translateZ(0);
+}
+
+.low-end-device .glass-button {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  @apply bg-white/90 dark:bg-white/20;
 }
 
 @keyframes light-streak-expand {
@@ -1003,19 +1036,27 @@ a:focus-visible {
   color: #fff !important;
   z-index: 1;
   box-shadow:
-    0 8px 32px rgba(0, 242, 255, 0.08),
-    inset 0 0 20px rgba(0, 242, 255, 0.05);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+    0 8px 32px rgba(0, 242, 255, 0.1),
+    inset 0 0 20px rgba(0, 242, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-3xl);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.low-end-device .awakened-msg-bubble {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 4px 16px rgba(0, 242, 255, 0.05);
+  background: rgba(5, 5, 8, 0.95) !important;
 }
 
 .awakened-msg-bubble:hover {
-  border-color: rgba(0, 242, 255, 0.4) !important;
+  border-color: rgba(0, 242, 255, 0.5) !important;
   box-shadow:
-    0 8px 32px rgba(0, 242, 255, 0.15),
-    inset 0 0 20px rgba(0, 242, 255, 0.1);
+    0 8px 40px rgba(0, 242, 255, 0.2),
+    inset 0 0 25px rgba(0, 242, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .awakened-msg-bubble::before {
@@ -1118,6 +1159,10 @@ a:focus-visible {
   opacity: 0.8;
   animation: none !important;
   mix-blend-mode: screen;
+}
+
+.low-end-device .awakened-mode::before {
+  display: none;
 }
 
 @keyframes cosmic-aura-pulse {

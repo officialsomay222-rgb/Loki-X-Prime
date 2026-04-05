@@ -515,7 +515,7 @@ export const MessageBubble = memo(
         <motion.div
           initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+          transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
           className={`flex flex-col ${gapClass} w-full px-2 sm:px-4 gpu-accelerate`}
         >
           <div className="flex items-center gap-3">
@@ -650,7 +650,7 @@ export const MessageBubble = memo(
       <motion.div
         initial={messageAnimation ? { opacity: 0, y: 20, scale: 0.95 } : false}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+        transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
         className={`flex ${chatAlignment === 'left' ? 'justify-start' : 'justify-end'} w-full px-2 sm:px-4 gpu-accelerate`}
       >
         <div className={`flex flex-col ${gapClass} max-w-[95%] sm:max-w-[85%] ${alignmentClass}`}>

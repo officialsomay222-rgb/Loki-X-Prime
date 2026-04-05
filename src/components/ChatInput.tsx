@@ -669,9 +669,9 @@ export const ChatInput = memo(
               scale: isRecording ? 1.02 : 1,
             }}
             transition={{ 
-              opacity: { duration: 0.8, ease: "easeOut" },
-              y: { duration: 0.8, ease: "easeOut" },
-              scale: { type: "spring", stiffness: 300, damping: 20 }
+              opacity: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+              y: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+              scale: { type: "spring", stiffness: 400, damping: 30, mass: 0.8 }
             }}
             className="max-w-4xl mx-auto relative rounded-2xl"
           >
@@ -725,7 +725,7 @@ export const ChatInput = memo(
                 className="relative w-full group mx-auto max-w-3xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+                transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
               >
                 <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened || effectInputBox ? 'p-[2px] shadow-[0_0_40px_rgba(0,242,255,0.3)]' : 'p-0 bg-transparent'}`}>
                   {(isAwakened || effectInputBox) && (

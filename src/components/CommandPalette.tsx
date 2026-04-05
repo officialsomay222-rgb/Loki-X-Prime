@@ -36,6 +36,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
             className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg glass-panel premium-shadow rounded-xl z-[101] overflow-hidden"
           >
             <div className="flex items-center px-4 border-b border-slate-200/30 dark:border-white/10">
