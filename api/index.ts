@@ -36,7 +36,8 @@ app.post("/api/transcribe", async (req, res) => {
     const fs = await import('fs');
     const path = await import('path');
     const os = await import('os');
-    const tempFilePath = path.join(os.tmpdir(), `audio_${Date.now()}.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`);
+    const { randomUUID } = await import('crypto');
+    const tempFilePath = path.join(os.tmpdir(), `audio_${randomUUID()}.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`);
     
     fs.writeFileSync(tempFilePath, buffer);
 

@@ -48,6 +48,37 @@ const generateId = () => {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 };
 
+const processAudioUrl = async (audioUrl?: string): Promise<string | undefined> => {
+  if (!audioUrl || !audioUrl.startsWith('blob:')) return audioUrl;
+  try {
+    const response = await fetch(audioUrl);
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.error("Failed to convert blob to data URL", e);
+    return audioUrl;
+  }
+};
+
+const updateSessionMessage = async (sessionId: string, messageId: string, content: string): Promise<void> => {
+  const session = await localDb.sessions.get(sessionId);
+  if (session) {
+    const msgIndex = session.messages.findIndex(m => m.id === messageId);
+    if (msgIndex !== -1) {
+      session.messages[msgIndex].content = content;
+      await localDb.sessions.put(session);
+    }
+  }
+};
+
+const cleanModelResponse = (text: string): string => {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
+};
+
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -259,20 +290,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
 
     const isVoiceRequest = !!audioUrl;
-    let persistentAudioUrl = audioUrl;
-    if (audioUrl && audioUrl.startsWith('blob:')) {
-      try {
-        const response = await fetch(audioUrl);
-        const blob = await response.blob();
-        persistentAudioUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      } catch (e) {
-        console.error("Failed to convert blob to data URL", e);
-      }
-    }
+    const persistentAudioUrl = await processAudioUrl(audioUrl);
 
     const userMessageId = generateId();
     const userMessage: Message = {
@@ -327,15 +345,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         const imageUrl = await generateImage(processedText, imageSize);
         // Storing base64 directly in Dexie is fine, no 1MB limit like Firestore
         const imageMarkdown = `![Generated Image](${imageUrl})`;
-        
-        const updatedSession = await localDb.sessions.get(currentSessionId);
-        if (updatedSession) {
-          const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
-          if (msgIndex !== -1) {
-            updatedSession.messages[msgIndex].content = imageMarkdown;
-            await localDb.sessions.put(updatedSession);
-          }
-        }
+        await updateSessionMessage(currentSessionId, modelMessageId, imageMarkdown);
       } else {
         const responseStream = await generateChatResponse({
           message: processedText,
@@ -369,7 +379,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
             fullResponse += chunk.text;
             const now = Date.now();
             if (now - lastUpdateTime > 50) {
-              let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
+              const cleanResponse = cleanModelResponse(fullResponse);
               updateState(cleanResponse);
               lastUpdateTime = now;
               pendingUpdate = false;
@@ -380,19 +390,11 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         }
 
         if (pendingUpdate) {
-          let cleanResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-          updateState(cleanResponse);
+          updateState(cleanModelResponse(fullResponse));
         }
 
         // Final update to Dexie
-        const finalSession = await localDb.sessions.get(currentSessionId);
-        if (finalSession) {
-          const msgIndex = finalSession.messages.findIndex(m => m.id === modelMessageId);
-          if (msgIndex !== -1) {
-            finalSession.messages[msgIndex].content = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
-            await localDb.sessions.put(finalSession);
-          }
-        }
+        await updateSessionMessage(currentSessionId, modelMessageId, cleanModelResponse(fullResponse));
         setStreamingMessage(null);
       }
 
@@ -400,26 +402,14 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         console.log('Generation stopped by user');
-        // Save partial response on abort
-        const finalSession = await localDb.sessions.get(currentSessionId);
-        if (finalSession && streamingMessage) {
-          const msgIndex = finalSession.messages.findIndex(m => m.id === modelMessageId);
-          if (msgIndex !== -1) {
-            finalSession.messages[msgIndex].content = streamingMessage.content;
-            await localDb.sessions.put(finalSession);
-          }
+        // Save partial response on abort. Use streamingMessage or fallback
+        if (streamingMessage) {
+          await updateSessionMessage(currentSessionId, modelMessageId, streamingMessage.content);
         }
         setStreamingMessage(null);
       } else {
         console.error("Error sending message:", error);
-        const updatedSession = await localDb.sessions.get(currentSessionId);
-        if (updatedSession) {
-          const msgIndex = updatedSession.messages.findIndex(m => m.id === modelMessageId);
-          if (msgIndex !== -1) {
-            updatedSession.messages[msgIndex].content = `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`;
-            await localDb.sessions.put(updatedSession);
-          }
-        }
+        await updateSessionMessage(currentSessionId, modelMessageId, `SYSTEM ERROR: ${error.message || 'Connection to core interrupted. Please try again.'}`);
         setStreamingMessage(null);
       }
     } finally {

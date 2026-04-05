@@ -1,5 +1,4 @@
 import { GoogleGenAI, Type, ThinkingLevel, Modality } from "@google/genai";
-import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
 
 const getApiKey = () => {
@@ -11,11 +10,7 @@ const getApiKey = () => {
   return key;
 };
 
-const getGroqKey = () => {
-  let key = (import.meta as any).env?.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
-  if (key && (key.includes("MY_GROQ") || key.includes("YOUR_"))) return undefined;
-  return key;
-};
+// We don't need getGroqKey in the frontend anymore since we're calling the backend API.
 
 const getHfToken = () => {
   let key = (import.meta as any).env?.VITE_HF_TOKEN || process.env.HF_TOKEN;
@@ -115,39 +110,75 @@ export const generateChatResponse = async (params: {
     return streamResponse();
 
   } else if (params.mode === "pro" || params.mode === "happy") {
-    const groqKey = getGroqKey();
-    if (!groqKey) {
-      async function* mockStream() {
-        yield { text: "Commander, your Groq API key is missing. Please set VITE_GROQ_API_KEY to enable Llama models. Running in demo mode." };
-      }
-      return mockStream();
-    }
-
-    const groq = new Groq({ apiKey: groqKey, dangerouslyAllowBrowser: true });
-    const modelName = params.mode === "pro" ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
-
-    const messages = [
-      { role: "system", content: params.systemInstruction },
-      ...(params.history || []).map((msg: any) => ({
-        role: msg.role === "model" ? "assistant" : "user",
-        content: msg.content
-      })),
-      { role: "user", content: params.message }
-    ];
-
-    const stream = await groq.chat.completions.create({
-      messages: messages as any,
-      model: modelName,
-      temperature: params.temperature || 0.7,
-      top_p: params.topP || 0.95,
-      stream: true,
+    // Pro and Happy modes use the Express backend to securely connect to Groq
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: params.message,
+        history: params.history?.map((msg: any) => ({
+          role: msg.role,
+          parts: [{ text: msg.content }] // Backend expects this format
+        })),
+        mode: params.mode,
+        systemInstruction: params.systemInstruction,
+        temperature: params.temperature,
+        topP: params.topP,
+      }),
     });
 
+    if (!response.ok) {
+      // Parse the error message, or fallback to generic
+      let errData;
+      try {
+        errData = await response.json();
+      } catch (e) {
+        throw new Error("Failed to generate chat response. Server returned " + response.status);
+      }
+      throw new Error(errData.error || "Failed to generate chat response.");
+    }
+
+    if (!response.body) {
+      throw new Error("No response body returned from server.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
     async function* streamResponse() {
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        if (content) {
-          yield { text: content };
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+
+        // Keep the last partial event in the buffer
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') {
+              return;
+            }
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.error) {
+                if (data.error.includes("Groq API Key is missing")) {
+                  yield { text: "Commander, your Groq API key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets to enable Pro/Happy models." };
+                  return;
+                }
+                throw new Error(data.error);
+              }
+              if (data.text) {
+                yield { text: data.text };
+              }
+            } catch (e) {
+              console.error("Error parsing SSE data:", e, "Raw data:", dataStr);
+            }
+          }
         }
       }
     }
@@ -218,29 +249,21 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
 };
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string) => {
-  const groqKey = getGroqKey();
-  if (!groqKey) throw new Error("Groq API Key is missing.");
-
-  const groq = new Groq({ apiKey: groqKey, dangerouslyAllowBrowser: true });
-  
-  // Convert base64 to File object
-  const byteCharacters = atob(audioBase64);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: mimeType });
-  const file = new File([blob], `audio.${mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm'}`, { type: mimeType });
-
-  const transcription = await groq.audio.transcriptions.create({
-    file: file,
-    model: 'whisper-large-v3-turbo',
-    response_format: 'json',
-    prompt: 'The following is a conversation in Hindi, Hinglish, and English. Please transcribe exactly as spoken. Keep Hinglish words in Latin script, and transcribe pure Hindi in Devanagari if appropriate, or Latin script. Examples: "Haan bhai, kya haal hai?", "Theek hai.", "Hello, how are you?"',
+  const response = await fetch('/api/transcribe', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ audioBase64, mimeType }),
   });
 
-  return transcription.text;
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || `Server responded with ${response.status}`);
+  }
+
+  return data.text;
 };
 
 export const connectLiveSession = (callbacks: {

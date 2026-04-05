@@ -520,9 +520,7 @@ export const ChatInput = memo(
 
           const session = await connectLiveSession(
             {
-              onopen: () => {
-                console.log("Live session opened");
-              },
+              onopen: () => {},
               onmessage: async (message) => {
                 if (
                   message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data
