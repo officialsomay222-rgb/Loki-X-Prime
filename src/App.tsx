@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from '
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { useAwakening } from './hooks/useAwakening';
+import { AvatarShockwave } from './components/AvatarShockwave';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
@@ -47,6 +48,7 @@ declare global {
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
@@ -593,7 +595,13 @@ export default function App() {
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? 'opacity-0' : 'opacity-100'}`} 
                 title={commanderName}
                 onClick={triggerAwakening}
+                onMouseDown={() => setIsAvatarActive(true)}
+                onMouseUp={() => setIsAvatarActive(false)}
+                onMouseLeave={() => setIsAvatarActive(false)}
+                onTouchStart={() => setIsAvatarActive(true)}
+                onTouchEnd={() => setIsAvatarActive(false)}
               >
+                 <AvatarShockwave isActive={isAvatarActive} />
                  {(isAwakened || effectAvatar) && (
                    <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura" style={{
                      background: 'conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)',
