@@ -350,7 +350,8 @@ html.awakened-mode-active {
 /* Global Button & Interactive Element Refinements */
 button,
 a {
-  @apply transition-all duration-300 ease-in-out;
+  @apply transition-all duration-300;
+  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
   outline: none;
 }
 
@@ -605,6 +606,52 @@ a:focus-visible {
 .input-container-focus:focus-within {
   animation: input-glow 3s infinite ease-in-out;
   transform: translateY(-2px);
+}
+
+@keyframes awakened-border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.awakened-input-wrapper {
+  position: relative;
+  border-radius: 32px;
+  background: transparent;
+}
+
+.awakened-input-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 34px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 255, 0.8),
+    rgba(189, 0, 255, 0.8),
+    rgba(0, 242, 255, 0.8)
+  );
+  background-size: 200% 200%;
+  animation: awakened-border-flow 3s ease infinite;
+  z-index: 0;
+  opacity: 0.9;
+  filter: blur(8px);
+}
+
+.awakened-input-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 33px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 255, 1),
+    rgba(189, 0, 255, 1),
+    rgba(0, 242, 255, 1)
+  );
+  background-size: 200% 200%;
+  animation: awakened-border-flow 3s ease infinite;
+  z-index: 0;
 }
 
 /* Awakening Animation - God Level */
@@ -950,22 +997,22 @@ a:focus-visible {
 /* Glassmorphism Utilities - Optimized for Performance */
 .glass-panel {
   @apply bg-white/20 dark:bg-black/20 border border-slate-200/40 dark:border-white/10 shadow-xl;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   transform: translateZ(0);
 }
 
 .premium-shadow {
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15);
 }
 .dark .premium-shadow {
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
 }
 
 .glass-button {
   @apply bg-white/70 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 border border-slate-200/40 dark:border-white/10 transition-all duration-300 shadow-sm hover:shadow-md;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transform: translateZ(0);
 }
 
