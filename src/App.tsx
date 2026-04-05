@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
+import { useAwakening } from './hooks/useAwakening';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
@@ -63,7 +64,6 @@ export default function App() {
   }, []);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
   
   const { 
     theme, setTheme, 
@@ -113,6 +113,7 @@ export default function App() {
     messageShadow,
     resetSettings
   } = useSettings();
+  const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(isAwakened, setIsAwakened);
   const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -274,59 +275,6 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-
-  const triggerAwakening = (e: React.MouseEvent) => {
-    if (awakening) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const startX = rect.left;
-    const startY = rect.top;
-    
-    setAwakening({ id: Date.now(), phase: 'moving-in', startX, startY, width: rect.width, height: rect.height, isDeactivating: isAwakened });
-    
-    setTimeout(() => {
-      if (isAwakened) {
-           // Deactivating
-           setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-           setTimeout(() => {
-              setIsAwakened(false);
-              setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2500);
-           setTimeout(() => {
-              setAwakening(null);
-           }, 4000);
-        } else {
-           // Activating - Skip prompt, go straight to shockwave
-           setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-           setTimeout(() => {
-             setIsAwakened(true);
-             setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2500);
-           setTimeout(() => {
-             setAwakening(null);
-           }, 4000);
-        }
-    }, 1500);
-  };
-
-  const handleAwakeningResponse = (ready: boolean) => {
-    if (!awakening) return;
-    
-    if (ready) {
-      setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-      setTimeout(() => {
-        setIsAwakened(true);
-        setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      }, 2500);
-      setTimeout(() => {
-        setAwakening(null);
-      }, 4000);
-    } else {
-      setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      setTimeout(() => {
-        setAwakening(null);
-      }, 1500);
-    }
-  };
 
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
