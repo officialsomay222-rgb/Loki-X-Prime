@@ -169,7 +169,6 @@ export default function App() {
     const command = urlParams.get('command');
     if (command) {
       // Handle web+loki:// protocol
-      console.log('Received command:', command);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
