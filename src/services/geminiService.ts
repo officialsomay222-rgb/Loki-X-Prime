@@ -20,7 +20,7 @@ const getHfToken = () => {
 
 export const generateChatResponse = async (params: {
   message: string;
-  history: any[];
+  history: { role: string; content: string }[];
   mode: 'fast' | 'pro' | 'happy';
   thinkingMode: boolean;
   searchGrounding: boolean;
@@ -63,7 +63,7 @@ export const generateChatResponse = async (params: {
 
     const contents: any[] = [];
     if (params.history && Array.isArray(params.history)) {
-      params.history.forEach((msg: any) => {
+      params.history.forEach((msg) => {
         if (msg.content) {
           contents.push({
             role: msg.role === 'model' ? 'model' : 'user',
@@ -75,7 +75,7 @@ export const generateChatResponse = async (params: {
     
     const userParts: any[] = [];
     if (hasAttachments) {
-      params.attachments!.forEach((att: any) => {
+      params.attachments!.forEach((att) => {
         userParts.push({
           inlineData: {
             data: att.data,
@@ -116,7 +116,7 @@ export const generateChatResponse = async (params: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: params.message,
-        history: params.history?.map((msg: any) => ({
+        history: params.history?.map((msg) => ({
           role: msg.role,
           parts: [{ text: msg.content }] // Backend expects this format
         })),
