@@ -607,16 +607,88 @@ a:focus-visible {
   transform: translateY(-2px);
 }
 
-/* Awakening Animation - Masterpiece Level */
+/* Awakening Animation - God Level */
 @keyframes shockwave-expand-rgb {
   0% {
     transform: translate(-50%, -50%) translateZ(0) scale(0.8);
     opacity: 1;
+    filter: brightness(2);
+  }
+  50% {
+    opacity: 1;
   }
   100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(12);
+    transform: translate(-50%, -50%) translateZ(0) scale(18);
     opacity: 0;
+    filter: brightness(1);
   }
+}
+
+@keyframes god-rays-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.1); opacity: 0; }
+  20% { opacity: 1; transform: translate(-50%, -50%) rotate(36deg) scale(1); }
+  80% { opacity: 1; transform: translate(-50%, -50%) rotate(144deg) scale(1.5); }
+  100% { transform: translate(-50%, -50%) rotate(180deg) scale(2); opacity: 0; }
+}
+
+@keyframes supernova-expand {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; filter: blur(0px); border-width: 50px; }
+  100% { transform: translate(-50%, -50%) scale(8); opacity: 0; filter: blur(20px); border-width: 1px; }
+}
+
+@keyframes particle-fly-god {
+  0% { transform: rotate(var(--angle)) translateY(0) translateZ(0) scale(1.5); opacity: 1; filter: brightness(2); }
+  100% { transform: rotate(var(--angle)) translateY(1200px) translateZ(0) scale(0); opacity: 0; filter: brightness(1); }
+}
+
+@keyframes screen-quake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5px, -5px); }
+  20% { transform: translate(5px, 5px); }
+  30% { transform: translate(-5px, 5px); }
+  40% { transform: translate(5px, -5px); }
+  50% { transform: translate(-3px, -3px); }
+  60% { transform: translate(3px, 3px); }
+  70% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  90% { transform: translate(0px, 0px); }
+}
+
+.god-rays {
+  position: fixed;
+  width: 300vmax;
+  height: 300vmax;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(0,242,255,0.4) 10deg, transparent 20deg, rgba(189,0,255,0.4) 30deg, transparent 40deg, rgba(0,242,255,0.4) 50deg, transparent 60deg, rgba(189,0,255,0.4) 70deg, transparent 80deg, rgba(0,242,255,0.4) 90deg, transparent 100deg, rgba(189,0,255,0.4) 110deg, transparent 120deg, rgba(0,242,255,0.4) 130deg, transparent 140deg, rgba(189,0,255,0.4) 150deg, transparent 160deg, rgba(0,242,255,0.4) 170deg, transparent 180deg, rgba(189,0,255,0.4) 190deg, transparent 200deg, rgba(0,242,255,0.4) 210deg, transparent 220deg, rgba(189,0,255,0.4) 230deg, transparent 240deg, rgba(0,242,255,0.4) 250deg, transparent 260deg, rgba(189,0,255,0.4) 270deg, transparent 280deg, rgba(0,242,255,0.4) 290deg, transparent 300deg, rgba(189,0,255,0.4) 310deg, transparent 320deg, rgba(0,242,255,0.4) 330deg, transparent 340deg, rgba(189,0,255,0.4) 350deg, transparent 360deg);
+  pointer-events: none;
+  z-index: 99995;
+  animation: god-rays-spin 3s ease-out forwards;
+  transform-origin: center;
+}
+
+.supernova-ring {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 50px solid #ffffff;
+  pointer-events: none;
+  z-index: 99997;
+  animation: supernova-expand 2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  box-shadow: 0 0 100px #00f2ff, inset 0 0 100px #00f2ff;
+}
+
+.particle-god {
+  position: absolute;
+  width: 4px;
+  height: 40px;
+  background: linear-gradient(to bottom, #fff, #00f2ff, #bd00ff, transparent);
+  border-radius: 2px;
+  animation: particle-fly-god 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  box-shadow: 0 0 15px #00f2ff;
+}
+
+.animate-screen-quake {
+  animation: screen-quake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes shockwave-glitch {

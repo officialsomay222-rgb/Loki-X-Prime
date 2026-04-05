@@ -400,7 +400,7 @@ export default function App() {
 
   return (
     <div 
-      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
+      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass} ${awakening?.phase === 'shockwave' ? 'animate-screen-quake' : ''}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}
@@ -415,6 +415,8 @@ export default function App() {
           
           {awakening.phase === 'shockwave' && (
             <>
+              <div className="god-rays" style={{ left: '50%', top: '35%' }} />
+              <div className="supernova-ring" style={{ left: '50%', top: '35%' }} />
               <div className="shockwave-core" style={{ left: '50%', top: '35%' }} />
               <div className="rgb-shockwave rgb-shockwave-1" style={{ left: '50%', top: '35%' }} />
               <div className="rgb-shockwave rgb-shockwave-2" style={{ left: '50%', top: '35%' }} />
@@ -422,8 +424,8 @@ export default function App() {
               <div className="rgb-shockwave rgb-shockwave-glitch" style={{ left: '50%', top: '35%' }} />
               <div className="light-streak" style={{ left: '50%', top: '35%' }} />
               <div className="particle-burst" style={{ left: '50%', top: '35%' }}>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="particle" style={{ '--angle': `${i * 60}deg` } as any} />
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="particle-god" style={{ '--angle': `${i * 30}deg` } as any} />
                 ))}
               </div>
             </>
