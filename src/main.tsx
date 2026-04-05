@@ -22,11 +22,9 @@ const queryClient = new QueryClient({
 try {
   const updateSW = registerSW({
     onNeedRefresh() {
-      console.log('New content available. Reloading...');
       updateSW(true);
     },
     onOfflineReady() {
-      console.log('App is ready to work offline');
     },
   });
 } catch (e) {
