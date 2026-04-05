@@ -527,11 +527,17 @@ export const ChatInput = memo(
                 ) {
                   const base64Audio =
                     message.serverContent.modelTurn.parts[0].inlineData.data;
-                  const audioData = Uint8Array.from(atob(base64Audio), (c) =>
-                    c.charCodeAt(0),
-                  );
-                  // Handle audio playback (PCM 16kHz)
-                  playLiveAudio(audioData);
+
+                  try {
+                    const response = await fetch(`data:application/octet-stream;base64,${base64Audio}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const audioData = new Uint8Array(arrayBuffer);
+
+                    // Handle audio playback (PCM 16kHz)
+                    playLiveAudio(audioData);
+                  } catch (e) {
+                    console.error("Error decoding audio using fetch:", e);
+                  }
                 }
                 if (message.serverContent?.interrupted) {
                   audioQueueRef.current = [];
