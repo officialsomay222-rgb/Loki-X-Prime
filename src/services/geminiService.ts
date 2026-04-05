@@ -225,25 +225,34 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
     throw new Error(`Hugging Face API Error: ${e.message}`);
   }
 
-  const imageBuffer = await blob.arrayBuffer();
-  // Convert ArrayBuffer to Base64 in browser
-  let binary = '';
-  const bytes = new Uint8Array(imageBuffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  let mimeType = blob.type;
+  if (!mimeType || !mimeType.startsWith('image/')) {
+    mimeType = 'image/jpeg';
   }
-  const base64EncodeString = window.btoa(binary);
+
+  // Convert Blob to Base64 in browser efficiently using FileReader
+  const base64EncodeString = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        // reader.result includes the "data:image/jpeg;base64," prefix.
+        // We extract just the base64 part to match existing logic/checks,
+        // or we can just return the data URL directly.
+        const base64Data = reader.result.split(',')[1];
+        resolve(base64Data);
+      } else {
+        reject(new Error("FileReader result is not a string"));
+      }
+    };
+    reader.onerror = reject;
+    // We recreate the blob with the correct mimeType to ensure FileReader generates the right prefix
+    reader.readAsDataURL(new Blob([blob], { type: mimeType }));
+  });
 
   if (!base64EncodeString || base64EncodeString.length < 100) {
     throw new Error("Generated image data is invalid or empty.");
   }
 
-  let mimeType = blob.type;
-  if (!mimeType || !mimeType.startsWith('image/')) {
-    mimeType = 'image/jpeg';
-  }
-  
   return `data:${mimeType};base64,${base64EncodeString}`;
 };
 
