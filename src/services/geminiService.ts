@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, ThinkingLevel, Modality } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel, Modality, GenerateContentConfig } from "@google/genai";
 import { HfInference } from "@huggingface/inference";
 
 const getApiKey = () => {
@@ -45,7 +45,7 @@ export const generateChatResponse = async (params: {
     const ai = new GoogleGenAI({ apiKey });
     let modelName = "gemini-3.1-flash-lite-preview";
     
-    const config: any = {
+    const config: GenerateContentConfig = {
       systemInstruction: params.systemInstruction,
       temperature: params.temperature || 0.7,
       topP: params.topP || 0.95,
@@ -58,7 +58,7 @@ export const generateChatResponse = async (params: {
     }
 
     if (params.thinkingMode) {
-      config.thinkingConfig = { thinkingLevel: "HIGH" };
+      config.thinkingConfig = { thinkingLevel: ThinkingLevel.HIGH };
     }
 
     const contents: any[] = [];
