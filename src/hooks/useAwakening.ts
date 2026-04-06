@@ -29,22 +29,22 @@ export function useAwakening(isAwakened: boolean, setIsAwakened: (value: boolean
            setTimeout(() => {
               setIsAwakened(false);
               setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2200);
+           }, 2500);
            setTimeout(() => {
               setAwakening(null);
-           }, 3500);
+           }, 4000);
         } else {
            // Activating - cinematic cinematic shockwave timing
            setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
            setTimeout(() => {
              setIsAwakened(true);
              setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2800); // Wait longer for the massive god-level rings to expand fully
+           }, 3000); // 3 seconds for the premium liquid effect
            setTimeout(() => {
              setAwakening(null);
-           }, 4200);
+           }, 4500);
         }
-    }, 1200);
+    }, 1200); // 1.2s to move in
   }, [awakening, isAwakened, setIsAwakened]);
 
   const handleAwakeningResponse = useCallback((ready: boolean) => {
@@ -55,10 +55,10 @@ export function useAwakening(isAwakened: boolean, setIsAwakened: (value: boolean
       setTimeout(() => {
         setIsAwakened(true);
         setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      }, 2500);
+      }, 3000);
       setTimeout(() => {
         setAwakening(null);
-      }, 4000);
+      }, 4500);
     } else {
       setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
       setTimeout(() => {

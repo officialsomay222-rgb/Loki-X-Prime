@@ -349,7 +349,7 @@ export default function App() {
 
   return (
     <div 
-      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass} ${awakening?.phase === 'shockwave' ? 'animate-screen-quake' : ''}`}
+      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}
@@ -357,27 +357,14 @@ export default function App() {
 
       {/* 2. Awakening Overlays */}
       {awakening && (
-        <div className="fixed inset-0 z-[100000] pointer-events-none">
-          <div className="bootloader-border" />
-          
-          <div className="screen-flash-overlay" style={{ opacity: awakening.phase === 'shockwave' ? undefined : 0, animation: awakening.phase === 'shockwave' ? 'screen-flash 3s ease-out forwards' : 'none' }} />
+        <div className="fixed inset-0 z-[100000] pointer-events-none flex justify-center items-center">
           
           {awakening.phase === 'shockwave' && (
-            <>
-              <div className="god-rays" style={{ left: '50%', top: '35%' }} />
-              <div className="supernova-ring" style={{ left: '50%', top: '35%' }} />
-              <div className="shockwave-core" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-1" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-2" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-3" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-glitch" style={{ left: '50%', top: '35%' }} />
-              <div className="light-streak" style={{ left: '50%', top: '35%' }} />
-              <div className="particle-burst" style={{ left: '50%', top: '35%' }}>
-                {[...Array(12)].map((_, i) => (
-                  <div key={i} className="particle-god" style={{ '--angle': `${i * 30}deg` } as any} />
-                ))}
-              </div>
-            </>
+            <div className="gemini-liquid-shockwave" style={{ position: 'absolute', left: '50%', top: '35%' }}>
+              <div className="gemini-liquid-layer-1" />
+              <div className="gemini-liquid-layer-2" />
+              <div className="gemini-liquid-layer-3" />
+            </div>
           )}
 
           <div 
