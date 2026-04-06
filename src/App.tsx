@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { useAwakening } from './hooks/useAwakening';
 import { AvatarShockwave } from './components/AvatarShockwave';
+import { PremiumLiquidShockwave } from './components/PremiumLiquidShockwave';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
@@ -359,14 +360,6 @@ export default function App() {
       {awakening && (
         <div className="fixed inset-0 z-[100000] pointer-events-none flex justify-center items-center">
           
-          {awakening.phase === 'shockwave' && (
-            <div className="gemini-liquid-shockwave" style={{ position: 'absolute', left: '50%', top: '35%' }}>
-              <div className="gemini-liquid-layer-1" />
-              <div className="gemini-liquid-layer-2" />
-              <div className="gemini-liquid-layer-3" />
-            </div>
-          )}
-
           <div 
             className={`avatar-awakening flex justify-center items-center ${awakening.phase === 'moving-out' ? 'avatar-moving-out' : 'avatar-moving-in'}`}
             style={{ 
@@ -376,6 +369,7 @@ export default function App() {
               height: awakening.height,
             } as any}
           >
+             {awakening.phase === 'shockwave' && <PremiumLiquidShockwave />}
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
              <img src={"https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"} className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]" alt="Commander" />
           </div>
