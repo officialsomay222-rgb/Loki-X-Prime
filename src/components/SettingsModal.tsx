@@ -14,6 +14,8 @@ import { PrivacyOverlay } from './PrivacyOverlay';
 import { ReportOverlay } from './ReportOverlay';
 import { ClearConfirmOverlay } from './ClearConfirmOverlay';
 import { PickerOverlay } from './PickerOverlay';
+import { DataControlsOverlay } from './DataControlsOverlay';
+import { MemoriesOverlay } from './MemoriesOverlay';
 
 
 interface SettingsModalProps {
@@ -224,6 +226,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showDataControls, setShowDataControls] = useState(false);
+  const [showMemories, setShowMemories] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showPicker, setShowPicker] = useState<{ label: string, options: any[], value: any, onChange: (val: any) => void, rect?: DOMRect } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -742,13 +746,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <SettingItem 
                     icon={Shield} 
                     label="Data Controls" 
-                    onClick={() => {}}
+                    onClick={() => setShowDataControls(true)}
                   />
                   <SettingItem 
                     icon={Database} 
                     label="Memories" 
                     noBorder
-                    onClick={() => {}}
+                    onClick={() => setShowMemories(true)}
                   />
                 </SettingSection>
 
@@ -820,6 +824,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {showPrivacy && <PrivacyOverlay key="privacy" onClose={() => setShowPrivacy(false)} />}
 
               {showReport && <ReportOverlay key="report" onClose={() => setShowReport(false)} />}
+
+              {showDataControls && <DataControlsOverlay key="data-controls" onClose={() => setShowDataControls(false)} />}
+
+              {showMemories && <MemoriesOverlay key="memories" onClose={() => setShowMemories(false)} />}
 
               {showClearConfirm && <ClearConfirmOverlay key="clear-confirm" onClose={() => setShowClearConfirm(false)} onParentClose={onClose} onClearAllChats={onClearAllChats} setShowClearConfirm={setShowClearConfirm} />}
             </AnimatePresence>
