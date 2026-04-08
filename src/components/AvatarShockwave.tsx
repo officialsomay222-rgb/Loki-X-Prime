@@ -137,12 +137,12 @@ export const AvatarShockwave: React.FC<AvatarShockwaveProps> = ({ isActive }) =>
 
     const baseRadius = Math.min(width, height) * 0.35;
 
-    // Gemini-style colors: electric blue, cyan, soft purple, light pink
+    // Vibrant colors: Red, Yellow, Green, Blue
     const waves = [
-      new CircularWave(baseRadius * 1.1, 0, 0.02, 10, ['rgba(0, 242, 255, 0.4)', 'rgba(59, 130, 246, 0.4)', 'rgba(168, 85, 247, 0.4)']), // Cyan -> Blue -> Purple
-      new CircularWave(baseRadius * 0.9, Math.PI / 2, 0.03, 15, ['rgba(236, 72, 153, 0.4)', 'rgba(168, 85, 247, 0.4)', 'rgba(0, 242, 255, 0.4)']), // Pink -> Purple -> Cyan
-      new CircularWave(baseRadius * 1.2, Math.PI, 0.015, 8, ['rgba(59, 130, 246, 0.3)', 'rgba(0, 242, 255, 0.3)', 'rgba(236, 72, 153, 0.3)']), // Blue -> Cyan -> Pink
-      new CircularWave(baseRadius * 1.0, Math.PI * 1.5, 0.025, 12, ['rgba(168, 85, 247, 0.5)', 'rgba(236, 72, 153, 0.5)', 'rgba(59, 130, 246, 0.5)']) // Purple -> Pink -> Blue
+      new CircularWave(baseRadius * 1.1, 0, 0.02, 10, ['rgba(255, 0, 0, 0.4)', 'rgba(255, 255, 0, 0.4)', 'rgba(0, 255, 0, 0.4)']), // Red -> Yellow -> Green
+      new CircularWave(baseRadius * 0.9, Math.PI / 2, 0.03, 15, ['rgba(255, 255, 0, 0.4)', 'rgba(0, 255, 0, 0.4)', 'rgba(0, 0, 255, 0.4)']), // Yellow -> Green -> Blue
+      new CircularWave(baseRadius * 1.2, Math.PI, 0.015, 8, ['rgba(0, 255, 0, 0.3)', 'rgba(0, 0, 255, 0.3)', 'rgba(255, 0, 0, 0.3)']), // Green -> Blue -> Red
+      new CircularWave(baseRadius * 1.0, Math.PI * 1.5, 0.025, 12, ['rgba(0, 0, 255, 0.5)', 'rgba(255, 0, 0, 0.5)', 'rgba(255, 255, 0, 0.5)']) // Blue -> Red -> Yellow
     ];
 
     let lastTime = performance.now();

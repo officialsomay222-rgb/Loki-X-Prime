@@ -92,13 +92,12 @@ export const PremiumLiquidShockwave: React.FC = () => {
     updateSize();
     window.addEventListener('resize', updateSize);
 
-    // Premium Gemini/Cosmic inspired palette
+    // User requested vibrant multi-color palette
     const colors = [
-      'rgba(0, 242, 255, ',   // Cyan (Gemini Core)
-      'rgba(66, 133, 244, ',  // Google Blue
-      'rgba(189, 0, 255, ',   // Deep Purple
-      'rgba(255, 0, 127, ',   // Magenta
-      'rgba(141, 198, 255, '  // Bright Liquid Blue
+      'rgba(255, 0, 0, ',     // Red
+      'rgba(255, 255, 0, ',   // Yellow
+      'rgba(0, 255, 0, ',     // Green
+      'rgba(0, 0, 255, '      // Blue
     ];
 
     const duration = 5000; // 5 seconds of continuous liquid god-level flow
@@ -115,7 +114,7 @@ export const PremiumLiquidShockwave: React.FC = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
+      const centerY = window.innerHeight * 0.35; // Aligned with avatar's 35vh position
 
       // Silky smooth easing (easeOutQuart)
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
@@ -143,10 +142,10 @@ export const PremiumLiquidShockwave: React.FC = () => {
         // Fluid color shifting based on frameCount and progress
         const timeOffset = Math.sin(frameCount * 0.05);
 
-        auraGradient.addColorStop(0, `rgba(0, 242, 255, ${globalAlpha * (0.4 + timeOffset * 0.1)})`); // Cyan center
-        auraGradient.addColorStop(0.2, `rgba(189, 0, 255, ${globalAlpha * 0.3})`); // Purple mid
-        auraGradient.addColorStop(0.5, `rgba(66, 133, 244, ${globalAlpha * 0.2})`); // Deep Blue outer
-        auraGradient.addColorStop(0.8, `rgba(255, 0, 127, ${globalAlpha * 0.05})`); // Magenta edges
+        auraGradient.addColorStop(0, `rgba(255, 0, 0, ${globalAlpha * (0.4 + timeOffset * 0.1)})`); // Red center
+        auraGradient.addColorStop(0.2, `rgba(255, 255, 0, ${globalAlpha * 0.3})`); // Yellow mid
+        auraGradient.addColorStop(0.5, `rgba(0, 255, 0, ${globalAlpha * 0.2})`); // Green outer
+        auraGradient.addColorStop(0.8, `rgba(0, 0, 255, ${globalAlpha * 0.05})`); // Blue edges
         auraGradient.addColorStop(1, `rgba(0, 0, 0, 0)`); // Transparent fade
 
         ctx.beginPath();
@@ -184,8 +183,8 @@ export const PremiumLiquidShockwave: React.FC = () => {
         centerX, centerY, coreSize
       );
       coreGradient.addColorStop(0, `rgba(255, 255, 255, ${globalAlpha})`);
-      coreGradient.addColorStop(0.3, `rgba(0, 242, 255, ${globalAlpha * 0.8})`);
-      coreGradient.addColorStop(1, `rgba(0, 242, 255, 0)`);
+      coreGradient.addColorStop(0.3, `rgba(255, 255, 0, ${globalAlpha * 0.8})`); // Yellow core
+      coreGradient.addColorStop(1, `rgba(255, 0, 0, 0)`); // Fade to Red
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
