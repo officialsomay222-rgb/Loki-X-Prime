@@ -41,7 +41,8 @@ import {
   Volume2,
   Rocket,
   LogOut,
-  LogIn
+  LogIn,
+  ArrowDown
 } from 'lucide-react';
 
 declare global {
@@ -670,11 +671,11 @@ export default function App() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.8 }}
                 onClick={() => {
-                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }}
-                className="absolute bottom-24 right-4 sm:right-8 z-30 p-3 rounded-full bg-cyan-600 text-white shadow-lg hover:bg-cyan-500 transition-all border border-white/20"
+                className="absolute bottom-32 sm:bottom-36 right-4 sm:right-8 z-30 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50"
               >
-                <Download className="w-5 h-5 rotate-180" />
+                <ArrowDown className="w-5 h-5" />
               </motion.button>
             )}
           </AnimatePresence>
