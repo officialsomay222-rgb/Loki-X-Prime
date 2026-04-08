@@ -94,13 +94,14 @@ export const PremiumLiquidShockwave: React.FC = () => {
 
     // Premium Gemini/Cosmic inspired palette
     const colors = [
-      'rgba(0, 242, 255, ',   // Cyan
+      'rgba(0, 242, 255, ',   // Cyan (Gemini Core)
       'rgba(66, 133, 244, ',  // Google Blue
-      'rgba(189, 0, 255, ',   // Purple
-      'rgba(255, 0, 127, '    // Magenta/Pink
+      'rgba(189, 0, 255, ',   // Deep Purple
+      'rgba(255, 0, 127, ',   // Magenta
+      'rgba(141, 198, 255, '  // Bright Liquid Blue
     ];
 
-    const duration = 4000; // 4 seconds of epic god-level simulation
+    const duration = 5000; // 5 seconds of continuous liquid god-level flow
 
     // Continuous flow parameters
     let frameCount = 0;
@@ -110,81 +111,86 @@ export const PremiumLiquidShockwave: React.FC = () => {
       const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Strict clear rect for no trailing alpha issues
+      // Strict clear rect for zero alpha trailing/artifacting
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
 
-      // Complex easing
-      const easeOutExpo = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      // Silky smooth easing (easeOutQuart)
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      // Fluid expanding base that scales with screen size
+      const maxRadius = Math.max(window.innerWidth, window.innerHeight) * 1.2;
 
+      // Smooth fade out in the last 20%
       let globalAlpha = 1;
-      if (progress > 0.7) {
-        globalAlpha = 1 - ((progress - 0.7) / 0.3);
+      if (progress > 0.8) {
+        globalAlpha = 1 - ((progress - 0.8) / 0.2);
       }
 
       ctx.globalCompositeOperation = 'lighter';
 
-      // Emit new particles continuously for the first 70% of the animation
-      if (progress < 0.7 && frameCount % 2 === 0) {
-        for (let i = 0; i < 8; i++) {
-          const color = colors[Math.floor(Math.random() * colors.length)];
-          // Spawn near center
-          const angle = Math.random() * Math.PI * 2;
-          const dist = Math.random() * 20;
-          particlesRef.current.push(new Particle(centerX + Math.cos(angle)*dist, centerY + Math.sin(angle)*dist, color));
-        }
-      }
+      // 1. Massive continuous liquid aura base
+      const currentRadius = 50 + (easeOutQuart * maxRadius);
 
-      // Base massive aura expanding
-      const auraRadius = 50 + (easeOutExpo * Math.max(window.innerWidth, window.innerHeight) * 0.8);
-
-      if (auraRadius > 0 && globalAlpha > 0) {
+      if (currentRadius > 0 && globalAlpha > 0) {
+        // Multi-layered god-tier gradient
         const auraGradient = ctx.createRadialGradient(
           centerX, centerY, 0,
-          centerX, centerY, auraRadius
+          centerX, centerY, currentRadius
         );
-        // Deep cosmic core expanding into fluid mist
-        auraGradient.addColorStop(0, `rgba(0, 242, 255, ${globalAlpha * 0.3})`);
-        auraGradient.addColorStop(0.3, `rgba(189, 0, 255, ${globalAlpha * 0.2})`);
-        auraGradient.addColorStop(0.7, `rgba(66, 133, 244, ${globalAlpha * 0.1})`);
-        auraGradient.addColorStop(1, `rgba(255, 0, 127, 0)`);
+
+        // Fluid color shifting based on frameCount and progress
+        const timeOffset = Math.sin(frameCount * 0.05);
+
+        auraGradient.addColorStop(0, `rgba(0, 242, 255, ${globalAlpha * (0.4 + timeOffset * 0.1)})`); // Cyan center
+        auraGradient.addColorStop(0.2, `rgba(189, 0, 255, ${globalAlpha * 0.3})`); // Purple mid
+        auraGradient.addColorStop(0.5, `rgba(66, 133, 244, ${globalAlpha * 0.2})`); // Deep Blue outer
+        auraGradient.addColorStop(0.8, `rgba(255, 0, 127, ${globalAlpha * 0.05})`); // Magenta edges
+        auraGradient.addColorStop(1, `rgba(0, 0, 0, 0)`); // Transparent fade
 
         ctx.beginPath();
-        ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = auraGradient;
         ctx.fill();
       }
 
-      // Update and draw particles
-      particlesRef.current.forEach((p, index) => {
+      // 2. High-performance liquid particles (spawning continuous dense cluster)
+      if (progress < 0.85) {
+        const spawnCount = Math.floor(Math.random() * 4) + 6; // Dense spawn rate
+        for (let i = 0; i < spawnCount; i++) {
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          // Spawn tightly around center to explode outward
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.random() * 30; // Tight cluster
+          particlesRef.current.push(new Particle(centerX + Math.cos(angle)*dist, centerY + Math.sin(angle)*dist, color));
+        }
+      }
+
+      // Update and render particles
+      particlesRef.current.forEach((p) => {
         p.update(progress);
         p.draw(ctx, globalAlpha);
       });
 
-      // Cleanup dead particles
+      // Purge dead particles instantly for performance
       particlesRef.current = particlesRef.current.filter(p => p.life > 0);
 
-      // Core white flash at start
-      if (progress < 0.3) {
-        const coreAlpha = 1 - (progress / 0.3);
-        const coreRadius = 30 + easeOutExpo * 150;
+      // 3. Intense energy core at the center, always behind avatar
+      ctx.globalCompositeOperation = 'screen';
+      const coreSize = 60 + Math.sin(frameCount * 0.1) * 10; // Pulsating core
+      const coreGradient = ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, coreSize
+      );
+      coreGradient.addColorStop(0, `rgba(255, 255, 255, ${globalAlpha})`);
+      coreGradient.addColorStop(0.3, `rgba(0, 242, 255, ${globalAlpha * 0.8})`);
+      coreGradient.addColorStop(1, `rgba(0, 242, 255, 0)`);
 
-        ctx.globalCompositeOperation = 'source-over';
-        const coreGradient = ctx.createRadialGradient(
-          centerX, centerY, 0,
-          centerX, centerY, coreRadius
-        );
-        coreGradient.addColorStop(0, `rgba(255, 255, 255, ${coreAlpha * 0.9})`);
-        coreGradient.addColorStop(0.5, `rgba(0, 242, 255, ${coreAlpha * 0.5})`);
-        coreGradient.addColorStop(1, `rgba(0, 242, 255, 0)`);
-
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
-        ctx.fillStyle = coreGradient;
-        ctx.fill();
-      }
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
+      ctx.fillStyle = coreGradient;
+      ctx.fill();
 
       frameCount++;
 
@@ -205,12 +211,15 @@ export const PremiumLiquidShockwave: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden"
+      className="fixed inset-0 pointer-events-none z-[998] overflow-hidden"
     >
       <canvas
         ref={canvasRef}
-        className="absolute top-0 left-0"
-        style={{ transform: 'translateZ(0)' }} // Force GPU acceleration
+        className="absolute top-0 left-0 w-full h-full"
+        style={{
+          transform: 'translateZ(0)',
+          willChange: 'transform, opacity'
+        }} // Force GPU acceleration, zero lag
       />
     </div>
   );

@@ -34,15 +34,15 @@ export function useAwakening(isAwakened: boolean, setIsAwakened: (value: boolean
               setAwakening(null);
            }, 4000);
         } else {
-           // Activating - cinematic shockwave timing (4s simulation)
+           // Activating - cinematic shockwave timing (5s simulation)
            setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
            setTimeout(() => {
              setIsAwakened(true);
              setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 4000); // 4 seconds for the god-level liquid effect
+           }, 5000); // 5 seconds for the god-level liquid effect
            setTimeout(() => {
              setAwakening(null);
-           }, 5500);
+           }, 6500);
         }
     }, 1200); // 1.2s to move in
   }, [awakening, isAwakened, setIsAwakened]);
@@ -55,10 +55,10 @@ export function useAwakening(isAwakened: boolean, setIsAwakened: (value: boolean
       setTimeout(() => {
         setIsAwakened(true);
         setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      }, 4000);
+      }, 5000);
       setTimeout(() => {
         setAwakening(null);
-      }, 5500);
+      }, 6500);
     } else {
       setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
       setTimeout(() => {
