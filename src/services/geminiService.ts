@@ -1,5 +1,4 @@
 import { GoogleGenAI, Type, ThinkingLevel, Modality, GenerateContentConfig } from "@google/genai";
-import { HfInference } from "@huggingface/inference";
 
 const getApiKey = () => {
   let key = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
@@ -11,12 +10,6 @@ const getApiKey = () => {
 };
 
 // We don't need getGroqKey in the frontend anymore since we're calling the backend API.
-
-const getHfToken = () => {
-  let key = (import.meta as any).env?.VITE_HF_TOKEN || process.env.HF_TOKEN;
-  if (key && (key.includes("MY_HF") || key.includes("YOUR_"))) return undefined;
-  return key;
-};
 
 export const generateChatResponse = async (params: {
   message: string;
@@ -189,10 +182,8 @@ export const generateChatResponse = async (params: {
 
 export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = '1K') => {
   const apiKey = getApiKey();
-  const hfToken = getHfToken();
   
   if (!apiKey) throw new Error("Google AI Key is missing.");
-  if (!hfToken) throw new Error("Hugging Face Token is missing.");
 
   const ai = new GoogleGenAI({ apiKey });
   
@@ -202,7 +193,7 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
       model: "gemini-3.1-flash-lite-preview",
       contents: `[IMAGE_MODE] Create a stunning visual description for: ${prompt}`,
       config: {
-        systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Stable Diffusion XL model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
+        systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Imagen 4 model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
       }
     });
     detailedPrompt = refinementResponse.text || prompt;
@@ -210,50 +201,41 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
     console.error("Gemini refinement failed, using original prompt:", e);
   }
 
-  const hf = new HfInference(hfToken);
-  
-  let blob;
-  try {
-    blob = await hf.textToImage({
-      inputs: detailedPrompt,
-      model: "stabilityai/stable-diffusion-xl-base-1.0",
-    });
-  } catch (e: any) {
-    if (e.message?.includes("loading") || e.status === 503) {
-      throw new Error("stable-diffusion-xl-base-1.0 model is loading on Hugging Face. Please try again in 20-30 seconds.");
-    }
-    throw new Error(`Hugging Face API Error: ${e.message}`);
-  }
+  const modelsToTry = [
+    "imagen-4.0-fast-generate-001",
+    "imagen-4.0-generate-001",
+    "imagen-4.0-ultra-generate-001",
+    "imagen-3.0-generate-001"
+  ];
 
-  let mimeType = blob.type;
-  if (!mimeType || !mimeType.startsWith('image/')) {
-    mimeType = 'image/jpeg';
-  }
+  let lastError: any = null;
 
-  // Convert Blob to Base64 in browser efficiently using FileReader
-  const base64EncodeString = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        // reader.result includes the "data:image/jpeg;base64," prefix.
-        // We extract just the base64 part to match existing logic/checks,
-        // or we can just return the data URL directly.
-        const base64Data = reader.result.split(',')[1];
-        resolve(base64Data);
-      } else {
-        reject(new Error("FileReader result is not a string"));
+  for (const model of modelsToTry) {
+    try {
+      const response = await ai.models.generateImages({
+        model: model,
+        prompt: detailedPrompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: "image/jpeg"
+        }
+      });
+
+      const generatedImage = response.generatedImages?.[0];
+      if (!generatedImage || !generatedImage.image || !generatedImage.image.imageBytes) {
+        throw new Error(`Model ${model} returned empty image data`);
       }
-    };
-    reader.onerror = reject;
-    // We recreate the blob with the correct mimeType to ensure FileReader generates the right prefix
-    reader.readAsDataURL(new Blob([blob], { type: mimeType }));
-  });
 
-  if (!base64EncodeString || base64EncodeString.length < 100) {
-    throw new Error("Generated image data is invalid or empty.");
+      // The imageBytes is returned as a base64 string
+      const base64Data = generatedImage.image.imageBytes;
+      return `data:image/jpeg;base64,${base64Data}`;
+    } catch (e: any) {
+      console.warn(`Failed with model ${model}:`, e);
+      lastError = e;
+    }
   }
 
-  return `data:${mimeType};base64,${base64EncodeString}`;
+  throw new Error(`All Google Imagen models failed. Last error: ${lastError?.message || 'Unknown error'}`);
 };
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string) => {
