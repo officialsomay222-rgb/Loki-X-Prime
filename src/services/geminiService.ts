@@ -25,7 +25,7 @@ export const generateChatResponse = async (params: {
 }) => {
   const hasAttachments = params.attachments && params.attachments.length > 0;
 
-  if (params.mode === "fast" || hasAttachments) {
+  if (hasAttachments) {
     const apiKey = getApiKey();
     if (!apiKey) {
       // Mock response for missing API key
@@ -102,7 +102,7 @@ export const generateChatResponse = async (params: {
     }
     return streamResponse();
 
-  } else if (params.mode === "pro" || params.mode === "happy") {
+  } else if (params.mode === "fast" || params.mode === "pro" || params.mode === "happy") {
     // Pro and Happy modes use the Express backend to securely connect to Groq
     const response = await fetch('/api/chat', {
       method: 'POST',
