@@ -155,20 +155,23 @@ export const generateChatResponse = async (params: {
             if (dataStr === '[DONE]') {
               return;
             }
+            let data;
             try {
-              const data = JSON.parse(dataStr);
-              if (data.error) {
-                if (data.error.includes("Groq API Key is missing")) {
-                  yield { text: "Commander, your Groq API key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets to enable Pro/Happy models." };
-                  return;
-                }
-                throw new Error(data.error);
-              }
-              if (data.text) {
-                yield { text: data.text };
-              }
+              data = JSON.parse(dataStr);
             } catch (e) {
               console.error("Error parsing SSE data:", e, "Raw data:", dataStr);
+              continue;
+            }
+
+            if (data.error) {
+              if (typeof data.error === 'string' && data.error.includes("Groq API Key is missing")) {
+                yield { text: "Commander, your Groq API key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets to enable Pro/Happy models." };
+                return;
+              }
+              throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+            }
+            if (data.text) {
+              yield { text: data.text };
             }
           }
         }
@@ -224,23 +227,26 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
         if (dataStr === '[DONE]') {
           break;
         }
+        let data;
         try {
-          const data = JSON.parse(dataStr);
-          if (data.error) {
-            throw new Error(data.error);
-          }
-          if (data.text) {
-            // Extract the base64 URL from the markdown ![Generated Image](url)
-            const match = data.text.match(/\!\[.*?\]\((.*?)\)/);
-            if (match && match[1]) {
-              base64Result = match[1];
-            } else {
-               // Fallback if the raw text is the URL
-               base64Result = data.text;
-            }
-          }
+          data = JSON.parse(dataStr);
         } catch (e) {
           // Ignore parsing errors for empty or keep-alive lines
+          continue;
+        }
+
+        if (data.error) {
+          throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+        }
+        if (data.text) {
+          // Extract the base64 URL from the markdown ![Generated Image](url)
+          const match = data.text.match(/\!\[.*?\]\((.*?)\)/);
+          if (match && match[1]) {
+            base64Result = match[1];
+          } else {
+             // Fallback if the raw text is the URL
+             base64Result = data.text;
+          }
         }
       }
     }

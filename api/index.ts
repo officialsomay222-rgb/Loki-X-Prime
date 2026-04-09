@@ -442,10 +442,38 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error: any) {
     console.error("Chat API Error:", error);
+
+    let errorMessage = error.message || "Internal server error while processing your request.";
+
+    // Attempt to extract cleaner error messages if it's a JSON string dump
+    try {
+      // Sometimes errors are prefixed with a status code like "400 {\"error\":...}"
+      const jsonStrMatch = errorMessage.match(/\{.*\}/s);
+      if (jsonStrMatch) {
+        const parsed = JSON.parse(jsonStrMatch[0]);
+        if (parsed.error && parsed.error.message) {
+           // Groq or nested generic format
+           let innerMsg = parsed.error.message;
+           // Gemini might double-encode the error inside the message
+           try {
+             const innerParsed = JSON.parse(innerMsg);
+             if (innerParsed.error && innerParsed.error.message) {
+               innerMsg = innerParsed.error.message;
+             }
+           } catch (e2) {}
+           errorMessage = innerMsg;
+        } else if (parsed.message) {
+           errorMessage = parsed.message;
+        }
+      }
+    } catch (e) {
+      // Leave errorMessage as is if parsing fails
+    }
+
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message || "Internal server error while processing your request." });
+      res.status(500).json({ error: errorMessage });
     } else {
-      res.write(`data: ${JSON.stringify({ error: error.message || "Internal server error while processing your request." })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
     }
