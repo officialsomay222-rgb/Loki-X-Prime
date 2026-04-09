@@ -24,8 +24,9 @@ interface SettingsModalProps {
 }
 
 // Sub-component for Edit Profile to prevent lag
-const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (name: string) => void, onClose: () => void }) => {
+const EditProfileOverlay = ({ name, email, onSave, onClose }: { name: string, email: string, onSave: (name: string, email: string) => void, onClose: () => void }) => {
   const [tempName, setTempName] = useState(name);
+  const [tempEmail, setTempEmail] = useState(email);
 
   return (
     <motion.div 
@@ -61,16 +62,16 @@ const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (
           <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
           <input 
             type="email" 
-            value="officialsomay222@gmail.com"
-            readOnly
-            className="w-full bg-slate-50/50 dark:bg-[#161616]/50 border border-slate-100 dark:border-white/5 rounded-2xl p-4 text-slate-500 dark:text-[#717171] text-sm focus:outline-none cursor-not-allowed"
+            value={tempEmail}
+            onChange={(e) => setTempEmail(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors"
+            placeholder="Enter your email"
           />
-          <p className="text-[10px] text-slate-400 dark:text-[#444]">Email cannot be changed for this account.</p>
         </div>
         <motion.button 
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => onSave(tempName)}
+          onClick={() => onSave(tempName, tempEmail)}
           className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold transition-all mt-4 shadow-xl"
         >
           Save Changes
@@ -185,6 +186,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     theme, setTheme,
     bgStyle, setBgStyle,
     commanderName, setCommanderName,
+    commanderEmail, setCommanderEmail,
     avatarUrl, setAvatarUrl,
     modelMode, setModelMode,
     tone, setTone,
@@ -335,7 +337,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   
                   <div className="text-center space-y-1">
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{commanderName || 'Owner'}</h3>
-                    <p className="text-sm text-slate-500 dark:text-[#717171] font-medium">officialsomay222@gmail.com</p>
+                    <p className="text-sm text-slate-500 dark:text-[#717171] font-medium">{commanderEmail}</p>
                   </div>
 
                   <motion.button 
@@ -854,8 +856,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <EditProfileOverlay 
                   key="edit-profile"
                   name={commanderName} 
-                  onSave={(newName) => {
+                  email={commanderEmail}
+                  onSave={(newName, newEmail) => {
                     setCommanderName(newName);
+                    setCommanderEmail(newEmail);
                     setShowEditProfile(false);
                   }} 
                   onClose={() => setShowEditProfile(false)} 
