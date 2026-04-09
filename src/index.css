@@ -701,11 +701,11 @@ a:focus-visible {
 }
 
 .avatar-moving-in {
-  animation: avatar-to-center 1.5s ease-in-out forwards;
+  animation: avatar-to-center 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .avatar-moving-out {
-  animation: avatar-to-origin 1.5s ease-in-out forwards;
+  animation: avatar-to-origin 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes success-flash-glow {

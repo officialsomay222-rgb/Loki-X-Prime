@@ -1,3 +1,4 @@
+cat << 'INNER_EOF' > /tmp/shockwave.js
 import React, { useRef, useEffect } from 'react';
 
 // A God-Level Fluid Aura Particle System
@@ -297,3 +298,5 @@ export const PremiumLiquidShockwave: React.FC = () => {
     </div>
   );
 };
+INNER_EOF
+cp /tmp/shockwave.js src/components/PremiumLiquidShockwave.tsx
