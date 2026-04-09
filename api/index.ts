@@ -283,10 +283,12 @@ app.post("/api/chat", async (req, res) => {
 
         const messages = [
           { role: "system", content: systemInstruction },
-          ...(history || []).map((msg: any) => ({
-            role: msg.role === "model" ? "assistant" : "user",
-            content: msg.parts[0].text
-          })),
+          ...(history || [])
+            .filter((msg: any) => msg?.parts?.[0]?.text)
+            .map((msg: any) => ({
+              role: msg.role === "model" ? "assistant" : "user",
+              content: msg.parts?.[0]?.text || ""
+            })),
           { role: "user", content: message }
         ];
 
@@ -338,7 +340,7 @@ app.post("/api/chat", async (req, res) => {
         try {
           const refinementResponse = await ai.models.generateContent({
             model: "gemini-3.1-flash-lite-preview",
-            contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
+            contents: [{ parts: [{ text: `[IMAGE_MODE] Create a stunning visual description for: ${message}` }] }],
             config: {
               systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Imagen 4 model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
             }
@@ -396,7 +398,8 @@ app.post("/api/chat", async (req, res) => {
               prompt: detailedPrompt,
               config: {
                 numberOfImages: 1,
-                outputMimeType: "image/jpeg"
+                outputMimeType: "image/jpeg",
+                aspectRatio: "1:1"
               }
             });
 
