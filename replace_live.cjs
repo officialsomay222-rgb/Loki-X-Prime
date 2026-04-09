@@ -1,4 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+const fs = require('fs');
+
+const content = `import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, X, Sparkles } from 'lucide-react';
 
@@ -48,8 +50,8 @@ class VolumeParticle {
     const alpha = (this.life / this.maxLife);
     ctx.beginPath();
     const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-    gradient.addColorStop(0, `${this.color}${alpha * 0.8})`);
-    gradient.addColorStop(1, `${this.color}0)`);
+    gradient.addColorStop(0, \`\${this.color}\${alpha * 0.8})\`);
+    gradient.addColorStop(1, \`\${this.color}0)\`);
     ctx.fillStyle = gradient;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -82,8 +84,8 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+      canvas.style.width = \`\${window.innerWidth}px\`;
+      canvas.style.height = \`\${window.innerHeight}px\`;
       ctx.scale(dpr, dpr);
     };
     updateSize();
@@ -120,10 +122,10 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
 
         const alphaBase = 0.5 + currentVolume * 0.5;
 
-        coreGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alphaBase})`);
-        coreGradient.addColorStop(0.3, `rgba(0, 242, 255, ${alphaBase * 0.6})`); // Cyan mid
-        coreGradient.addColorStop(0.8, `rgba(255, 0, 255, ${alphaBase * 0.2})`); // Purple outer
-        coreGradient.addColorStop(1, `rgba(0, 0, 0, 0)`);
+        coreGradient.addColorStop(0, \`rgba(\${r}, \${g}, \${b}, \${alphaBase})\`);
+        coreGradient.addColorStop(0.3, \`rgba(0, 242, 255, \${alphaBase * 0.6})\`); // Cyan mid
+        coreGradient.addColorStop(0.8, \`rgba(255, 0, 255, \${alphaBase * 0.2})\`); // Purple outer
+        coreGradient.addColorStop(1, \`rgba(0, 0, 0, 0)\`);
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
@@ -217,3 +219,7 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
     </AnimatePresence>
   );
 };
+`;
+
+fs.writeFileSync('src/components/LiveVoiceOverlay.tsx', content);
+console.log('done');

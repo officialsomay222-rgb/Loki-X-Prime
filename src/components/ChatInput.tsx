@@ -83,6 +83,7 @@ export const ChatInput = memo(
       const [isTranscribing, setIsTranscribing] = useState(false);
       const [isFocused, setIsFocused] = useState(false);
       const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
+      const [userVolume, setUserVolume] = useState<number>(0);
       const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
       const [transcriptionError, setTranscriptionError] = useState<
@@ -174,6 +175,7 @@ export const ChatInput = memo(
       const audioOutRef = useRef<AudioContext | null>(null);
       const audioQueueRef = useRef<Float32Array[]>([]);
       const isPlayingRef = useRef(false);
+      const volumeAnimFrameRef = useRef<number>(0);
 
       useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -568,10 +570,27 @@ export const ChatInput = memo(
           const audioCtx = new AudioContext({ sampleRate: 16000 });
           await audioCtx.resume();
           const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
           const processor = audioCtx.createScriptProcessor(4096, 1, 1);
 
-          source.connect(processor);
+          source.connect(analyser);
+          analyser.connect(processor);
           processor.connect(audioCtx.destination);
+
+          const updateVolume = () => {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            setUserVolume(average);
+            volumeAnimFrameRef.current = requestAnimationFrame(updateVolume);
+          };
+          updateVolume();
 
           processor.onaudioprocess = (e) => {
             if (!isLiveSessionActive) return;
@@ -621,6 +640,9 @@ export const ChatInput = memo(
           liveSessionRef.current.close();
         }
         setIsLiveSessionActive(false);
+        if (volumeAnimFrameRef.current) {
+          cancelAnimationFrame(volumeAnimFrameRef.current);
+        }
       };
 
       const playLiveAudio = async (data: Uint8Array) => {
@@ -970,7 +992,10 @@ export const ChatInput = memo(
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
-                              onClick={() => setIsVoiceOverlayOpen(true)}
+                              onClick={() => {
+                                setIsVoiceOverlayOpen(true);
+                                startLiveSession();
+                              }}
                               className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
                             >
                               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1026,12 +1051,15 @@ export const ChatInput = memo(
           
           <LiveVoiceOverlay
             isOpen={isVoiceOverlayOpen}
+            userVolume={userVolume}
             onClose={() => {
               setIsVoiceOverlayOpen(false);
+              stopLiveSession();
             }}
             onHold={() => {
               // Pause/Hold logic can be added here if needed
               setIsVoiceOverlayOpen(false);
+              stopLiveSession();
             }}
           />
         </div>
