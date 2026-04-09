@@ -170,11 +170,14 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "Message and mode are required" });
   }
 
-  // Set headers for Server-Sent Events (SSE)
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
+  const setupSSE = () => {
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+    }
+  };
 
   try {
     if (mode === "fast" || mode === "pro" || mode === "happy") {
@@ -194,7 +197,7 @@ app.post("/api/chat", async (req, res) => {
       if (mode === "fast" || hasAttachments) {
         // Fast mode or when attachments are present uses Gemini
         if (!apiKey) {
-          throw new Error("Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model.");
+          return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -257,6 +260,7 @@ app.post("/api/chat", async (req, res) => {
           config: config
         });
 
+        setupSSE();
         for await (const chunk of responseStream) {
           if (chunk.text) {
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
@@ -268,7 +272,7 @@ app.post("/api/chat", async (req, res) => {
       } else if (mode === "pro" || mode === "happy") {
         // Pro and Happy modes use Groq as requested
         if (!groqKey) {
-          throw new Error("Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Pro/Happy models.");
+          return res.status(400).json({ error: "Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Pro/Happy models." });
         }
 
         const groq = new Groq({ apiKey: groqKey });
@@ -294,6 +298,7 @@ app.post("/api/chat", async (req, res) => {
           stream: true,
         });
 
+        setupSSE();
         for await (const chunk of stream) {
           const content = chunk.choices[0]?.delta?.content || "";
           if (content) {
@@ -316,12 +321,13 @@ app.post("/api/chat", async (req, res) => {
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
       
       if (!apiKey) {
-        throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
+        return res.status(400).json({ error: "Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets." });
       }
 
       const ai = new GoogleGenAI({ apiKey });
       
       // Keep connection alive with SSE comments
+      setupSSE();
       const pingInterval = setInterval(() => {
         res.write(`:\n\n`);
       }, 15000);
@@ -431,14 +437,18 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else {
-      throw new Error("Invalid mode selected");
+      return res.status(400).json({ error: "Invalid mode selected" });
     }
 
   } catch (error: any) {
     console.error("Chat API Error:", error);
-    res.write(`data: ${JSON.stringify({ error: error.message || "Internal server error while processing your request." })}\n\n`);
-    res.write(`data: [DONE]\n\n`);
-    res.end();
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message || "Internal server error while processing your request." });
+    } else {
+      res.write(`data: ${JSON.stringify({ error: error.message || "Internal server error while processing your request." })}\n\n`);
+      res.write(`data: [DONE]\n\n`);
+      res.end();
+    }
   }
 });
 
