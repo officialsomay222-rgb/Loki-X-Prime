@@ -285,14 +285,19 @@ app.post("/api/chat", async (req, res) => {
         }
 
         const historyMessages = (history || [])
-          .filter((msg: any) => msg?.parts?.[0]?.text)
+          .filter((msg: any) => msg?.parts?.[0]?.text && msg.parts[0].text.trim() !== "")
           .map((msg: any) => ({
             role: msg.role === "model" ? "assistant" : "user",
-            content: msg.parts?.[0]?.text || ""
+            content: msg.parts[0].text
           }));
 
         messages.push(...historyMessages);
-        messages.push({ role: "user", content: message });
+        if (message && message.trim() !== "") {
+          messages.push({ role: "user", content: message });
+        } else {
+          // If message is somehow empty, push a space to avoid 400 Bad Request
+          messages.push({ role: "user", content: " " });
+        }
 
         const stream = await groq.chat.completions.create({
           messages: messages as any,
@@ -475,8 +480,10 @@ app.post("/api/chat", async (req, res) => {
       // Leave errorMessage as is if parsing fails
     }
 
+    const statusCode = error.status || error.statusCode || 500;
+
     if (!res.headersSent) {
-      res.status(500).json({ error: errorMessage });
+      res.status(statusCode).json({ error: errorMessage });
     } else {
       res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
       res.write(`data: [DONE]\n\n`);
