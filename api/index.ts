@@ -194,8 +194,8 @@ app.post("/api/chat", async (req, res) => {
 
       const hasAttachments = attachments && attachments.length > 0;
 
-      if (mode === "fast" || hasAttachments) {
-        // Fast mode or when attachments are present uses Gemini
+      if (hasAttachments) {
+        // When attachments are present uses Gemini
         if (!apiKey) {
           return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
         }
@@ -269,17 +269,15 @@ app.post("/api/chat", async (req, res) => {
         res.write(`data: [DONE]\n\n`);
         res.end();
 
-      } else if (mode === "pro" || mode === "happy") {
-        // Pro and Happy modes use Groq as requested
+      } else if (mode === "fast" || mode === "pro" || mode === "happy") {
+        // Fast, Pro and Happy modes use Groq as requested
         if (!groqKey) {
-          return res.status(400).json({ error: "Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Pro/Happy models." });
+          return res.status(400).json({ error: "Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Fast/Pro/Happy models." });
         }
 
         const groq = new Groq({ apiKey: groqKey });
         
-        // Pro: llama-3.3-70b-versatile
-        // Happy: llama-3.1-8b-instant
-        const modelName = mode === "pro" ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
+        const modelName = mode === "pro" ? "openai/gpt-oss-120b" : mode === "fast" ? "groq/compound-mini" : "llama-3.1-8b-instant";
 
         const messages: any[] = [];
         if (systemInstruction && systemInstruction.trim() !== "") {
