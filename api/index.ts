@@ -304,6 +304,7 @@ app.post("/api/chat", async (req, res) => {
           model: modelName,
           temperature: temperature || 0.7,
           top_p: topP || 0.95,
+          max_tokens: 4000,
           stream: true,
         });
 
