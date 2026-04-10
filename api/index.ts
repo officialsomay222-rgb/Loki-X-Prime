@@ -1,74 +1,14 @@
 import express from "express";
-import cors from "cors";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
-import Database from "better-sqlite3";
 
 const app = express();
-
-// Initialize Quota Tracker Database
-const quotaDb = new Database('quota.db');
-quotaDb.exec(`
-  CREATE TABLE IF NOT EXISTS imagen_quota (
-    date TEXT PRIMARY KEY,
-    fast_count INTEGER DEFAULT 0,
-    generate_count INTEGER DEFAULT 0,
-    ultra_count INTEGER DEFAULT 0
-  )
-`);
-
-const getTodayDateString = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-};
-
-// In-memory tracker for consecutive failures
-const consecutiveFailures = {
-  fast: 0,
-  generate: 0,
-  ultra: 0
-};
-
-let lastQuotaDate = getTodayDateString();
-
-const getTodayQuota = () => {
-  const dateStr = getTodayDateString();
-
-  if (dateStr !== lastQuotaDate) {
-    // New day has started: reset the consecutive failures globally
-    consecutiveFailures.fast = 0;
-    consecutiveFailures.generate = 0;
-    consecutiveFailures.ultra = 0;
-    lastQuotaDate = dateStr;
-  }
-
-  let row = quotaDb.prepare('SELECT * FROM imagen_quota WHERE date = ?').get(dateStr) as any;
-  if (!row) {
-    quotaDb.prepare('INSERT INTO imagen_quota (date, fast_count, generate_count, ultra_count) VALUES (?, 0, 0, 0)').run(dateStr);
-    row = { date: dateStr, fast_count: 0, generate_count: 0, ultra_count: 0 };
-  }
-  return row;
-};
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // API routes FIRST
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
-});
-
-app.get("/api/quota", (req, res) => {
-  try {
-    const quota = getTodayQuota();
-    res.json(quota);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 app.post("/api/transcribe", async (req, res) => {
@@ -96,8 +36,7 @@ app.post("/api/transcribe", async (req, res) => {
     const fs = await import('fs');
     const path = await import('path');
     const os = await import('os');
-    const { randomUUID } = await import('crypto');
-    const tempFilePath = path.join(os.tmpdir(), `audio_${randomUUID()}.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`);
+    const tempFilePath = path.join(os.tmpdir(), `audio_${Date.now()}.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`);
     
     fs.writeFileSync(tempFilePath, buffer);
 
@@ -170,14 +109,11 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "Message and mode are required" });
   }
 
-  const setupSSE = () => {
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.flushHeaders();
-    }
-  };
+  // Set headers for Server-Sent Events (SSE)
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
 
   try {
     if (mode === "fast" || mode === "pro" || mode === "happy") {
@@ -194,10 +130,10 @@ app.post("/api/chat", async (req, res) => {
 
       const hasAttachments = attachments && attachments.length > 0;
 
-      if (hasAttachments) {
-        // When attachments are present uses Gemini
+      if (mode === "fast" || hasAttachments) {
+        // Fast mode or when attachments are present uses Gemini
         if (!apiKey) {
-          return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
+          throw new Error("Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model.");
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -260,7 +196,6 @@ app.post("/api/chat", async (req, res) => {
           config: config
         });
 
-        setupSSE();
         for await (const chunk of responseStream) {
           if (chunk.text) {
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
@@ -269,46 +204,35 @@ app.post("/api/chat", async (req, res) => {
         res.write(`data: [DONE]\n\n`);
         res.end();
 
-      } else if (mode === "fast" || mode === "pro" || mode === "happy") {
-        // Fast, Pro and Happy modes use Groq as requested
+      } else if (mode === "pro" || mode === "happy") {
+        // Pro and Happy modes use Groq as requested
         if (!groqKey) {
-          return res.status(400).json({ error: "Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Fast/Pro/Happy models." });
+          throw new Error("Groq API Key is missing. Please add 'GROQ_API_KEY' or 'GR' to your AI Studio Secrets to enable Pro/Happy models.");
         }
 
         const groq = new Groq({ apiKey: groqKey });
         
-        const modelName = mode === "pro" ? "openai/gpt-oss-120b" : mode === "fast" ? "groq/compound-mini" : "llama-3.1-8b-instant";
+        // Pro: llama-3.3-70b-versatile
+        // Happy: llama-3.1-8b-instant
+        const modelName = mode === "pro" ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
 
-        const messages: any[] = [];
-        if (systemInstruction && systemInstruction.trim() !== "") {
-          messages.push({ role: "system", content: systemInstruction });
-        }
-
-        const historyMessages = (history || [])
-          .filter((msg: any) => msg?.parts?.[0]?.text && msg.parts[0].text.trim() !== "")
-          .map((msg: any) => ({
+        const messages = [
+          { role: "system", content: systemInstruction },
+          ...(history || []).map((msg: any) => ({
             role: msg.role === "model" ? "assistant" : "user",
             content: msg.parts[0].text
-          }));
-
-        messages.push(...historyMessages);
-        if (message && message.trim() !== "") {
-          messages.push({ role: "user", content: message });
-        } else {
-          // If message is somehow empty, push a space to avoid 400 Bad Request
-          messages.push({ role: "user", content: " " });
-        }
+          })),
+          { role: "user", content: message }
+        ];
 
         const stream = await groq.chat.completions.create({
           messages: messages as any,
           model: modelName,
           temperature: temperature || 0.7,
           top_p: topP || 0.95,
-          max_tokens: 4000,
           stream: true,
         });
 
-        setupSSE();
         for await (const chunk of stream) {
           const content = chunk.choices[0]?.delta?.content || "";
           if (content) {
@@ -320,24 +244,29 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation Logic using Gemini for refinement and Imagen for generation
+      // Image Generation Logic using Gemini for refinement and Hugging Face FLUX
       let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
       let googleKey = process.env.GOOGLE_AI_KEY;
+      let hfToken = process.env.HF_TOKEN || process.env.HF;
       
       // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
       if (googleKey && (googleKey.includes("MY_GOOGLE") || googleKey.includes("YOUR_"))) googleKey = undefined;
+      if (hfToken && (hfToken.includes("MY_HF") || hfToken.includes("YOUR_"))) hfToken = undefined;
 
       const apiKey = googleKey || geminiKey || process.env.API_KEY;
       
       if (!apiKey) {
-        return res.status(400).json({ error: "Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets." });
+        throw new Error("Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets.");
       }
 
+      if (!hfToken) {
+        throw new Error("Hugging Face Token (HF) is missing. Please add it to your AI Studio Secrets.");
+      }
+      
       const ai = new GoogleGenAI({ apiKey });
       
       // Keep connection alive with SSE comments
-      setupSSE();
       const pingInterval = setInterval(() => {
         res.write(`:\n\n`);
       }, 15000);
@@ -348,9 +277,9 @@ app.post("/api/chat", async (req, res) => {
         try {
           const refinementResponse = await ai.models.generateContent({
             model: "gemini-3.1-flash-lite-preview",
-            contents: [{ parts: [{ text: `[IMAGE_MODE] Create a stunning visual description for: ${message}` }] }],
+            contents: `[IMAGE_MODE] Create a stunning visual description for: ${message}`,
             config: {
-              systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Imagen 4 model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
+              systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Stable Diffusion XL model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
             }
           });
           detailedPrompt = refinementResponse.text || message;
@@ -358,88 +287,43 @@ app.post("/api/chat", async (req, res) => {
           console.error("Gemini refinement failed, using original prompt:", e);
         }
 
-        // Step 2: Generate image using Google Imagen 4 models with predictive failover and quota checking
-        let base64EncodeString = null;
-        let lastError: any = null;
-        const dateStr = getTodayDateString();
-
-        while (true) {
-          const quota = getTodayQuota();
-          let activeModel = null;
-          let modelTier: 'fast' | 'generate' | 'ultra' | null = null;
-
-          if (quota.fast_count < 25 && consecutiveFailures.fast < 3) {
-            activeModel = "imagen-4.0-fast-generate-001";
-            modelTier = 'fast';
-            if (quota.fast_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 fast pool is nearing exhaustion (${quota.fast_count}/25).`);
-            }
-          } else if (quota.generate_count < 25 && consecutiveFailures.generate < 3) {
-            activeModel = "imagen-4.0-generate-001";
-            modelTier = 'generate';
-            if (quota.generate_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 generate pool is nearing exhaustion (${quota.generate_count}/25).`);
-            }
-          } else if (quota.ultra_count < 25 && consecutiveFailures.ultra < 3) {
-            activeModel = "imagen-4.0-ultra-generate-001";
-            modelTier = 'ultra';
-            if (quota.ultra_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 ultra pool is nearing exhaustion (${quota.ultra_count}/25).`);
-            }
+        // Step 2: Generate image using Hugging Face stabilityai/stable-diffusion-xl-base-1.0
+        const { HfInference } = await import("@huggingface/inference");
+        const hf = new HfInference(hfToken);
+        
+        let blob;
+        try {
+          blob = await hf.textToImage({
+            inputs: detailedPrompt,
+            model: "stabilityai/stable-diffusion-xl-base-1.0",
+          });
+        } catch (e: any) {
+          console.error("Hugging Face API Error Details:", {
+            message: e.message,
+            status: e.status,
+            name: e.name,
+            stack: e.stack
+          });
+          if (e.message?.includes("loading") || e.status === 503) {
+            throw new Error("stable-diffusion-xl-base-1.0 model is loading on Hugging Face. Please try again in 20-30 seconds.");
           }
-
-          if (!activeModel || !modelTier) {
-            const nextMidnight = new Date();
-            nextMidnight.setUTCHours(24, 0, 0, 0); // Next 00:00 UTC
-            throw new Error(`Daily image generation limit reached. Limits reset at ${nextMidnight.toISOString()}`);
-          }
-
-          try {
-            // Strict Version Control Pre-flight Payload Check
-            const targetModel = activeModel;
-            if (!targetModel.startsWith("imagen-4")) {
-               throw new Error("Critical: Version Mismatch/Downgrade Attempted - Pre-flight check failed");
-            }
-
-            const response = await ai.models.generateImages({
-              model: targetModel,
-              prompt: detailedPrompt,
-              config: {
-                numberOfImages: 1,
-                outputMimeType: "image/jpeg",
-                aspectRatio: "1:1"
-              }
-            });
-
-            const generatedImage = response.generatedImages?.[0];
-            if (!generatedImage || !generatedImage.image || !generatedImage.image.imageBytes) {
-              throw new Error(`Model ${activeModel} returned empty image data`);
-            }
-
-            base64EncodeString = generatedImage.image.imageBytes;
-
-            // Success: update DB counter and reset failures
-            quotaDb.prepare(`UPDATE imagen_quota SET ${modelTier}_count = ${modelTier}_count + 1 WHERE date = ?`).run(dateStr);
-            consecutiveFailures[modelTier] = 0;
-            break; // Success, exit loop
-
-          } catch (e: any) {
-            console.warn(`Failed with model ${activeModel}:`, e);
-            lastError = e;
-
-            // Failover logic based on error type
-            if (e.status === 429 || e.message?.includes("429") || e.message?.includes("quota")) {
-               // Rate limit exceeded: force failover by maxing quota
-               quotaDb.prepare(`UPDATE imagen_quota SET ${modelTier}_count = 25 WHERE date = ?`).run(dateStr);
-            } else {
-               // Non-quota error (500, 503, etc): increment consecutive failures
-               consecutiveFailures[modelTier]++;
-            }
-          }
+          throw new Error(`Hugging Face API Error: ${e.message}`);
         }
 
+        const imageBuffer = await blob.arrayBuffer();
+        const base64EncodeString = Buffer.from(imageBuffer).toString('base64');
+
+        if (!base64EncodeString || base64EncodeString.length < 100) {
+          throw new Error("Generated image data is invalid or empty.");
+        }
+
+        let mimeType = blob.type;
+        if (!mimeType || !mimeType.startsWith('image/')) {
+          mimeType = 'image/jpeg';
+        }
+        
         // Use a cleaner response format - Only send the image markdown
-        const responseText = `![Generated Image](data:image/jpeg;base64,${base64EncodeString})`;
+        const responseText = `![Generated Image](data:${mimeType};base64,${base64EncodeString})`;
         res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
         res.write(`data: [DONE]\n\n`);
         res.end();
@@ -448,48 +332,14 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else {
-      return res.status(400).json({ error: "Invalid mode selected" });
+      throw new Error("Invalid mode selected");
     }
 
   } catch (error: any) {
     console.error("Chat API Error:", error);
-
-    let errorMessage = error.message || "Internal server error while processing your request.";
-
-    // Attempt to extract cleaner error messages if it's a JSON string dump
-    try {
-      // Sometimes errors are prefixed with a status code like "400 {\"error\":...}"
-      const jsonStrMatch = errorMessage.match(/\{.*\}/s);
-      if (jsonStrMatch) {
-        const parsed = JSON.parse(jsonStrMatch[0]);
-        if (parsed.error && parsed.error.message) {
-           // Groq or nested generic format
-           let innerMsg = parsed.error.message;
-           // Gemini might double-encode the error inside the message
-           try {
-             const innerParsed = JSON.parse(innerMsg);
-             if (innerParsed.error && innerParsed.error.message) {
-               innerMsg = innerParsed.error.message;
-             }
-           } catch (e2) {}
-           errorMessage = innerMsg;
-        } else if (parsed.message) {
-           errorMessage = parsed.message;
-        }
-      }
-    } catch (e) {
-      // Leave errorMessage as is if parsing fails
-    }
-
-    const statusCode = error.status || error.statusCode || 500;
-
-    if (!res.headersSent) {
-      res.status(statusCode).json({ error: errorMessage });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-    }
+    res.write(`data: ${JSON.stringify({ error: error.message || "Internal server error while processing your request." })}\n\n`);
+    res.write(`data: [DONE]\n\n`);
+    res.end();
   }
 });
 

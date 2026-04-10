@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <style>
       html, body {
-        height: 100%;
+        min-height: 100vh;
         width: 100%;
         margin: 0;
         padding: 0;
@@ -24,9 +24,11 @@
         box-sizing: inherit;
       }
       #root {
-        height: 100%;
+        min-height: 100vh;
         width: 100%;
         isolation: isolate;
+        display: flex;
+        flex-direction: column;
       }
       body {
         -webkit-user-select: none;
@@ -41,7 +43,7 @@
   </head>
   <body>
     <div id="root">
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background-color: #08080c; color: #6b6b80; font-family: 'Montserrat', sans-serif; text-align: center; padding: 20px;">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; background-color: #08080c; color: #6b6b80; font-family: 'Montserrat', sans-serif; text-align: center; padding: 20px;">
         <div style="width: 40px; height: 40px; border: 2px solid #00f2ff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
         <p style="letter-spacing: 4px; font-size: 12px; font-weight: bold; margin: 0;">INITIALIZING CORE...</p>
         <style>
@@ -49,6 +51,26 @@
         </style>
       </div>
     </div>
+    <div id="error-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: red; z-index: 999999; display: none; padding: 20px; overflow: auto; font-family: monospace; white-space: pre-wrap; pointer-events: none;"></div>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        var overlay = document.getElementById('error-overlay');
+        overlay.style.display = 'block';
+        overlay.innerHTML += 'Error: ' + message + '\nSource: ' + source + ':' + lineno + ':' + colno + '\n\n';
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        var overlay = document.getElementById('error-overlay');
+        overlay.style.display = 'block';
+        overlay.innerHTML += 'Unhandled Promise Rejection: ' + (event.reason && event.reason.stack ? event.reason.stack : event.reason) + '\n\n';
+      });
+      const originalConsoleError = console.error;
+      console.error = function(...args) {
+        var overlay = document.getElementById('error-overlay');
+        overlay.style.display = 'block';
+        overlay.innerHTML += 'Console Error: ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ') + '\n\n';
+        originalConsoleError.apply(console, args);
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Prevent pinch-to-zoom

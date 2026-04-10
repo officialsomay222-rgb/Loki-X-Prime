@@ -9,10 +9,6 @@ import { GlobalInteractionProvider } from './contexts/GlobalInteractionContext';
 import { registerSW } from 'virtual:pwa-register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
-import { applyDevicePerformanceClass } from './utils/performance';
-
-// Apply performance class early in the lifecycle
-applyDevicePerformanceClass();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,9 +22,11 @@ const queryClient = new QueryClient({
 try {
   const updateSW = registerSW({
     onNeedRefresh() {
+      console.log('New content available. Reloading...');
       updateSW(true);
     },
     onOfflineReady() {
+      console.log('App is ready to work offline');
     },
   });
 } catch (e) {

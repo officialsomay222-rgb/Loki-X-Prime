@@ -15,4 +15,3 @@ android/app/src/main/assets/capacitor.*.json
 ios/App/App/Assets.xcassets/
 capacitor-assets-output/
 *.png.backup
-dev-dist/
