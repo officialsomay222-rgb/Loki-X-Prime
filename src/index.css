@@ -265,8 +265,6 @@ body {
   height: 100%;
   width: 100%;
   isolation: isolate;
-  display: flex;
-  flex-direction: column;
   overscroll-behavior: auto; /* Enable native bounce/stretch effect */
 }
 
@@ -609,60 +607,10 @@ a:focus-visible {
   transform: translateY(-2px);
 }
 
-/* Awakening Animation - Masterpiece Level */
-@keyframes shockwave-expand-rgb {
-  0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(12);
-    opacity: 0;
-  }
-}
-
-@keyframes shockwave-glitch {
-  0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(14);
-    opacity: 0;
-  }
-}
-
-@keyframes particle-fly {
-  0% {
-    transform: rotate(var(--angle)) translateY(0) translateZ(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: rotate(var(--angle)) translateY(600px) translateZ(0) scale(0);
-    opacity: 0;
-  }
-}
-
-@keyframes core-explode {
-  0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.5);
-    opacity: 1;
-    filter: brightness(2);
-  }
-  100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(20);
-    opacity: 0;
-    filter: brightness(1);
-  }
-}
-
-@keyframes screen-flash {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+.low-end-device .input-container-focus:focus-within {
+  animation: none;
+  transform: none;
+  border-color: rgba(0, 242, 255, 0.5);
 }
 
 @keyframes avatar-to-center {
@@ -753,21 +701,11 @@ a:focus-visible {
 }
 
 .avatar-moving-in {
-  animation: avatar-to-center 1.5s ease-in-out forwards;
+  animation: avatar-to-center 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .avatar-moving-out {
-  animation: avatar-to-origin 1.5s ease-in-out forwards;
-}
-
-.rgb-shockwave {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 5;
-  transform: translateZ(0);
+  animation: avatar-to-origin 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes success-flash-glow {
@@ -789,90 +727,6 @@ a:focus-visible {
   animation: success-flash-glow 1s ease-out forwards;
 }
 
-.rgb-shockwave::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 4px solid rgba(0, 242, 255, 0.5);
-}
-
-.rgb-shockwave-1 {
-  animation: shockwave-expand-rgb 3s ease-out both;
-}
-.rgb-shockwave-1::before {
-  border-color: rgba(0, 242, 255, 0.8);
-}
-
-.rgb-shockwave-2 {
-  animation: shockwave-expand-rgb 3.5s ease-out both;
-  animation-delay: 0.2s;
-}
-.rgb-shockwave-2::before {
-  border-color: rgba(189, 0, 255, 0.4);
-}
-
-.rgb-shockwave-3 {
-  animation: shockwave-expand-rgb 4s ease-out both;
-  animation-delay: 0.4s;
-}
-.rgb-shockwave-3::before {
-  border-color: rgba(255, 0, 85, 0.2);
-}
-
-.rgb-shockwave-glitch {
-  animation: shockwave-glitch 2.5s ease-out both;
-  z-index: 99999;
-}
-.rgb-shockwave-glitch::before {
-  background: rgba(0, 242, 255, 0.05);
-  border: 2px solid rgba(0, 242, 255, 0.5);
-}
-
-.particle-burst {
-  position: fixed;
-  z-index: 99998;
-  pointer-events: none;
-  transform: translateZ(0);
-}
-
-.particle {
-  position: absolute;
-  width: 3px;
-  height: 20px;
-  background: linear-gradient(to bottom, #fff, #00f2ff, transparent);
-  border-radius: 2px;
-  animation: particle-fly 2.5s ease-out forwards;
-  box-shadow: 0 0 5px #00f2ff;
-}
-
-.shockwave-core {
-  position: fixed;
-  width: 192px;
-  height: 192px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #ffffff 0%,
-    rgba(0, 242, 255, 0.5) 40%,
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 99998;
-  animation: core-explode 3s ease-out both;
-  transform: translateZ(0);
-}
-
-.screen-flash-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-  z-index: 99996;
-  animation: screen-flash 3s ease-out forwards;
-  transform: translateZ(0);
-}
-
 .font-montserrat {
   font-family: "Montserrat", sans-serif;
 }
@@ -885,11 +739,24 @@ a:focus-visible {
   transform: translateZ(0);
 }
 
+.low-end-device .glass-panel {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  @apply bg-white/80 dark:bg-black/80;
+}
+
 .premium-shadow {
   box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
 }
 .dark .premium-shadow {
   box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+}
+
+.low-end-device .premium-shadow {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+}
+.low-end-device .dark .premium-shadow {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
 }
 
 .glass-button {
@@ -899,30 +766,10 @@ a:focus-visible {
   transform: translateZ(0);
 }
 
-@keyframes light-streak-expand {
-  0% {
-    transform: translate(-50%, -50%) translateZ(0) scale(0.5) rotate(0deg);
-    opacity: 1;
-    border-width: 30px;
-  }
-  100% {
-    transform: translate(-50%, -50%) translateZ(0) scale(40) rotate(180deg);
-    opacity: 0;
-    border-width: 1px;
-  }
-}
-
-.light-streak {
-  position: fixed;
-  width: 192px;
-  height: 192px;
-  border-radius: 50%;
-  border: 10px solid transparent;
-  border-top-color: #00f2ff;
-  border-bottom-color: #bd00ff;
-  pointer-events: none;
-  z-index: 99999;
-  animation: light-streak-expand 2.5s ease-out both;
+.low-end-device .glass-button {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  @apply bg-white/90 dark:bg-white/20;
 }
 
 /* Awakened Message Bubble - Optimized Tech Look */
@@ -933,19 +780,27 @@ a:focus-visible {
   color: #fff !important;
   z-index: 1;
   box-shadow:
-    0 8px 32px rgba(0, 242, 255, 0.08),
-    inset 0 0 20px rgba(0, 242, 255, 0.05);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+    0 8px 32px rgba(0, 242, 255, 0.1),
+    inset 0 0 20px rgba(0, 242, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-3xl);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.low-end-device .awakened-msg-bubble {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 4px 16px rgba(0, 242, 255, 0.05);
+  background: rgba(5, 5, 8, 0.95) !important;
 }
 
 .awakened-msg-bubble:hover {
-  border-color: rgba(0, 242, 255, 0.4) !important;
+  border-color: rgba(0, 242, 255, 0.5) !important;
   box-shadow:
-    0 8px 32px rgba(0, 242, 255, 0.15),
-    inset 0 0 20px rgba(0, 242, 255, 0.1);
+    0 8px 40px rgba(0, 242, 255, 0.2),
+    inset 0 0 25px rgba(0, 242, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .awakened-msg-bubble::before {
@@ -1048,6 +903,10 @@ a:focus-visible {
   opacity: 0.8;
   animation: none !important;
   mix-blend-mode: screen;
+}
+
+.low-end-device .awakened-mode::before {
+  display: none;
 }
 
 @keyframes cosmic-aura-pulse {

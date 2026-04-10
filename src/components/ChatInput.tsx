@@ -33,6 +33,9 @@ import { Capacitor } from '@capacitor/core';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
+const sharedPcmData = new Int16Array(4096);
+const sharedUint8Data = new Uint8Array(sharedPcmData.buffer);
+
 export interface ChatInputHandle {
   focus: () => void;
   setInput: (text: string) => void;
@@ -80,6 +83,7 @@ export const ChatInput = memo(
       const [isTranscribing, setIsTranscribing] = useState(false);
       const [isFocused, setIsFocused] = useState(false);
       const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
+      const [userVolume, setUserVolume] = useState<number>(0);
       const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
       const [transcriptionError, setTranscriptionError] = useState<
@@ -171,6 +175,7 @@ export const ChatInput = memo(
       const audioOutRef = useRef<AudioContext | null>(null);
       const audioQueueRef = useRef<Float32Array[]>([]);
       const isPlayingRef = useRef(false);
+      const volumeAnimFrameRef = useRef<number>(0);
 
       useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -520,20 +525,24 @@ export const ChatInput = memo(
 
           const session = await connectLiveSession(
             {
-              onopen: () => {
-                console.log("Live session opened");
-              },
+              onopen: () => {},
               onmessage: async (message) => {
                 if (
                   message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data
                 ) {
                   const base64Audio =
                     message.serverContent.modelTurn.parts[0].inlineData.data;
-                  const audioData = Uint8Array.from(atob(base64Audio), (c) =>
-                    c.charCodeAt(0),
-                  );
-                  // Handle audio playback (PCM 16kHz)
-                  playLiveAudio(audioData);
+
+                  try {
+                    const response = await fetch(`data:application/octet-stream;base64,${base64Audio}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const audioData = new Uint8Array(arrayBuffer);
+
+                    // Handle audio playback (PCM 16kHz)
+                    playLiveAudio(audioData);
+                  } catch (e) {
+                    console.error("Error decoding audio using fetch:", e);
+                  }
                 }
                 if (message.serverContent?.interrupted) {
                   audioQueueRef.current = [];
@@ -561,22 +570,49 @@ export const ChatInput = memo(
           const audioCtx = new AudioContext({ sampleRate: 16000 });
           await audioCtx.resume();
           const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
           const processor = audioCtx.createScriptProcessor(4096, 1, 1);
 
-          source.connect(processor);
+          source.connect(analyser);
+          analyser.connect(processor);
           processor.connect(audioCtx.destination);
+
+          const updateVolume = () => {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            setUserVolume(average);
+            volumeAnimFrameRef.current = requestAnimationFrame(updateVolume);
+          };
+          updateVolume();
 
           processor.onaudioprocess = (e) => {
             if (!isLiveSessionActive) return;
             const inputData = e.inputBuffer.getChannelData(0);
+            const l = inputData.length;
             // Convert Float32 to Int16
-            const pcmData = new Int16Array(inputData.length);
-            for (let i = 0; i < inputData.length; i++) {
-              pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7fff;
+            const pcmData = l === 4096 ? sharedPcmData : new Int16Array(l);
+            const uint8Data = l === 4096 ? sharedUint8Data : new Uint8Array(pcmData.buffer);
+
+            for (let i = 0; i < l; i++) {
+              let s = inputData[i];
+              s = s < -1 ? -1 : (s > 1 ? 1 : s);
+              pcmData[i] = s * 0x7fff;
             }
-            const base64 = btoa(
-              String.fromCharCode(...new Uint8Array(pcmData.buffer)),
-            );
+
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let i = 0; i < uint8Data.length; i += chunkSize) {
+              binary += String.fromCharCode.apply(null, uint8Data.subarray(i, i + chunkSize) as any);
+            }
+
+            const base64 = btoa(binary);
             session.sendRealtimeInput({
               audio: { data: base64, mimeType: "audio/pcm;rate=16000" },
             });
@@ -604,6 +640,9 @@ export const ChatInput = memo(
           liveSessionRef.current.close();
         }
         setIsLiveSessionActive(false);
+        if (volumeAnimFrameRef.current) {
+          cancelAnimationFrame(volumeAnimFrameRef.current);
+        }
       };
 
       const playLiveAudio = async (data: Uint8Array) => {
@@ -643,7 +682,7 @@ export const ChatInput = memo(
       };
 
       return (
-        <div className="w-full pt-1 pb-3 sm:pb-4 px-3 sm:px-6 bg-transparent">
+        <div className="w-full pt-1 pb-3 sm:pb-4 px-3 sm:px-6 bg-transparent" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}>
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ 
@@ -652,9 +691,9 @@ export const ChatInput = memo(
               scale: isRecording ? 1.02 : 1,
             }}
             transition={{ 
-              opacity: { duration: 0.8, ease: "easeOut" },
-              y: { duration: 0.8, ease: "easeOut" },
-              scale: { type: "spring", stiffness: 300, damping: 20 }
+              opacity: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+              y: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+              scale: { type: "spring", stiffness: 400, damping: 30, mass: 0.8 }
             }}
             className="max-w-4xl mx-auto relative rounded-2xl"
           >
@@ -708,7 +747,7 @@ export const ChatInput = memo(
                 className="relative w-full group mx-auto max-w-3xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+                transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
               >
                 <div className={`relative rounded-[32px] transition-all duration-500 ${isAwakened || effectInputBox ? 'p-[2px] shadow-[0_0_40px_rgba(0,242,255,0.3)]' : 'p-0 bg-transparent'}`}>
                   {(isAwakened || effectInputBox) && (
@@ -953,7 +992,10 @@ export const ChatInput = memo(
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
-                              onClick={() => setIsVoiceOverlayOpen(true)}
+                              onClick={() => {
+                                setIsVoiceOverlayOpen(true);
+                                startLiveSession();
+                              }}
                               className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
                             >
                               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1009,12 +1051,15 @@ export const ChatInput = memo(
           
           <LiveVoiceOverlay
             isOpen={isVoiceOverlayOpen}
+            userVolume={userVolume}
             onClose={() => {
               setIsVoiceOverlayOpen(false);
+              stopLiveSession();
             }}
             onHold={() => {
               // Pause/Hold logic can be added here if needed
               setIsVoiceOverlayOpen(false);
+              stopLiveSession();
             }}
           />
         </div>

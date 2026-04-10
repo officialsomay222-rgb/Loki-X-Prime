@@ -1,14 +1,19 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
+import { useAwakening } from './hooks/useAwakening';
+import { AvatarShockwave } from './components/AvatarShockwave';
+import { PremiumLiquidShockwave } from './components/PremiumLiquidShockwave';
 import { MessageBubble } from './components/MessageBubble';
 import { AwakenedBackground } from './components/AwakenedBackground';
 import { CommandPalette } from './components/CommandPalette';
 import { SettingsModal } from './components/SettingsModal';
 import { AppsModal } from './components/AppsModal';
+import { WelcomeModal } from './components/WelcomeModal';
 import { useSettings } from './contexts/SettingsContext';
 import { useChat } from './contexts/ChatContext';
 import { InfinityLogo, HeaderInfinityLogo } from './components/Logos';
+import { TimelineItem } from './components/TimelineItem';
 import { format, isToday } from 'date-fns';
 import { TaskWidget } from './features/tasks/components/TaskWidget';
 import { 
@@ -25,13 +30,20 @@ import {
   Image as ImageIcon,
   Palette,
   Sliders,
+  MoreVertical,
+  Pin,
+  PinOff,
+  Edit2,
+  Check,
+  Search,
   FileText,
   Download,
   Type,
   Volume2,
   Rocket,
   LogOut,
-  LogIn
+  LogIn,
+  ArrowDown
 } from 'lucide-react';
 
 declare global {
@@ -46,9 +58,14 @@ declare global {
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
+  const [timelineSearchQuery, setTimelineSearchQuery] = useState('');
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return typeof window !== 'undefined' ? !localStorage.getItem('loki_hasSeenWelcome') : false;
+  });
   
   const isSettingsOpen = activeModal === 'settings';
   const isAppsOpen = activeModal === 'apps';
@@ -63,7 +80,6 @@ export default function App() {
   }, []);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [awakening, setAwakening] = useState<{id: number, phase: string, startX: number, startY: number, width: number, height: number, isDeactivating?: boolean} | null>(null);
   
   const { 
     theme, setTheme, 
@@ -113,7 +129,8 @@ export default function App() {
     messageShadow,
     resetSettings
   } = useSettings();
-  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration } = useChat();
+  const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(isAwakened, setIsAwakened);
+  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, togglePinSession, renameSession } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<ChatInputHandle>(null);
@@ -168,7 +185,6 @@ export default function App() {
     const command = urlParams.get('command');
     if (command) {
       // Handle web+loki:// protocol
-      console.log('Received command:', command);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -194,6 +210,25 @@ export default function App() {
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
 
+  // Search and sort timelines
+  const sortedAndFilteredSessions = React.useMemo(() => {
+    let result = [...sessions];
+
+    if (timelineSearchQuery.trim()) {
+      const lowerQuery = timelineSearchQuery.toLowerCase();
+      result = result.filter(s => s.title.toLowerCase().includes(lowerQuery));
+    }
+
+    // Sort by pinned status first
+    result.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0; // Maintain recent updatedAt order from DB
+    });
+
+    return result;
+  }, [sessions, timelineSearchQuery]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (autoScroll) {
@@ -212,13 +247,11 @@ export default function App() {
         setShowScrollToBottom(!isNearBottom);
       }
 
-      if (!document.body.classList.contains('is-scrolling')) {
-        document.body.classList.add('is-scrolling');
-      }
+      // Removed DOM class manipulation on body during scroll to prevent layout thrashing and severe lag
       
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
-        document.body.classList.remove('is-scrolling');
+        // Debounce empty callback placeholder
       }, 150); // 150ms debounce
     };
 
@@ -277,59 +310,6 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
-  const triggerAwakening = (e: React.MouseEvent) => {
-    if (awakening) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const startX = rect.left;
-    const startY = rect.top;
-    
-    setAwakening({ id: Date.now(), phase: 'moving-in', startX, startY, width: rect.width, height: rect.height, isDeactivating: isAwakened });
-    
-    setTimeout(() => {
-      if (isAwakened) {
-           // Deactivating
-           setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-           setTimeout(() => {
-              setIsAwakened(false);
-              setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2500);
-           setTimeout(() => {
-              setAwakening(null);
-           }, 4000);
-        } else {
-           // Activating - Skip prompt, go straight to shockwave
-           setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-           setTimeout(() => {
-             setIsAwakened(true);
-             setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-           }, 2500);
-           setTimeout(() => {
-             setAwakening(null);
-           }, 4000);
-        }
-    }, 1500);
-  };
-
-  const handleAwakeningResponse = (ready: boolean) => {
-    if (!awakening) return;
-    
-    if (ready) {
-      setAwakening(prev => prev ? { ...prev, phase: 'shockwave' } : null);
-      setTimeout(() => {
-        setIsAwakened(true);
-        setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      }, 2500);
-      setTimeout(() => {
-        setAwakening(null);
-      }, 4000);
-    } else {
-      setAwakening(prev => prev ? { ...prev, phase: 'moving-out' } : null);
-      setTimeout(() => {
-        setAwakening(null);
-      }, 1500);
-    }
-  };
-
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
       <MessageBubble
@@ -366,7 +346,7 @@ export default function App() {
 
   if (isBooting) {
     return (
-      <div className="fixed inset-0 bg-[#08080c] z-[9999] flex flex-col justify-between items-center transition-opacity duration-700 pb-12 pt-24">
+      <div className="fixed inset-0 w-full h-full bg-[#08080c] z-[9999] flex flex-col justify-between items-center transition-opacity duration-700 pb-12 pt-24">
          <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[300px] my-auto mx-auto">
             <div className="w-full max-w-[240px] aspect-[2/1] relative flex justify-center items-center">
                <InfinityLogo />
@@ -402,7 +382,7 @@ export default function App() {
 
   return (
     <div 
-      className={`w-full h-full flex-1 relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
+      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       {/* 1. Background Layer (Fixed, never moves) */}
@@ -410,26 +390,10 @@ export default function App() {
 
       {/* 2. Awakening Overlays */}
       {awakening && (
-        <div className="fixed inset-0 z-[100000] pointer-events-none">
-          <div className="bootloader-border" />
+        <div className="fixed inset-0 z-[100000] pointer-events-none flex justify-center items-center">
           
-          <div className="screen-flash-overlay" style={{ opacity: awakening.phase === 'shockwave' ? undefined : 0, animation: awakening.phase === 'shockwave' ? 'screen-flash 3s ease-out forwards' : 'none' }} />
-          
-          {awakening.phase === 'shockwave' && (
-            <>
-              <div className="shockwave-core" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-1" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-2" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-3" style={{ left: '50%', top: '35%' }} />
-              <div className="rgb-shockwave rgb-shockwave-glitch" style={{ left: '50%', top: '35%' }} />
-              <div className="light-streak" style={{ left: '50%', top: '35%' }} />
-              <div className="particle-burst" style={{ left: '50%', top: '35%' }}>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="particle" style={{ '--angle': `${i * 60}deg` } as any} />
-                ))}
-              </div>
-            </>
-          )}
+          {/* Shockwave rendered strictly behind the avatar container */}
+          {awakening.phase === 'shockwave' && <PremiumLiquidShockwave />}
 
           <div 
             className={`avatar-awakening flex justify-center items-center ${awakening.phase === 'moving-out' ? 'avatar-moving-out' : 'avatar-moving-in'}`}
@@ -438,6 +402,7 @@ export default function App() {
               '--start-y': `${awakening.startY}px`,
               width: awakening.width,
               height: awakening.height,
+              zIndex: 999
             } as any}
           >
              <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
@@ -461,6 +426,9 @@ export default function App() {
         onClearAllChats={clearAllSessions}
       />
 
+      {/* Welcome Modal for First-time Users */}
+      <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} />
+
       {/* 3. Main Content Layer (Flex Row/Column) */}
       <div className={`flex-1 flex min-h-0 z-10 relative ${isSidebarOpen ? (sidebarPosition === 'right' ? 'md:pr-72' : 'md:pl-72') : ''} ${sidebarPosition === 'right' ? 'flex-row-reverse' : 'flex-row'} transition-all duration-300`}>
         {/* Sidebar Overlay for Mobile */}
@@ -481,7 +449,7 @@ export default function App() {
         <motion.div 
           initial={false}
           animate={{ x: isSidebarOpen ? 0 : (sidebarPosition === 'right' ? '100%' : '-100%') }}
-          transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.5 }}
+          transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
           className={`fixed inset-y-0 ${sidebarPosition === 'right' ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-72 bg-[#f8fafc] dark:bg-[#0a0a0a] shadow-2xl border-y-0 border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu gpu-accelerate`}
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
@@ -513,52 +481,49 @@ export default function App() {
             <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
               Recent Timelines
             </div>
+
+            <div className="px-3 mb-3 relative">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search timelines..."
+                value={timelineSearchQuery}
+                onChange={(e) => setTimelineSearchQuery(e.target.value)}
+                className={`w-full pl-9 pr-3 py-2 text-xs rounded-lg transition-all border outline-none
+                  ${(isAwakened || effectSidebar)
+                    ? 'bg-black/20 border-white/10 text-white placeholder-slate-400 focus:border-cyan-500/50 focus:bg-black/40'
+                    : 'bg-white/50 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:border-cyan-500/30 focus:bg-white dark:focus:bg-black/40 shadow-sm'
+                  }
+                `}
+              />
+            </div>
+
             <AnimatePresence>
-              {sessions.map((session, index) => (
-                <motion.div 
+              {sortedAndFilteredSessions.map((session, index) => (
+                <TimelineItem
                   key={session.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  session={session}
+                  index={index}
+                  isActive={currentSessionId === session.id}
+                  isAwakened={isAwakened}
+                  effectSidebar={effectSidebar}
                   onClick={() => {
                     setCurrentSessionId(session.id);
                     if (window.innerWidth < 768) setIsSidebarOpen(false);
                   }}
-                  className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
-                    currentSessionId === session.id 
-                      ? (isAwakened || effectSidebar)
-                        ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
-                        : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10' 
-                      : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
-                  }`}
-                >
-                  {currentSessionId === session.id && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full shadow-[0_0_10px_rgba(0,242,255,1)]" />
-                  )}
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${currentSessionId === session.id ? 'text-cyan-600 dark:text-[#00f2ff]' : (isAwakened || effectSidebar) ? 'text-slate-400 group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
-                    <div className="truncate text-sm font-semibold tracking-tight">
-                      {session.title}
-                    </div>
-                  </div>
-                  <button 
-                    onClick={(e) => handleDeleteSession(e, session.id)}
-                    className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-400 hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'}`}
-                    title="Delete timeline"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </motion.div>
+                  onDelete={handleDeleteSession}
+                  onPin={togglePinSession}
+                  onRename={renameSession}
+                />
               ))}
             </AnimatePresence>
-            {sessions.length === 0 && (
+              {sortedAndFilteredSessions.length === 0 && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
               >
-                No timelines yet. Initiate an awakening.
+                  {sessions.length === 0 ? "No timelines yet. Initiate an awakening." : "No matching timelines found."}
               </motion.div>
             )}
           </div>
@@ -646,7 +611,13 @@ export default function App() {
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? 'opacity-0' : 'opacity-100'}`} 
                 title={commanderName}
                 onClick={triggerAwakening}
+                onMouseDown={() => setIsAvatarActive(true)}
+                onMouseUp={() => setIsAvatarActive(false)}
+                onMouseLeave={() => setIsAvatarActive(false)}
+                onTouchStart={() => setIsAvatarActive(true)}
+                onTouchEnd={() => setIsAvatarActive(false)}
               >
+                 <AvatarShockwave isActive={isAvatarActive} />
                  {(isAwakened || effectAvatar) && (
                    <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura" style={{
                      background: 'conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)',
@@ -667,7 +638,7 @@ export default function App() {
                 <motion.div 
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, ease: "easeOut" }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col items-center justify-center text-center space-y-8 w-full h-full touch-none select-none"
                   onTouchMove={(e) => e.preventDefault()} // CRITICAL: Stop pull-to-refresh/scroll on empty state
                 >
@@ -707,11 +678,11 @@ export default function App() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.8 }}
                 onClick={() => {
-                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }}
-                className="absolute bottom-24 right-4 sm:right-8 z-30 p-3 rounded-full bg-cyan-600 text-white shadow-lg hover:bg-cyan-500 transition-all border border-white/20"
+                className="absolute bottom-32 sm:bottom-36 right-4 sm:right-8 z-30 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50"
               >
-                <Download className="w-5 h-5 rotate-180" />
+                <ArrowDown className="w-5 h-5" />
               </motion.button>
             )}
           </AnimatePresence>

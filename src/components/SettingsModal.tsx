@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, User, Sliders, Monitor, Zap, Volume2, Type, Layout, Sparkles, Camera, 
   Shield, Database, LogOut, Trash2, Download, ChevronDown, ChevronRight, 
@@ -9,6 +9,13 @@ import {
 } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
 
+import { TermsOverlay } from './TermsOverlay';
+import { PrivacyOverlay } from './PrivacyOverlay';
+import { ReportOverlay } from './ReportOverlay';
+import { ClearConfirmOverlay } from './ClearConfirmOverlay';
+import { PickerOverlay } from './PickerOverlay';
+
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -17,8 +24,9 @@ interface SettingsModalProps {
 }
 
 // Sub-component for Edit Profile to prevent lag
-const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (name: string) => void, onClose: () => void }) => {
+const EditProfileOverlay = ({ name, email, onSave, onClose }: { name: string, email: string, onSave: (name: string, email: string) => void, onClose: () => void }) => {
   const [tempName, setTempName] = useState(name);
+  const [tempEmail, setTempEmail] = useState(email);
 
   return (
     <motion.div 
@@ -54,16 +62,16 @@ const EditProfileOverlay = ({ name, onSave, onClose }: { name: string, onSave: (
           <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
           <input 
             type="email" 
-            value="officialsomay222@gmail.com"
-            readOnly
-            className="w-full bg-slate-50/50 dark:bg-[#161616]/50 border border-slate-100 dark:border-white/5 rounded-2xl p-4 text-slate-500 dark:text-[#717171] text-sm focus:outline-none cursor-not-allowed"
+            value={tempEmail}
+            onChange={(e) => setTempEmail(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors"
+            placeholder="Enter your email"
           />
-          <p className="text-[10px] text-slate-400 dark:text-[#444]">Email cannot be changed for this account.</p>
         </div>
         <motion.button 
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => onSave(tempName)}
+          onClick={() => onSave(tempName, tempEmail)}
           className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold transition-all mt-4 shadow-xl"
         >
           Save Changes
@@ -163,10 +171,22 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onExportChat, onClearAllChats }) => {
+  const [quotaData, setQuotaData] = useState<{fast_count: number, generate_count: number, ultra_count: number} | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/quota')
+        .then(res => res.json())
+        .then(data => setQuotaData(data))
+        .catch(err => console.error("Failed to fetch quota data", err));
+    }
+  }, [isOpen]);
+
   const {
     theme, setTheme,
     bgStyle, setBgStyle,
     commanderName, setCommanderName,
+    commanderEmail, setCommanderEmail,
     avatarUrl, setAvatarUrl,
     modelMode, setModelMode,
     tone, setTone,
@@ -219,8 +239,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [showReport, setShowReport] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showPicker, setShowPicker] = useState<{ label: string, options: any[], value: any, onChange: (val: any) => void, rect?: DOMRect } | null>(null);
-  const [reportText, setReportText] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,7 +271,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             initial={{ opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.99 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="w-full h-full flex flex-col overflow-hidden relative bg-white dark:bg-[#0a0a0a] z-10 shadow-2xl transform-gpu will-change-transform"
           >
             
@@ -318,7 +337,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   
                   <div className="text-center space-y-1">
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{commanderName || 'Owner'}</h3>
-                    <p className="text-sm text-slate-500 dark:text-[#717171] font-medium">officialsomay222@gmail.com</p>
+                    <p className="text-sm text-slate-500 dark:text-[#717171] font-medium">{commanderEmail}</p>
                   </div>
 
                   <motion.button 
@@ -448,6 +467,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     type="toggle"
                     checked={searchGrounding}
                     onChange={setSearchGrounding}
+                    noBorder
+                  />
+                </SettingSection>
+
+                {/* Rate Limits Breakdown Section */}
+                <SettingSection title="Rate limits breakdown" delay={0.28}>
+                  <SettingItem
+                    icon={Activity}
+                    label="Imagen 4 Fast"
+                    subLabel="Daily Quota (Tier 1)"
+                    value={`${quotaData ? quotaData.fast_count : 0}/25`}
+                    type="text"
+                    onChange={() => {}}
+                  />
+                  <SettingItem
+                    icon={Activity}
+                    label="Imagen 4 Generate"
+                    subLabel="Daily Quota (Tier 2)"
+                    value={`${quotaData ? quotaData.generate_count : 0}/25`}
+                    type="text"
+                    onChange={() => {}}
+                  />
+                  <SettingItem
+                    icon={Activity}
+                    label="Imagen 4 Ultra"
+                    subLabel="Daily Quota (Tier 3)"
+                    value={`${quotaData ? quotaData.ultra_count : 0}/25`}
+                    type="text"
+                    onChange={() => {}}
+                  />
+                  <SettingItem
+                    icon={Zap}
+                    label="Peak requests per day (RPD)"
+                    value="25"
+                    type="text"
+                    onChange={() => {}}
                     noBorder
                   />
                 </SettingSection>
@@ -801,243 +856,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <EditProfileOverlay 
                   key="edit-profile"
                   name={commanderName} 
-                  onSave={(newName) => {
+                  email={commanderEmail}
+                  onSave={(newName, newEmail) => {
                     setCommanderName(newName);
+                    setCommanderEmail(newEmail);
                     setShowEditProfile(false);
                   }} 
                   onClose={() => setShowEditProfile(false)} 
                 />
               )}
 
-              {showTerms && (
-                <motion.div 
-                  key="terms"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="absolute inset-0 z-[120] bg-white dark:bg-[#0a0a0a] flex flex-col"
-                >
-                  <div className="flex items-center gap-4 p-5 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] sticky top-0">
-                    <motion.button 
-                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setShowTerms(false)} 
-                      className="p-2 rounded-full transition-colors"
-                    >
-                      <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
-                    </motion.button>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Terms of Use</h2>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-slate-500 dark:text-[#717171] leading-relaxed custom-scrollbar">
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">1. Acceptance of Terms</h3>
-                      <p>By using Loki Prime X, you agree to these terms. If you do not agree, please do not use the service.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">2. Use of Service</h3>
-                      <p>You agree to use the service for lawful purposes only. You are responsible for all content you generate or share.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">3. Privacy</h3>
-                      <p>Your privacy is important to us. Please review our Privacy Policy to understand how we handle your data.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">4. AI Disclaimer</h3>
-                      <p>Loki Prime X uses advanced AI models. Responses may be inaccurate, biased, or incomplete. Always verify important information.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">5. Modifications</h3>
-                      <p>We reserve the right to modify these terms at any time. Continued use of the service constitutes acceptance of new terms.</p>
-                    </section>
-                    <div className="pt-8 text-center text-[10px] uppercase tracking-widest">
-                      Last Updated: March 2026
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              {showTerms && <TermsOverlay key="terms" onClose={() => setShowTerms(false)} />}
 
-              {showPrivacy && (
-                <motion.div 
-                  key="privacy"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="absolute inset-0 z-[120] bg-white dark:bg-[#0a0a0a] flex flex-col"
-                >
-                  <div className="flex items-center gap-4 p-5 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] sticky top-0">
-                    <motion.button 
-                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setShowPrivacy(false)} 
-                      className="p-2 rounded-full transition-colors"
-                    >
-                      <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
-                    </motion.button>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Privacy Policy</h2>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-slate-500 dark:text-[#717171] leading-relaxed custom-scrollbar">
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">1. Data Collection</h3>
-                      <p>We collect minimal data required to provide the AI service. This includes chat history (stored locally by default) and basic settings.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">2. Data Usage</h3>
-                      <p>Your data is used solely to improve your experience with Loki Prime X. We do not sell your personal information to third parties.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">3. Local Storage</h3>
-                      <p>Most of your settings and chat data are stored directly on your device using local storage for maximum privacy.</p>
-                    </section>
-                    <section className="space-y-2">
-                      <h3 className="text-slate-900 dark:text-white font-bold">4. Security</h3>
-                      <p>We implement industry-standard security measures to protect your data during transmission and storage.</p>
-                    </section>
-                    <div className="pt-8 text-center text-[10px] uppercase tracking-widest">
-                      Last Updated: March 2026
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              {showPrivacy && <PrivacyOverlay key="privacy" onClose={() => setShowPrivacy(false)} />}
 
-              {showReport && (
-                <motion.div 
-                  key="report"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="absolute inset-0 z-[120] bg-white dark:bg-[#0a0a0a] flex flex-col"
-                >
-                  <div className="flex items-center gap-4 p-5 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] sticky top-0">
-                    <motion.button 
-                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setShowReport(false)} 
-                      className="p-2 rounded-full transition-colors"
-                    >
-                      <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
-                    </motion.button>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Report a Problem</h2>
-                  </div>
-                  <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
-                    <p className="text-sm text-slate-500 dark:text-[#717171]">Describe the issue you're experiencing. Our team will look into it as soon as possible.</p>
-                    <textarea 
-                      value={reportText}
-                      onChange={(e) => setReportText(e.target.value)}
-                      placeholder="Type your message here..."
-                      className="w-full h-48 bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors resize-none"
-                    />
-                    <motion.button 
-                      whileHover={{ scale: 1.02, backgroundColor: "#2563eb" }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        alert('Thank you for your report!');
-                        setShowReport(false);
-                        setReportText('');
-                      }}
-                      disabled={!reportText.trim()}
-                      className="w-full py-4 bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-bold transition-all shadow-xl shadow-blue-600/20"
-                    >
-                      Submit Report
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
+              {showReport && <ReportOverlay key="report" onClose={() => setShowReport(false)} />}
 
-              {showClearConfirm && (
-                <motion.div 
-                  key="clear-confirm"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-[130] bg-white/90 dark:bg-black/95 backdrop-blur-sm flex items-center justify-center p-6"
-                >
-                  <motion.div 
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-white dark:bg-[#0a0a0a] rounded-[32px] p-8 max-w-sm w-full border border-slate-200 dark:border-white/10 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,1)]"
-                  >
-                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Trash2 className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2 tracking-tight">Clear History?</h3>
-                    <p className="text-slate-500 dark:text-[#717171] text-center mb-8 text-sm leading-relaxed">This will permanently delete all your chat sessions. This action cannot be undone.</p>
-                    <div className="flex flex-col gap-3">
-                      <motion.button 
-                        whileHover={{ scale: 1.02, backgroundColor: "#dc2626" }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          onClearAllChats();
-                          onClose();
-                          setShowClearConfirm(false);
-                        }}
-                        className="w-full py-4 bg-red-600 text-white rounded-full font-bold transition-all shadow-xl shadow-red-600/20"
-                      >
-                        Clear Everything
-                      </motion.button>
-                      <motion.button 
-                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowClearConfirm(false)}
-                        className="w-full py-4 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white rounded-full font-bold transition-all"
-                      >
-                        Cancel
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
+              {showClearConfirm && <ClearConfirmOverlay key="clear-confirm" onClose={() => setShowClearConfirm(false)} onParentClose={onClose} onClearAllChats={onClearAllChats} setShowClearConfirm={setShowClearConfirm} />}
             </AnimatePresence>
 
             {/* Custom Picker Overlay - Floating Menu Style */}
             <AnimatePresence>
-              {showPicker && (
-                <div className="fixed inset-0 z-[100001] bg-transparent" onClick={() => setShowPicker(null)}>
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                    style={{
-                      position: 'fixed',
-                      top: showPicker.rect ? Math.min(showPicker.rect.top - 4, window.innerHeight - 300) : '50%',
-                      left: showPicker.rect ? Math.min(showPicker.rect.right - 200, window.innerWidth - 216) : '50%',
-                      transform: showPicker.rect ? 'none' : 'translate(-50%, -50%)'
-                    }}
-                    className="w-[210px] bg-white dark:bg-[#0a0a0a] rounded-[24px] p-2 border border-slate-200 dark:border-white/10 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,1)] ring-1 ring-slate-200 dark:ring-white/5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="px-3 py-2 border-b border-slate-100 dark:border-white/5 mb-1">
-                      <h3 className="text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-wider">{showPicker.label}</h3>
-                    </div>
-                    <div className="space-y-0.5">
-                      {showPicker.options.map((opt: any) => {
-                        const val = opt.value || opt;
-                        const label = opt.label || opt;
-                        const Icon = opt.icon;
-                        const isSelected = showPicker.value === val;
-                        return (
-                          <motion.button
-                            key={val}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => {
-                              showPicker.onChange(val);
-                              setShowPicker(null);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isSelected ? 'bg-slate-900 dark:bg-white text-white dark:text-black' : 'hover:bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {Icon && <Icon className={`w-4 h-4 ${isSelected ? 'text-white dark:text-black' : 'text-slate-500 dark:text-[#717171]'}`} />}
-                              <span className="text-sm font-bold capitalize">{label}</span>
-                            </div>
-                            {isSelected && <Zap className="w-3.5 h-3.5" />}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                </div>
-              )}
+              {showPicker && <PickerOverlay key="picker" showPicker={showPicker} setShowPicker={setShowPicker} />}
             </AnimatePresence>
 
           </motion.div>

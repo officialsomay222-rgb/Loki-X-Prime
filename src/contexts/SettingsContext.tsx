@@ -33,6 +33,7 @@ interface SettingsState {
   theme: Theme;
   bgStyle: BgStyle;
   commanderName: string;
+  commanderEmail: string;
   avatarUrl: string;
   modelMode: ModelMode;
   tone: Tone;
@@ -82,6 +83,7 @@ interface SettingsState {
   setTheme: (theme: Theme) => void;
   setBgStyle: (bg: BgStyle) => void;
   setCommanderName: (name: string) => void;
+  setCommanderEmail: (email: string) => void;
   setAvatarUrl: (url: string) => void;
   setModelMode: (mode: ModelMode) => void;
   setSystemInstruction: (instruction: string) => void;
@@ -131,10 +133,11 @@ interface SettingsState {
   resetSettings: () => void;
 }
 
-const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setAvatarUrl' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'setIsAwakened' | 'setEffectInputBox' | 'setEffectMessageBubbles' | 'setEffectSidebar' | 'setEffectBackground' | 'setEffectAvatar' | 'setSidebarPosition' | 'setChatAlignment' | 'setBlurIntensity' | 'setTimestampFormat' | 'setSoundTheme' | 'setCodeTheme' | 'setAvatarShape' | 'setMessageShadow' | 'setSendButtonIcon' | 'setMessageHoverEffect' | 'setSidebarTheme' | 'setInputBoxStyle' | 'resetSettings'> = {
+const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setCommanderEmail' | 'setAvatarUrl' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'setIsAwakened' | 'setEffectInputBox' | 'setEffectMessageBubbles' | 'setEffectSidebar' | 'setEffectBackground' | 'setEffectAvatar' | 'setSidebarPosition' | 'setChatAlignment' | 'setBlurIntensity' | 'setTimestampFormat' | 'setSoundTheme' | 'setCodeTheme' | 'setAvatarShape' | 'setMessageShadow' | 'setSendButtonIcon' | 'setMessageHoverEffect' | 'setSidebarTheme' | 'setInputBoxStyle' | 'resetSettings'> = {
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
+  commanderEmail: 'officialsomay222@gmail.com',
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Loki',
   modelMode: 'pro',
   tone: 'formal',
@@ -189,6 +192,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(defaultSettings.theme);
   const [bgStyle, setBgStyle] = useState<BgStyle>(defaultSettings.bgStyle);
   const [commanderName, setCommanderName] = useState(defaultSettings.commanderName);
+  const [commanderEmail, setCommanderEmail] = useState(defaultSettings.commanderEmail);
   const [avatarUrl, setAvatarUrl] = useState(defaultSettings.avatarUrl);
   const [modelMode, setModelMode] = useState<ModelMode>(defaultSettings.modelMode);
   const [tone, setTone] = useState<Tone>(defaultSettings.tone);
@@ -240,6 +244,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setTheme(defaultSettings.theme);
     setBgStyle(defaultSettings.bgStyle);
     setCommanderName(defaultSettings.commanderName);
+    setCommanderEmail(defaultSettings.commanderEmail);
     setAvatarUrl(defaultSettings.avatarUrl);
     setModelMode(defaultSettings.modelMode);
     setTone(defaultSettings.tone);
@@ -302,6 +307,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     loadSetting('theme', setTheme as any);
     loadSetting('bgStyle', setBgStyle as any);
     loadSetting('commanderName', setCommanderName);
+    loadSetting('commanderEmail', setCommanderEmail);
     loadSetting('avatarUrl', setAvatarUrl);
     loadSetting('modelMode', setModelMode as any);
     loadSetting('tone', setTone as any);
@@ -354,6 +360,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('loki_theme', theme);
       localStorage.setItem('loki_bgStyle', bgStyle);
       localStorage.setItem('loki_commanderName', commanderName);
+      localStorage.setItem('loki_commanderEmail', commanderEmail);
       localStorage.setItem('loki_avatarUrl', avatarUrl);
       localStorage.setItem('loki_modelMode', modelMode);
       localStorage.setItem('loki_tone', tone);
@@ -419,12 +426,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     
     document.documentElement.style.setProperty('--global-radius', radiusVar);
     document.documentElement.style.setProperty('--glow-opacity', glowOpacity);
-  }, [theme, bgStyle, commanderName, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle]);
+  }, [theme, bgStyle, commanderName, commanderEmail, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle]);
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle,
-      setTheme, setBgStyle, setCommanderName, setAvatarUrl, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, setIsAwakened, resetSettings,
+      theme, bgStyle, commanderName, commanderEmail, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle,
+      setTheme, setBgStyle, setCommanderName, setCommanderEmail, setAvatarUrl, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, setIsAwakened, resetSettings,
       setEffectInputBox, setEffectMessageBubbles, setEffectSidebar, setEffectBackground, setEffectAvatar, setSidebarPosition, setChatAlignment, setBlurIntensity, setTimestampFormat, setSoundTheme, setCodeTheme, setAvatarShape, setMessageShadow, setSendButtonIcon
     } as any}>
       {children}

@@ -17,9 +17,9 @@ export default async function handler(req, res) {
 
     if (slot === '1' || slot === '2') {
       // Groq API Logic
-      // Slot 1: groq/compound
+      // Slot 1: groq/compound-mini
       // Slot 2: openai/gpt-oss-120b
-      const model = slot === '1' ? 'groq/compound' : 'openai/gpt-oss-120b';
+      const model = slot === '1' ? 'groq/compound-mini' : 'openai/gpt-oss-120b';
       
       const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',

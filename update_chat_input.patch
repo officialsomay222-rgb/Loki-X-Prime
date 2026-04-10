@@ -1,0 +1,11 @@
+--- src/components/ChatInput.tsx
++++ src/components/ChatInput.tsx
+@@ -970,7 +970,7 @@
+                               initial={{ opacity: 0, scale: 0.8 }}
+                               animate={{ opacity: 1, scale: 1 }}
+                               exit={{ opacity: 0, scale: 0.8 }}
+-                              onClick={() => setIsVoiceOverlayOpen(true)}
++                              onClick={startLiveSession}
+                               className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
+                             >
+                               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
