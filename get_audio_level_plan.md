@@ -1,5 +1,0 @@
-The user has requested to implement Gemini's audio response for live conversation, along with an extreme level live conversation UI and effect while they speak.
-
-1.  **Expose Audio Levels:** We need a way to get the audio level from the user's microphone so we can animate the LiveVoiceOverlay when they speak. In `ChatInput.tsx`, where `onaudioprocess` is handled, we can calculate the RMS (Root Mean Square) volume of the `pcmData` buffer and expose it via state or ref to the overlay.
-2.  **Fix LiveSession Linking:** The `startLiveSession` function inside `ChatInput.tsx` is defined but never called! The `LiveVoiceOverlay` is opened via `setIsVoiceOverlayOpen(true)`, but it doesn't trigger the Gemini Live API. We need to actually start the session when the user opens the overlay, and close it when they close it.
-3.  **God-Level Live UI:** We will replace the simple CSS blur circles in `LiveVoiceOverlay` with an extreme canvas-based fluid animation (similar to `PremiumLiquidShockwave` but scaled for voice and reacting to volume levels).

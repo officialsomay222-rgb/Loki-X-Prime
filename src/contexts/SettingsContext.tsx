@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'system';
 export type BgStyle = 'default' | 'nebula' | 'cyber-grid';
 export type ModelMode = 'pro' | 'fast' | 'happy';
 export type BubbleStyle = 'glass' | 'solid';
@@ -31,6 +31,7 @@ export type InputBoxStyle = 'default' | 'floating' | 'minimal';
 
 interface SettingsState {
   theme: Theme;
+  resolvedTheme: 'light' | 'dark';
   bgStyle: BgStyle;
   commanderName: string;
   commanderEmail: string;
@@ -134,7 +135,8 @@ interface SettingsState {
 }
 
 const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setCommanderName' | 'setCommanderEmail' | 'setAvatarUrl' | 'setModelMode' | 'setTone' | 'setSystemInstruction' | 'setTemperature' | 'setTopP' | 'setTopK' | 'setEnterToSend' | 'setBubbleStyle' | 'setFontSize' | 'setFontStyle' | 'setSoundEnabled' | 'setMessageAnimation' | 'setAutoScroll' | 'setTypingSpeed' | 'setShowAvatars' | 'setResponseLength' | 'setAccentColor' | 'setMessageDensity' | 'setThinkingMode' | 'setSearchGrounding' | 'setImageSize' | 'setLiveAudioEnabled' | 'setAnimationSpeed' | 'setBorderRadius' | 'setTextReveal' | 'setAppWidth' | 'setGlowIntensity' | 'setIsAwakened' | 'setEffectInputBox' | 'setEffectMessageBubbles' | 'setEffectSidebar' | 'setEffectBackground' | 'setEffectAvatar' | 'setSidebarPosition' | 'setChatAlignment' | 'setBlurIntensity' | 'setTimestampFormat' | 'setSoundTheme' | 'setCodeTheme' | 'setAvatarShape' | 'setMessageShadow' | 'setSendButtonIcon' | 'setMessageHoverEffect' | 'setSidebarTheme' | 'setInputBoxStyle' | 'resetSettings'> = {
-  theme: 'dark',
+  theme: 'system',
+  resolvedTheme: 'dark', // Will be re-evaluated on mount
   bgStyle: 'nebula',
   commanderName: 'Commander',
   commanderEmail: '',
@@ -190,6 +192,7 @@ const SettingsContext = createContext<SettingsState | undefined>(undefined);
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(defaultSettings.theme);
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(defaultSettings.theme === 'dark' ? 'dark' : 'light');
   const [bgStyle, setBgStyle] = useState<BgStyle>(defaultSettings.bgStyle);
   const [commanderName, setCommanderName] = useState(defaultSettings.commanderName);
   const [commanderEmail, setCommanderEmail] = useState(defaultSettings.commanderEmail);
@@ -410,14 +413,33 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       console.error('Failed to save settings to localStorage', e);
     }
 
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.body.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
-      document.documentElement.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
+    const applyTheme = (isDark: boolean) => {
+      setResolvedTheme(isDark ? 'dark' : 'light');
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.body.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
+        document.documentElement.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
+        document.documentElement.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
+      }
+    };
+
+    let cleanupFn: (() => void) | undefined;
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches);
+
+      const listener = (e: MediaQueryListEvent) => applyTheme(e.matches);
+      mediaQuery.addEventListener('change', listener);
+
+      cleanupFn = () => {
+        mediaQuery.removeEventListener('change', listener);
+      };
     } else {
-      document.documentElement.classList.remove('dark');
-      document.body.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
-      document.documentElement.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
+      applyTheme(theme === 'dark');
     }
 
     // Apply global CSS variables
@@ -426,11 +448,15 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     
     document.documentElement.style.setProperty('--global-radius', radiusVar);
     document.documentElement.style.setProperty('--glow-opacity', glowOpacity);
+
+    return () => {
+      if (cleanupFn) cleanupFn();
+    };
   }, [theme, bgStyle, commanderName, commanderEmail, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle]);
 
   return (
     <SettingsContext.Provider value={{
-      theme, bgStyle, commanderName, commanderEmail, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle,
+      theme, resolvedTheme, bgStyle, commanderName, commanderEmail, avatarUrl, modelMode, tone, systemInstruction, temperature, topP, topK, enterToSend, bubbleStyle, fontSize, fontStyle, soundEnabled, messageAnimation, autoScroll, typingSpeed, showAvatars, responseLength, accentColor, messageDensity, thinkingMode, searchGrounding, imageSize, liveAudioEnabled, animationSpeed, borderRadius, textReveal, appWidth, glowIntensity, isAwakened, effectInputBox, effectMessageBubbles, effectSidebar, effectBackground, effectAvatar, sidebarPosition, chatAlignment, blurIntensity, timestampFormat, soundTheme, codeTheme, avatarShape, messageShadow, sendButtonIcon, messageHoverEffect, sidebarTheme, inputBoxStyle,
       setTheme, setBgStyle, setCommanderName, setCommanderEmail, setAvatarUrl, setModelMode, setTone, setSystemInstruction, setTemperature, setTopP, setTopK, setEnterToSend, setBubbleStyle, setFontSize, setFontStyle, setSoundEnabled, setMessageAnimation, setAutoScroll, setTypingSpeed, setShowAvatars, setResponseLength, setAccentColor, setMessageDensity, setThinkingMode, setSearchGrounding, setImageSize, setLiveAudioEnabled, setAnimationSpeed, setBorderRadius, setTextReveal, setAppWidth, setGlowIntensity, setIsAwakened, resetSettings,
       setEffectInputBox, setEffectMessageBubbles, setEffectSidebar, setEffectBackground, setEffectAvatar, setSidebarPosition, setChatAlignment, setBlurIntensity, setTimestampFormat, setSoundTheme, setCodeTheme, setAvatarShape, setMessageShadow, setSendButtonIcon
     } as any}>
