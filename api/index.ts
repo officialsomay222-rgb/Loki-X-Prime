@@ -315,7 +315,9 @@ app.post("/api/chat", async (req, res) => {
       const seed = Math.floor(Math.random() * 1000000);
 
       // Construct the Pollinations URL
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true`;
+      // encodeURIComponent doesn't encode parentheses, so we manually encode them
+      const encodedPrompt = encodeURIComponent(prompt).replace(/\(/g, '%28').replace(/\)/g, '%29');
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&width=1024&height=1024&nologo=true`;
 
       // Send the image back in Markdown format
       const responseText = `![Generated Image](${imageUrl})\n\n*Image generated successfully!*`;
