@@ -305,9 +305,22 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation is currently disabled.
+      // Image Generation using Pollinations.ai (Free, no API key required)
       setupSSE();
-      res.write(`data: ${JSON.stringify({ text: "![Image Generation Disabled](https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png)\n\n*Commander, the Imagen generation feature has been temporarily taken offline for maintenance and upgrades. Please stand by for future deployment.*" })}\n\n`);
+
+      // Ensure there is a prompt
+      const prompt = message && message.trim().length > 0 ? message.trim() : "A beautiful sunset";
+
+      // Generate a random seed to avoid browser caching of the exact same prompt
+      const seed = Math.floor(Math.random() * 1000000);
+
+      // Construct the Pollinations URL
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true`;
+
+      // Send the image back in Markdown format
+      const responseText = `![Generated Image](${imageUrl})\n\n*Image generated successfully!*`;
+
+      res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
 
