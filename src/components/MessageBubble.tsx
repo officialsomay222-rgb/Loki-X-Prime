@@ -8,12 +8,15 @@ import {
   Square,
   Mic,
   Loader2,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BubbleStyle,
   FontSize,
@@ -482,6 +485,8 @@ export const MessageBubble = memo(
     avatarShape = 'circle',
     messageShadow = 'md',
   }: MessageBubbleProps) => {
+    const [isThinkingOpen, setIsThinkingOpen] = useState(false);
+
     const fontSizeClass =
       fontSize === "small"
         ? "text-xs sm:text-sm"
@@ -546,6 +551,44 @@ export const MessageBubble = memo(
               className={`relative transition-all duration-300 ${densityClass} text-slate-800/90 dark:text-white/90`}
             >
               <div className={`markdown-body ${fontSizeClass} bg-transparent p-1`}>
+                {message.reasoning && (
+                  <div className="mb-4 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 transition-all duration-300">
+                    <button
+                      onClick={() => setIsThinkingOpen(!isThinkingOpen)}
+                      className="w-full flex items-center justify-between p-3 sm:p-4 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                        <span className="text-sm font-semibold tracking-wide">
+                          {isThinkingOpen ? "Hide thinking" : "Show thinking"}
+                        </span>
+                      </div>
+                      {isThinkingOpen ? (
+                        <ChevronUp className="w-4 h-4 opacity-50" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 opacity-50" />
+                      )}
+                    </button>
+                    <AnimatePresence>
+                      {isThinkingOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="px-3 sm:px-4 pb-3 sm:pb-4 text-[0.85em] text-slate-600 dark:text-slate-400 italic border-t border-slate-200 dark:border-white/10 pt-3 sm:pt-4"
+                        >
+                          <MemoizedMarkdown
+                            content={message.reasoning}
+                            textReveal="none"
+                            animationSpeed="fast"
+                            codeTheme={codeTheme}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
                 {message.audioUrl && (
                   <div className="mb-3">
                     <AudioPlayer url={message.audioUrl} autoPlay={false} />
