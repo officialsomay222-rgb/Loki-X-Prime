@@ -441,14 +441,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                     </div>
                   </div>
-                  <SettingItem 
-                    icon={Zap} 
-                    label="Thinking Mode" 
-                    subLabel="Enable step-by-step reasoning"
-                    type="toggle"
-                    checked={thinkingMode}
-                    onChange={setThinkingMode}
-                  />
+                  {modelMode === 'pro' && (
+                    <SettingItem
+                      icon={Zap}
+                      label="Thinking Mode"
+                      subLabel="Enable step-by-step reasoning"
+                      type="toggle"
+                      checked={thinkingMode}
+                      onChange={setThinkingMode}
+                    />
+                  )}
                   <SettingItem 
                     icon={Eye} 
                     label="Search Grounding" 

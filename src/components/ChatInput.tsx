@@ -848,24 +848,26 @@ export const ChatInput = memo(
                                 </div>
 
                                 <div className="space-y-1">
-                                  <button
-                                    onClick={() => setThinkingMode(!thinkingMode)}
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Sparkles className="w-4 h-4" />
-                                      <span className="text-[0.75rem] font-bold uppercase tracking-wider">
-                                        Deep Search
-                                      </span>
-                                    </div>
-                                    <div
-                                      className={`w-8 h-4 rounded-full relative transition-colors ${thinkingMode ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
+                                  {modelMode === 'pro' && (
+                                    <button
+                                      onClick={() => setThinkingMode(!thinkingMode)}
+                                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                     >
+                                      <div className="flex items-center gap-3">
+                                        <Sparkles className="w-4 h-4" />
+                                        <span className="text-[0.75rem] font-bold uppercase tracking-wider">
+                                          Deep Search
+                                        </span>
+                                      </div>
                                       <div
-                                        className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${thinkingMode ? "left-4.5" : "left-0.5"}`}
-                                      />
-                                    </div>
-                                  </button>
+                                        className={`w-8 h-4 rounded-full relative transition-colors ${thinkingMode ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-800"}`}
+                                      >
+                                        <div
+                                          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${thinkingMode ? "left-4.5" : "left-0.5"}`}
+                                        />
+                                      </div>
+                                    </button>
+                                  )}
 
                                   <button
                                     onClick={() =>

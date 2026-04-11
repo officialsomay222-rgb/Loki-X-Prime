@@ -18,6 +18,7 @@ export type Message = {
   audioUrl?: string;
   isVoiceResponse?: boolean;
   attachments?: { data: string, mimeType: string }[];
+  reasoning?: string;
 };
 
 export type ChatSession = {
@@ -66,19 +67,36 @@ const processAudioUrl = async (audioUrl?: string): Promise<string | undefined> =
   }
 };
 
-const updateSessionMessage = async (sessionId: string, messageId: string, content: string): Promise<void> => {
+const updateSessionMessage = async (sessionId: string, messageId: string, content: string, reasoning?: string): Promise<void> => {
   const session = await localDb.sessions.get(sessionId);
   if (session) {
     const msgIndex = session.messages.findIndex(m => m.id === messageId);
     if (msgIndex !== -1) {
       session.messages[msgIndex].content = content;
+      if (reasoning !== undefined) {
+        session.messages[msgIndex].reasoning = reasoning;
+      }
       await localDb.sessions.put(session);
     }
   }
 };
 
-const cleanModelResponse = (text: string): string => {
-  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thought>[\s\S]*?<\/thought>/gi, '').trimStart();
+const extractModelReasoning = (text: string): { content: string; reasoning?: string } => {
+  let reasoning: string | undefined = undefined;
+
+  // Extract content between <think> tags (both complete and incomplete)
+  const thinkMatch = text.match(/<think>([\s\S]*?)(?:<\/think>|$)/i) ||
+                     text.match(/<thought>([\s\S]*?)(?:<\/thought>|$)/i);
+
+  if (thinkMatch && thinkMatch[1]) {
+    reasoning = thinkMatch[1].trim();
+  }
+
+  const content = text.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '')
+                      .replace(/<thought>[\s\S]*?(?:<\/thought>|$)/gi, '')
+                      .trimStart();
+
+  return { content, reasoning };
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -388,11 +406,12 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         let lastUpdateTime = Date.now();
         let pendingUpdate = false;
 
-        const updateState = (cleanResponse: string) => {
+        const updateState = (parsed: { content: string, reasoning?: string }) => {
           setStreamingMessage({
             id: modelMessageId,
             role: 'model',
-            content: cleanResponse,
+            content: parsed.content,
+            reasoning: parsed.reasoning,
             timestamp: new Date(),
             isImage: false
           });
@@ -403,8 +422,8 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
             fullResponse += chunk.text;
             const now = Date.now();
             if (now - lastUpdateTime > 50) {
-              const cleanResponse = cleanModelResponse(fullResponse);
-              updateState(cleanResponse);
+              const parsed = extractModelReasoning(fullResponse);
+              updateState(parsed);
               lastUpdateTime = now;
               pendingUpdate = false;
             } else {
@@ -414,11 +433,12 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         }
 
         if (pendingUpdate) {
-          updateState(cleanModelResponse(fullResponse));
+          updateState(extractModelReasoning(fullResponse));
         }
 
         // Final update to Dexie
-        await updateSessionMessage(currentSessionId, modelMessageId, cleanModelResponse(fullResponse));
+        const finalParsed = extractModelReasoning(fullResponse);
+        await updateSessionMessage(currentSessionId, modelMessageId, finalParsed.content, finalParsed.reasoning);
         setStreamingMessage(null);
       }
 
