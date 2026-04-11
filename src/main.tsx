@@ -10,6 +10,9 @@ import { registerSW } from 'virtual:pwa-register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { applyDevicePerformanceClass } from './utils/performance';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar';
+import { Capacitor } from '@capacitor/core';
 
 // Apply performance class early in the lifecycle
 applyDevicePerformanceClass();
@@ -22,6 +25,16 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+try {
+  if (Capacitor.isNativePlatform()) {
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
+  }
+} catch (e) {
+  console.warn('System Bar configuration failed', e);
+}
 
 try {
   const updateSW = registerSW({

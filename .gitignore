@@ -16,3 +16,4 @@ ios/App/App/Assets.xcassets/
 capacitor-assets-output/
 *.png.backup
 dev-dist/
+android/app/capacitor.build.gradle\nandroid/capacitor.settings.gradle

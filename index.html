@@ -32,10 +32,8 @@
         -webkit-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
+        /* Remove body padding, let React handle safe areas internally */
+        padding: 0;
       }
     </style>
   </head>

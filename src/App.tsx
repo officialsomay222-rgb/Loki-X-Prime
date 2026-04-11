@@ -451,6 +451,7 @@ export default function App() {
           animate={{ x: isSidebarOpen ? 0 : (sidebarPosition === 'right' ? '100%' : '-100%') }}
           transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
           className={`fixed inset-y-0 ${sidebarPosition === 'right' ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-72 bg-[#f8fafc] dark:bg-[#0a0a0a] shadow-2xl border-y-0 border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu gpu-accelerate`}
+          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
             <div className={`flex items-center gap-2 font-montserrat font-bold ${isAwakened && theme === 'light' ? 'text-slate-900' : 'text-slate-900 dark:text-white'}`}>
@@ -567,6 +568,9 @@ export default function App() {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
+          {/* Header Spacer for Safe Area (instead of editing header height) */}
+          <div className="w-full shrink-0 bg-[#08080c] z-20" style={{ height: 'env(safe-area-inset-top)' }}></div>
+
           {/* Header */}
           <header className="h-16 sm:h-20 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
