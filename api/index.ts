@@ -3,53 +3,14 @@ import cors from "cors";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import Database from "better-sqlite3";
 
 const app = express();
-
-// Initialize Quota Tracker Database
-const quotaDb = new Database('quota.db');
-quotaDb.exec(`
-  CREATE TABLE IF NOT EXISTS imagen_quota (
-    date TEXT PRIMARY KEY,
-    fast_count INTEGER DEFAULT 0,
-    generate_count INTEGER DEFAULT 0,
-    ultra_count INTEGER DEFAULT 0
-  )
-`);
 
 const getTodayDateString = () => {
   const today = new Date();
   return today.toISOString().split('T')[0];
 };
 
-// In-memory tracker for consecutive failures
-const consecutiveFailures = {
-  fast: 0,
-  generate: 0,
-  ultra: 0
-};
-
-let lastQuotaDate = getTodayDateString();
-
-const getTodayQuota = () => {
-  const dateStr = getTodayDateString();
-
-  if (dateStr !== lastQuotaDate) {
-    // New day has started: reset the consecutive failures globally
-    consecutiveFailures.fast = 0;
-    consecutiveFailures.generate = 0;
-    consecutiveFailures.ultra = 0;
-    lastQuotaDate = dateStr;
-  }
-
-  let row = quotaDb.prepare('SELECT * FROM imagen_quota WHERE date = ?').get(dateStr) as any;
-  if (!row) {
-    quotaDb.prepare('INSERT INTO imagen_quota (date, fast_count, generate_count, ultra_count) VALUES (?, 0, 0, 0)').run(dateStr);
-    row = { date: dateStr, fast_count: 0, generate_count: 0, ultra_count: 0 };
-  }
-  return row;
-};
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -65,8 +26,7 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/quota", (req, res) => {
   try {
-    const quota = getTodayQuota();
-    res.json(quota);
+    res.json({ date: getTodayDateString(), fast_count: 0, generate_count: 0, ultra_count: 0 });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -298,8 +258,6 @@ app.post("/api/chat", async (req, res) => {
           messages.push({ role: "user", content: " " });
         }
 
-        setupSSE();
-
         if (groqKey) {
           const groq = new Groq({ apiKey: groqKey });
           const modelName = mode === "pro" ? "openai/gpt-oss-120b" : mode === "fast" ? "groq/compound-mini" : "llama-3.1-8b-instant";
@@ -312,6 +270,8 @@ app.post("/api/chat", async (req, res) => {
             max_tokens: 4000,
             stream: true,
           });
+
+          setupSSE();
 
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || "";
@@ -331,6 +291,8 @@ app.post("/api/chat", async (req, res) => {
             max_tokens: 4000,
           });
 
+          setupSSE();
+
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || "";
             if (content) {
@@ -343,132 +305,11 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation Logic using Gemini for refinement and Imagen for generation
-      let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
-      let googleKey = process.env.GOOGLE_AI_KEY;
-      
-      // Filter out placeholder keys
-      if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
-      if (googleKey && (googleKey.includes("MY_GOOGLE") || googleKey.includes("YOUR_"))) googleKey = undefined;
-
-      const apiKey = googleKey || geminiKey || process.env.API_KEY;
-      
-      if (!apiKey) {
-        return res.status(400).json({ error: "Google AI Key (GC) is missing or invalid. Please add a real GOOGLE_AI_KEY or GC to your AI Studio Secrets." });
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      
-      // Keep connection alive with SSE comments
+      // Image Generation is currently disabled.
       setupSSE();
-      const pingInterval = setInterval(() => {
-        res.write(`:\n\n`);
-      }, 15000);
-
-      try {
-        // Step 1: Refine prompt using Gemini
-        let detailedPrompt = message;
-        try {
-          const refinementResponse = await ai.models.generateContent({
-            model: "gemini-3.1-flash-lite-preview",
-            contents: [{ parts: [{ text: `[IMAGE_MODE] Create a stunning visual description for: ${message}` }] }],
-            config: {
-              systemInstruction: "Tum ek expert Image Prompt Engineer ho. Jab user '[IMAGE_MODE]' flag ke saath koi request bheje, toh tum us text ko ek detailed, artistic, aur high-quality visual description mein badal do. Description ko Imagen 4 model ke liye optimize karo (lighting, style, aur camera angles add karo). Sirf description likhna, koi extra baat mat karna."
-            }
-          });
-          detailedPrompt = refinementResponse.text || message;
-        } catch (e) {
-          console.error("Gemini refinement failed, using original prompt:", e);
-        }
-
-        // Step 2: Generate image using Google Imagen 4 models with predictive failover and quota checking
-        let base64EncodeString = null;
-        let lastError: any = null;
-        const dateStr = getTodayDateString();
-
-        while (true) {
-          const quota = getTodayQuota();
-          let activeModel = null;
-          let modelTier: 'fast' | 'generate' | 'ultra' | null = null;
-
-          if (quota.fast_count < 25 && consecutiveFailures.fast < 3) {
-            activeModel = "imagen-4.0-fast-generate-001";
-            modelTier = 'fast';
-            if (quota.fast_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 fast pool is nearing exhaustion (${quota.fast_count}/25).`);
-            }
-          } else if (quota.generate_count < 25 && consecutiveFailures.generate < 3) {
-            activeModel = "imagen-4.0-generate-001";
-            modelTier = 'generate';
-            if (quota.generate_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 generate pool is nearing exhaustion (${quota.generate_count}/25).`);
-            }
-          } else if (quota.ultra_count < 25 && consecutiveFailures.ultra < 3) {
-            activeModel = "imagen-4.0-ultra-generate-001";
-            modelTier = 'ultra';
-            if (quota.ultra_count >= 20) {
-              console.warn(`Preemptive Alert: Imagen 4 ultra pool is nearing exhaustion (${quota.ultra_count}/25).`);
-            }
-          }
-
-          if (!activeModel || !modelTier) {
-            const nextMidnight = new Date();
-            nextMidnight.setUTCHours(24, 0, 0, 0); // Next 00:00 UTC
-            throw new Error(`Daily image generation limit reached. Limits reset at ${nextMidnight.toISOString()}`);
-          }
-
-          try {
-            // Strict Version Control Pre-flight Payload Check
-            const targetModel = activeModel;
-            if (!targetModel.startsWith("imagen-4")) {
-               throw new Error("Critical: Version Mismatch/Downgrade Attempted - Pre-flight check failed");
-            }
-
-            const response = await ai.models.generateImages({
-              model: targetModel,
-              prompt: detailedPrompt,
-              config: {
-                numberOfImages: 1,
-                outputMimeType: "image/jpeg",
-                aspectRatio: "1:1"
-              }
-            });
-
-            const generatedImage = response.generatedImages?.[0];
-            if (!generatedImage || !generatedImage.image || !generatedImage.image.imageBytes) {
-              throw new Error(`Model ${activeModel} returned empty image data`);
-            }
-
-            base64EncodeString = generatedImage.image.imageBytes;
-
-            // Success: update DB counter and reset failures
-            quotaDb.prepare(`UPDATE imagen_quota SET ${modelTier}_count = ${modelTier}_count + 1 WHERE date = ?`).run(dateStr);
-            consecutiveFailures[modelTier] = 0;
-            break; // Success, exit loop
-
-          } catch (e: any) {
-            console.warn(`Failed with model ${activeModel}:`, e);
-            lastError = e;
-
-            // Failover logic based on error type
-            if (e.status === 429 || e.message?.includes("429") || e.message?.includes("quota")) {
-               // Rate limit exceeded: force failover by maxing quota
-               quotaDb.prepare(`UPDATE imagen_quota SET ${modelTier}_count = 25 WHERE date = ?`).run(dateStr);
-            } else {
-               // Non-quota error (500, 503, etc): increment consecutive failures
-               consecutiveFailures[modelTier]++;
-            }
-          }
-        }
-
-        // Use a cleaner response format - Only send the image markdown
-        const responseText = `![Generated Image](data:image/jpeg;base64,${base64EncodeString})`;
-        res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
-        res.write(`data: [DONE]\n\n`);
-        res.end();
-      } finally {
-        clearInterval(pingInterval);
-      }
+      res.write(`data: ${JSON.stringify({ text: "![Image Generation Disabled](https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png)\n\n*Commander, the Imagen generation feature has been temporarily taken offline for maintenance and upgrades. Please stand by for future deployment.*" })}\n\n`);
+      res.write(`data: [DONE]\n\n`);
+      res.end();
 
     } else {
       return res.status(400).json({ error: "Invalid mode selected" });
