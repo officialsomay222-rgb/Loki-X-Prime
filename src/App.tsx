@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { NetworkStatusIndicator } from './components/NetworkStatusIndicator';
+
 import { ChatInput, ChatInputHandle } from './components/ChatInput';
 import { useAwakening } from './hooks/useAwakening';
 import { AvatarShockwave } from './components/AvatarShockwave';
@@ -385,6 +387,7 @@ export default function App() {
       className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? 'awakened-mode' : ''} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
+      <NetworkStatusIndicator />
       {/* 1. Background Layer (Fixed, never moves) */}
       <AwakenedBackground isAwakened={isAwakened || effectBackground} bgStyle={bgStyle} theme={theme} />
 

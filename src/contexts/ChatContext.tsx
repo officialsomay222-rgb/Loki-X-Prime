@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useRe
 import { useSettings } from './SettingsContext';
 import { localDb } from '../lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { toast } from 'sonner';
+import { Network } from '@capacitor/network';
 import { 
   generateChatResponse, 
   generateImage, 
@@ -343,6 +345,13 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const sendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string, attachments?: { data: string, mimeType: string }[]) => {
     if ((!text.trim() && !audioUrl && (!attachments || attachments.length === 0)) || !currentSessionId || isLoading) return;
+
+    // Check for network connectivity
+    const networkStatus = await Network.getStatus();
+    if (!networkStatus.connected) {
+      toast.error('No Internet Connection. Please check your network to send messages.');
+      return;
+    }
 
     // Tone change logic
     const toneMatch = text.match(/change my tone to (formal|casual|happy|custom)/i);
