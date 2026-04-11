@@ -453,12 +453,12 @@ export default function App() {
           className={`fixed inset-y-0 ${sidebarPosition === 'right' ? 'right-0 border-l' : 'left-0 border-r'} z-50 w-72 bg-[#f8fafc] dark:bg-[#0a0a0a] shadow-2xl border-y-0 border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu gpu-accelerate`}
         >
           <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
-            <div className="flex items-center gap-2 font-montserrat font-bold text-slate-900 dark:text-white">
+            <div className={`flex items-center gap-2 font-montserrat font-bold ${isAwakened && theme === 'light' ? 'text-slate-900' : 'text-slate-900 dark:text-white'}`}>
               <span className="text-cyan-600 dark:text-[#00f2ff]">TIME</span> LINES
             </div>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-white"
+              className={`p-2 rounded-lg transition-colors ${isAwakened && theme === 'light' ? 'hover:bg-slate-200 text-slate-600' : 'hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white'}`}
             >
               <PanelLeftClose className="w-5 h-5" />
             </button>

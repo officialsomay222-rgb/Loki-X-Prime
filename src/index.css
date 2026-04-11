@@ -924,11 +924,22 @@ a:focus-visible {
   background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 242, 255, 0.1) 70%, rgba(189, 0, 255, 0.05) 100%);
 }
 
+html:not(.dark) .awakened-bg-aura {
+  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 242, 255, 0.15) 70%, rgba(189, 0, 255, 0.1) 100%);
+}
+
 .awakened-bg-nebula {
   background:
     radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.08), transparent 70%),
     radial-gradient(circle at 100% 100%, rgba(189, 0, 255, 0.05), transparent 50%),
     linear-gradient(to bottom, #050508, #0a0a12);
+}
+
+html:not(.dark) .awakened-bg-nebula {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.12), transparent 70%),
+    radial-gradient(circle at 100% 100%, rgba(189, 0, 255, 0.08), transparent 50%),
+    linear-gradient(to bottom, #ffffff, #f8fafc);
 }
 
 .dark .awakened-mode .bg-slate-50,
@@ -946,6 +957,11 @@ body.awakened-mode-active {
   overscroll-behavior: none;
 }
 
+html.awakened-mode-active:not(.dark),
+body.awakened-mode-active:not(.dark) {
+  background-color: #ffffff !important;
+}
+
 .dark .awakened-mode-active ::-webkit-scrollbar-track {
   background-color: #050508 !important;
 }
@@ -953,6 +969,17 @@ body.awakened-mode-active {
 .dark .awakened-mode-active ::-webkit-scrollbar-thumb {
   background-color: #333 !important;
   border: 2px solid #050508;
+}
+
+html.awakened-mode-active:not(.dark) ::-webkit-scrollbar-track,
+body.awakened-mode-active:not(.dark) ::-webkit-scrollbar-track {
+  background-color: #ffffff !important;
+}
+
+html.awakened-mode-active:not(.dark) ::-webkit-scrollbar-thumb,
+body.awakened-mode-active:not(.dark) ::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border: 2px solid #ffffff;
 }
 
 .dark .awakened-mode .text-slate-700,
@@ -964,6 +991,18 @@ body.awakened-mode-active {
 .dark .awakened-mode .text-slate-500,
 .dark .awakened-mode .text-slate-400 {
   color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: none !important;
+}
+
+html:not(.dark) .awakened-mode .text-slate-700,
+html:not(.dark) .awakened-mode .text-slate-600 {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html:not(.dark) .awakened-mode .text-slate-500,
+html:not(.dark) .awakened-mode .text-slate-400 {
+  color: #475569 !important;
   text-shadow: none !important;
 }
 
@@ -984,11 +1023,16 @@ body.awakened-mode-active {
 /* Light Theme Awakened Mode Styles */
 html:not(.dark) .awakened-mode .glass-panel {
   background: rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(0, 242, 255, 0.3) !important;
-  box-shadow: 0 12px 48px rgba(0, 242, 255, 0.1) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 242, 255, 0.4) !important;
+  box-shadow: 0 12px 48px rgba(0, 242, 255, 0.15), 0 0 15px rgba(0, 242, 255, 0.05) inset !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   transform: translateZ(0);
+}
+
+html:not(.dark) .awakened-mode .glass-panel:hover {
+  border-color: rgba(0, 242, 255, 0.6) !important;
+  box-shadow: 0 12px 48px rgba(0, 242, 255, 0.25), 0 0 20px rgba(0, 242, 255, 0.1) inset !important;
 }
 
 html:not(.dark) .awakened-mode .border-slate-200,

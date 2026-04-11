@@ -416,8 +416,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
     } else {
       document.documentElement.classList.remove('dark');
-      document.body.style.backgroundColor = '#f8fafc';
-      document.documentElement.style.backgroundColor = '#f8fafc';
+      document.body.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
+      document.documentElement.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
     }
 
     // Apply global CSS variables

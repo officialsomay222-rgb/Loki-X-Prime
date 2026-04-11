@@ -12,7 +12,7 @@ export const AwakenedBackground = memo(({ isAwakened, bgStyle, theme }: Awakened
       {/* Base Background Layer */}
       <div className={`absolute inset-0 transition-colors duration-700 ${
         isAwakened 
-          ? (theme === 'dark' ? 'bg-[#050508]' : 'bg-slate-50')
+          ? (theme === 'dark' ? 'bg-[#050508]' : 'bg-white')
           : (theme === 'dark' ? 'bg-[#08080c]' : 'bg-slate-50')
       }`} />
 
