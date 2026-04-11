@@ -581,10 +581,7 @@ export const MessageBubble = memo(
                     </div>
                   ) : message.isImage && message.content.startsWith("![") ? (
                     <MarkdownImage
-                      src={message.content.slice(
-                        message.content.indexOf("(data:image") + 1,
-                        -1,
-                      )}
+                      src={message.content.match(/\((.*?)\)/)?.[1] || ""}
                       alt="Generated Image"
                     />
                   ) : (
