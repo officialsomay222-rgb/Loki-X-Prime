@@ -137,7 +137,7 @@ const defaultSettings: Omit<SettingsState, 'setTheme' | 'setBgStyle' | 'setComma
   theme: 'dark',
   bgStyle: 'nebula',
   commanderName: 'Commander',
-  commanderEmail: 'officialsomay222@gmail.com',
+  commanderEmail: '',
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Loki',
   modelMode: 'pro',
   tone: 'formal',

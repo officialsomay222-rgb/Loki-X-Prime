@@ -797,7 +797,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-[10px] text-slate-400 dark:text-[#666] font-bold uppercase tracking-[0.2em]">Crafted with passion by</span>
                     <span className="text-base sm:text-lg font-black bg-gradient-to-r from-slate-900 via-blue-500 to-slate-900 dark:from-white dark:via-blue-400 dark:to-white bg-clip-text text-transparent drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-shimmer">
-                      Somay a.k.a. 🜲—͟͞ ✧𓄂 𓆩❍Ꮿꪀꫀ𝚁☠︎𓆪🥀
+                      Somay a.k.a. Owner bro
                     </span>
                   </div>
                 </motion.div>

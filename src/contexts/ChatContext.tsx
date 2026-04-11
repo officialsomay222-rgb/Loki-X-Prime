@@ -27,13 +27,16 @@ export type ChatSession = {
   messages: Message[];
   updatedAt: Date;
   isPinned?: boolean;
+  modelMode?: string;
+  draftText?: string;
+  draftAttachments?: { data: string, mimeType: string, url: string }[];
 };
 
 interface ChatState {
   sessions: ChatSession[];
   currentSessionId: string | null;
   isLoading: boolean;
-  createNewSession: () => void;
+  createNewSession: (initialModelMode?: string) => void;
   deleteSession: (id: string) => void;
   deleteMessage: (sessionId: string, messageId: string) => void;
   clearAllSessions: () => void;
@@ -43,6 +46,8 @@ interface ChatState {
   stopGeneration: () => void;
   renameSession: (id: string, title: string) => void;
   togglePinSession: (id: string) => void;
+  setSessionModelMode: (id: string, mode: string) => void;
+  saveSessionDraft: (id: string, text: string, attachments: any[]) => void;
 }
 
 const ChatContext = createContext<ChatState | undefined>(undefined);
@@ -157,19 +162,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     sessionsRef.current = sessions;
   }, [sessions]);
 
-  const createNewSession = useCallback(async () => {
+  const createNewSession = useCallback(async (initialModelMode?: string) => {
     const sessionId = generateId();
     try {
       await localDb.sessions.add({
         id: sessionId,
         title: 'New Awakening',
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        modelMode: initialModelMode || modelMode
       });
     } catch (e) {
       console.warn('Failed to save new session to IndexedDB:', e);
     }
     setCurrentSessionId(sessionId);
-  }, []);
+  }, [modelMode]);
 
   // Initialize first session if empty
   useEffect(() => {
@@ -200,9 +206,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     init();
   }, [createNewSession, sessions.length]);
 
-  const getFullSystemInstruction = useCallback(() => {
+  const getFullSystemInstruction = useCallback((sessionModelMode?: string) => {
+    const effectiveModelMode = sessionModelMode || modelMode;
     let modeInstruction = '';
-    switch(modelMode) {
+    switch(effectiveModelMode) {
       case 'fast': modeInstruction = `Provide concise, direct, and incredibly fast answers. Be sharp and to the point, but keep the human touch. `; break;
       case 'happy': modeInstruction = `Be extremely cheerful, enthusiastic, and positive! Talk like a highly energetic and supportive human friend. `; break;
       case 'pro': modeInstruction = `Provide detailed, step-by-step reasoning and advanced-level insights. Explain complex things simply, like an expert human mentor. `; break;
@@ -309,6 +316,23 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
   }, []);
 
+  const setSessionModelMode = useCallback(async (id: string, mode: string) => {
+    const session = await localDb.sessions.get(id);
+    if (session) {
+      session.modelMode = mode;
+      await localDb.sessions.put(session);
+    }
+  }, []);
+
+  const saveSessionDraft = useCallback(async (id: string, text: string, attachments: any[]) => {
+    const session = await localDb.sessions.get(id);
+    if (session) {
+      session.draftText = text;
+      session.draftAttachments = attachments;
+      await localDb.sessions.put(session);
+    }
+  }, []);
+
   const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -398,13 +422,16 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
         const imageMarkdown = `![Generated Image](${imageUrl})`;
         await updateSessionMessage(currentSessionId, modelMessageId, imageMarkdown);
       } else {
+        const currentSession = sessions.find(s => s.id === currentSessionId);
+        const sessionModelMode = currentSession?.modelMode || modelMode;
+
         const responseStream = await generateChatResponse({
           message: processedText,
           history,
-          mode: modelMode,
+          mode: sessionModelMode as 'pro' | 'fast' | 'happy',
           thinkingMode,
           searchGrounding,
-          systemInstruction: `${getFullSystemInstruction()}\n\nIMPORTANT: If the user input starts with [VOICE_INPUT], you are receiving a voice message. Bypass extensive reasoning or research. Keep your response concise, conversational, and direct. Provide a text answer as requested by the user.`,
+          systemInstruction: `${getFullSystemInstruction(sessionModelMode)}\n\nIMPORTANT: If the user input starts with [VOICE_INPUT], you are receiving a voice message. Bypass extensive reasoning or research. Keep your response concise, conversational, and direct. Provide a text answer as requested by the user.`,
           temperature,
           topP,
           topK,
@@ -486,8 +513,8 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const contextValue = React.useMemo(() => ({
     sessions: modifiedSessions, currentSessionId, isLoading,
-    createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession, togglePinSession
-  }), [modifiedSessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession, togglePinSession]);
+    createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession, togglePinSession, setSessionModelMode, saveSessionDraft
+  }), [modifiedSessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, renameSession, togglePinSession, setSessionModelMode, saveSessionDraft]);
 
   return (
     <ChatContext.Provider value={contextValue}>

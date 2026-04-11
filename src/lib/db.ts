@@ -9,6 +9,10 @@ export class ChatDatabase extends Dexie {
 
   constructor() {
     super('LokiChatDB');
+    this.version(3).stores({
+      sessions: 'id, title, updatedAt',
+      messages: 'id, sessionId, timestamp'
+    });
     this.version(2).stores({
       sessions: 'id, title, updatedAt',
       messages: 'id, sessionId, timestamp'

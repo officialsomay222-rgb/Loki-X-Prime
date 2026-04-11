@@ -130,7 +130,7 @@ export default function App() {
     resetSettings
   } = useSettings();
   const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(isAwakened, setIsAwakened);
-  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, togglePinSession, renameSession } = useChat();
+  const { sessions, currentSessionId, isLoading, createNewSession, deleteSession, deleteMessage, clearAllSessions, clearSessionMessages, setCurrentSessionId, sendMessage, stopGeneration, togglePinSession, renameSession, setSessionModelMode, saveSessionDraft } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<ChatInputHandle>(null);
@@ -147,12 +147,12 @@ export default function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault();
-        createNewSession();
+        createNewSession(modelMode);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [createNewSession, isCommandPaletteOpen, openModal, closeModal]);
+  }, [createNewSession, isCommandPaletteOpen, openModal, closeModal, modelMode]);
 
   const [showSkip, setShowSkip] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -289,11 +289,11 @@ export default function App() {
   };
 
   const handleCreateNewSession = useCallback(() => {
-    createNewSession();
+    createNewSession(modelMode);
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
-  }, [createNewSession]);
+  }, [createNewSession, modelMode]);
 
   const copyToClipboard = useCallback((text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -697,13 +697,21 @@ export default function App() {
               ref={inputRef}
               isAwakened={isAwakened}
               isLoading={isLoading}
-              modelMode={modelMode}
-              setModelMode={setModelMode}
+              modelMode={sessions.find(s => s.id === currentSessionId)?.modelMode || modelMode}
+              setModelMode={(mode) => {
+                setModelMode(mode as any);
+                if (currentSessionId) {
+                  setSessionModelMode(currentSessionId, mode);
+                }
+              }}
               onSendMessage={handleSendMessage}
               onDeleteSession={handleDeleteSession}
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
+              draftText={sessions.find(s => s.id === currentSessionId)?.draftText || ""}
+              draftAttachments={sessions.find(s => s.id === currentSessionId)?.draftAttachments || []}
+              saveSessionDraft={saveSessionDraft}
             />
           </div>
         </div>

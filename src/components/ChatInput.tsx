@@ -57,6 +57,9 @@ interface ChatInputProps {
   onStopGeneration?: () => void;
   enterToSend: boolean;
   isAwakened?: boolean;
+  draftText?: string;
+  draftAttachments?: { data: string, mimeType: string, url: string }[];
+  saveSessionDraft?: (id: string, text: string, attachments: any[]) => void;
 }
 
 export const ChatInput = memo(
@@ -72,10 +75,13 @@ export const ChatInput = memo(
         onStopGeneration,
         enterToSend,
         isAwakened,
+        draftText = "",
+        draftAttachments = [],
+        saveSessionDraft,
       },
       ref,
     ) => {
-      const [input, setInput] = useState("");
+      const [input, setInput] = useState(draftText);
       const [isOptionsOpen, setIsOptionsOpen] = useState(false);
       const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
       const [isImageMode, setIsImageMode] = useState(false);
@@ -109,7 +115,41 @@ export const ChatInput = memo(
         }
       }), [input]);
 
-      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>([]);
+      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
+
+      useEffect(() => {
+        setInput(draftText);
+        setAttachments(draftAttachments);
+      }, [currentSessionId]);
+
+      // Use a ref to track the latest input/attachments to avoid adding them to dependency array
+      const draftStateRef = useRef({ input, attachments });
+      useEffect(() => {
+        draftStateRef.current = { input, attachments };
+      }, [input, attachments]);
+
+      useEffect(() => {
+        if (!saveSessionDraft || !currentSessionId) return;
+
+        const timeoutId = setTimeout(() => {
+          saveSessionDraft(currentSessionId, input, attachments);
+        }, 500);
+
+        return () => {
+          clearTimeout(timeoutId);
+        };
+      }, [input, attachments, currentSessionId, saveSessionDraft]);
+
+      // Only save on unmount/session switch, reading from the ref to get latest state
+      useEffect(() => {
+        if (!saveSessionDraft || !currentSessionId) return;
+
+        return () => {
+           // When switching sessions, save the last known state of the *previous* session
+           saveSessionDraft(currentSessionId, draftStateRef.current.input, draftStateRef.current.attachments);
+        };
+      }, [currentSessionId, saveSessionDraft]);
+
       const fileInputRef = useRef<HTMLInputElement>(null);
       const micButtonRef = useRef<HTMLButtonElement>(null);
       const audioContextRef = useRef<AudioContext | null>(null);
@@ -243,6 +283,7 @@ export const ChatInput = memo(
         onSendMessage(input.trim(), isImageMode, undefined, attachments);
         setInput("");
         setAttachments([]);
+        if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
         if (inputRef.current) {
           inputRef.current.style.height = "auto";
         }
@@ -350,6 +391,9 @@ export const ChatInput = memo(
                     setIsSuccessFlash(true);
                     setTimeout(() => setIsSuccessFlash(false), 1000);
                     onSendMessage(text, isImageMode, audioUrl);
+                    setInput("");
+                    setAttachments([]);
+                    if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
                   } else {
                     const fallbackText = currentInput;
                     if (fallbackText) {
@@ -357,6 +401,9 @@ export const ChatInput = memo(
                       setIsSuccessFlash(true);
                       setTimeout(() => setIsSuccessFlash(false), 1000);
                       onSendMessage(fallbackText, isImageMode, audioUrl);
+                      setInput("");
+                      setAttachments([]);
+                      if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
                     }
                   }
                 } catch (error) {
@@ -369,6 +416,9 @@ export const ChatInput = memo(
                     setIsSuccessFlash(true);
                     setTimeout(() => setIsSuccessFlash(false), 1000);
                     onSendMessage(fallbackText, isImageMode, audioUrl);
+                    setInput("");
+                    setAttachments([]);
+                    if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
                   }
                 } finally {
                   setIsTranscribing(false);

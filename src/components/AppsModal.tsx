@@ -69,7 +69,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
                     className="text-3xl sm:text-5xl font-black tracking-tighter"
                   >
                     <span className="bg-gradient-to-r from-white via-cyan-400 to-blue-500 bg-clip-text text-transparent animate-gradient-x">
-                      Somay a.k.a. {commanderName}
+                      Somay a.k.a. Owner bro
                     </span>
                   </motion.h2>
                   <motion.p
