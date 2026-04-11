@@ -609,17 +609,31 @@ export const MessageBubble = memo(
                 <HeaderInfinityLogo className="w-full h-full" />
               </div>
             )}
-            <div className="flex items-center gap-2 px-1.5">
+            <div className="flex items-center gap-2 px-1.5 flex-wrap">
               <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase font-mono">
                 Loki Prime
               </span>
-              {timestampFormat !== 'hidden' && (
-                <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-slate-500 opacity-60">
-                  {timestampFormat === '24h' ? message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : formatDate(message.timestamp)}
-                </span>
+
+              {message.reasoning && (
+                <div className="flex items-center">
+                  <span className="text-slate-500 dark:text-slate-400 mx-1">•</span>
+                  <button
+                    onClick={() => setIsThinkingOpen(!isThinkingOpen)}
+                    className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono tracking-wider text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors uppercase"
+                  >
+                    <Sparkles className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                    <span>Loki's Thinking</span>
+                    {isThinkingOpen ? (
+                      <ChevronUp className="w-3 h-3 opacity-50" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 opacity-50" />
+                    )}
+                  </button>
+                </div>
               )}
+
             {!message.content && !message.audioUrl && (
-              <span className={`text-[9px] sm:text-[10px] font-mono ${accentClass} animate-pulse`}>
+              <span className={`text-[9px] sm:text-[10px] font-mono ${accentClass} animate-pulse ml-1`}>
                 {message.isImage ? "GENERATING..." : "THINKING..."}
               </span>
             )}
@@ -630,45 +644,30 @@ export const MessageBubble = memo(
             <div
               className={`relative transition-all duration-300 ${densityClass} text-slate-800/90 dark:text-white/90`}
             >
-              <div className={`markdown-body ${fontSizeClass} bg-transparent p-1`}>
-                {message.reasoning && (
-                  <div className="mb-4 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 transition-all duration-300">
-                    <button
-                      onClick={() => setIsThinkingOpen(!isThinkingOpen)}
-                      className="w-full flex items-center justify-between p-3 sm:p-4 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/5 transition-colors"
+              {message.reasoning && (
+                <AnimatePresence>
+                  {isThinkingOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden mb-4"
                     >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                        <span className="text-sm font-semibold tracking-wide">
-                          {isThinkingOpen ? "Hide thinking" : "Show thinking"}
-                        </span>
+                      <div className="bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 px-3 sm:px-4 py-3 sm:py-4 text-[0.85em] text-slate-600 dark:text-slate-400 italic">
+                        <MemoizedMarkdown
+                          content={message.reasoning}
+                          textReveal="none"
+                          animationSpeed="fast"
+                          codeTheme={codeTheme}
+                        />
                       </div>
-                      {isThinkingOpen ? (
-                        <ChevronUp className="w-4 h-4 opacity-50" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 opacity-50" />
-                      )}
-                    </button>
-                    <AnimatePresence>
-                      {isThinkingOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="px-3 sm:px-4 pb-3 sm:pb-4 text-[0.85em] text-slate-600 dark:text-slate-400 italic border-t border-slate-200 dark:border-white/10 pt-3 sm:pt-4"
-                        >
-                          <MemoizedMarkdown
-                            content={message.reasoning}
-                            textReveal="none"
-                            animationSpeed="fast"
-                            codeTheme={codeTheme}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+
+              <div className={`markdown-body ${fontSizeClass} bg-transparent p-1`}>
                 {message.audioUrl && (
                   <div className="mb-3">
                     <AudioPlayer url={message.audioUrl} autoPlay={false} />
