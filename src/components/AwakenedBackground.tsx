@@ -10,7 +10,7 @@ interface AwakenedBackgroundProps {
 
 export const AwakenedBackground = memo(({ isAwakened, bgStyle, theme }: AwakenedBackgroundProps) => {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
+    <div className="fixed inset-0 z-0 edge-to-edge-bg overflow-hidden pointer-events-none select-none">
       {/* Base Background Layer */}
       <div className={`absolute inset-0 transition-colors duration-700 ${
         isAwakened 
