@@ -71,10 +71,11 @@ const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default'
 const MarkdownImage = ({ node, ...props }: any) => {
   if (!props.src) return null;
 
-  // Clean URI for strict Android Capacitor WebViews which fail on spaces
+  // Clean URI for strict Android Capacitor WebViews which fail on unencoded characters
+  // pollonations.ai also returns unencoded () which might break strictly parsed views
   const safeSrc = props.src.startsWith('data:')
     ? props.src
-    : props.src.replace(/ /g, "%20");
+    : props.src.replace(/ /g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29');
 
   const isDataUri = safeSrc.startsWith("data:");
   const [hasError, setHasError] = useState(false);

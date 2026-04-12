@@ -159,7 +159,7 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
           throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
         }
         if (data.text) {
-          const match = data.text.match(/\!\[.*?\]\((.*?)\)/);
+          const match = data.text.match(/\!\[.*?\]\((.*)\)/);
           if (match && match[1]) {
             base64Result = match[1];
           } else {

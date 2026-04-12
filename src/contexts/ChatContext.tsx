@@ -349,8 +349,16 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     if ((!text.trim() && !audioUrl && (!attachments || attachments.length === 0)) || !currentSessionId || isLoading) return;
 
     // Check for network connectivity
-    const networkStatus = await Network.getStatus();
-    if (!networkStatus.connected) {
+    let isConnected = true;
+    try {
+      const networkStatus = await Network.getStatus();
+      isConnected = networkStatus.connected;
+    } catch (error) {
+      console.warn("Network.getStatus() failed, falling back to navigator.onLine", error);
+      isConnected = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    }
+
+    if (!isConnected) {
       toast.error('No Internet Connection. Please check your network to send messages.');
       return;
     }
