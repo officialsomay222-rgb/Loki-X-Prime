@@ -127,8 +127,8 @@ app.post("/api/tts", async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
 
-  if (!message || !mode) {
-    return res.status(400).json({ error: "Message and mode are required" });
+  if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
+    return res.status(400).json({ error: "Message or attachments are required" });
   }
 
   const setupSSE = () => {
@@ -157,8 +157,8 @@ app.post("/api/chat", async (req, res) => {
 
       const hasAttachments = attachments && attachments.length > 0;
 
-      if (hasAttachments) {
-        // When attachments are present uses Gemini
+      // Use Gemini if attachments, thinkingMode, or searchGrounding is requested
+      if (hasAttachments || thinkingMode || searchGrounding) {
         if (!apiKey) {
           return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
         }
@@ -179,7 +179,6 @@ app.post("/api/chat", async (req, res) => {
         }
 
         if (thinkingMode) {
-          // Thinking mode is only available for Gemini 3 series
           config.thinkingConfig = { thinkingLevel: "HIGH" };
         }
 
@@ -189,7 +188,7 @@ app.post("/api/chat", async (req, res) => {
           history.forEach((msg: any) => {
             if (msg.parts && msg.parts[0] && msg.parts[0].text) {
               contents.push({
-                role: msg.role === 'model' ? 'model' : 'user',
+                role: msg.role === 'model' || msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.parts[0].text }]
               });
             }
@@ -232,8 +231,8 @@ app.post("/api/chat", async (req, res) => {
         res.write(`data: [DONE]\n\n`);
         res.end();
 
-      } else if (mode === "fast" || mode === "pro" || mode === "happy") {
-        // Fast, Pro and Happy modes use Groq or HuggingFace as fallback
+      } else {
+        // Fast, Pro and Happy modes (without Gemini-specific features) use Groq or HuggingFace
         if (!groqKey && !hfKey) {
           return res.status(400).json({ error: "Groq or HuggingFace API Key is missing. Please add 'GROQ_API_KEY' or 'HF_TOKEN' to your AI Studio Secrets to enable Fast/Pro/Happy models." });
         }
@@ -246,7 +245,7 @@ app.post("/api/chat", async (req, res) => {
         const historyMessages = (history || [])
           .filter((msg: any) => msg?.parts?.[0]?.text && msg.parts[0].text.trim() !== "")
           .map((msg: any) => ({
-            role: msg.role === "model" ? "assistant" : "user",
+            role: msg.role === "model" || msg.role === "assistant" ? "assistant" : "user",
             content: msg.parts[0].text
           }));
 
@@ -254,7 +253,6 @@ app.post("/api/chat", async (req, res) => {
         if (message && message.trim() !== "") {
           messages.push({ role: "user", content: message });
         } else {
-          // If message is somehow empty, push a space to avoid 400 Bad Request
           messages.push({ role: "user", content: " " });
         }
 
@@ -305,23 +303,12 @@ app.post("/api/chat", async (req, res) => {
       }
 
     } else if (mode === "image") {
-      // Image Generation using Pollinations.ai (Free, no API key required)
       setupSSE();
-
-      // Ensure there is a prompt
       const prompt = message && message.trim().length > 0 ? message.trim() : "A beautiful sunset";
-
-      // Generate a random seed to avoid browser caching of the exact same prompt
       const seed = Math.floor(Math.random() * 1000000);
-
-      // Construct the Pollinations URL
-      // encodeURIComponent doesn't encode parentheses, so we manually encode them
       const encodedPrompt = encodeURIComponent(prompt).replace(/\(/g, '%28').replace(/\)/g, '%29');
       const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&width=1024&height=1024&nologo=true`;
-
-      // Send the image back in Markdown format
       const responseText = `![Generated Image](${imageUrl})\n\n*Image generated successfully!*`;
-
       res.write(`data: ${JSON.stringify({ text: responseText })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
@@ -332,19 +319,13 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error: any) {
     console.error("Chat API Error:", error);
-
     let errorMessage = error.message || "Internal server error while processing your request.";
-
-    // Attempt to extract cleaner error messages if it's a JSON string dump
     try {
-      // Sometimes errors are prefixed with a status code like "400 {\"error\":...}"
       const jsonStrMatch = errorMessage.match(/\{.*\}/s);
       if (jsonStrMatch) {
         const parsed = JSON.parse(jsonStrMatch[0]);
         if (parsed.error && parsed.error.message) {
-           // Groq or nested generic format
            let innerMsg = parsed.error.message;
-           // Gemini might double-encode the error inside the message
            try {
              const innerParsed = JSON.parse(innerMsg);
              if (innerParsed.error && innerParsed.error.message) {
@@ -356,12 +337,8 @@ app.post("/api/chat", async (req, res) => {
            errorMessage = parsed.message;
         }
       }
-    } catch (e) {
-      // Leave errorMessage as is if parsing fails
-    }
-
+    } catch (e) {}
     const statusCode = error.status || error.statusCode || 500;
-
     if (!res.headersSent) {
       res.status(statusCode).json({ error: errorMessage });
     } else {

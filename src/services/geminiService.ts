@@ -1,15 +1,12 @@
 import { GoogleGenAI, Type, ThinkingLevel, Modality, GenerateContentConfig } from "@google/genai";
 
 const getApiKey = () => {
+  // Only use VITE_ prefixed keys on the client to avoid leaking server-side secrets
   let key = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-         (import.meta as any).env?.VITE_GOOGLE_AI_KEY || 
-         process.env.GEMINI_API_KEY || 
-         process.env.GOOGLE_AI_KEY;
+         (import.meta as any).env?.VITE_GOOGLE_AI_KEY;
   if (key && (key.includes("MY_GEMINI") || key.includes("YOUR_"))) return undefined;
   return key;
 };
-
-// We don't need getGroqKey in the frontend anymore since we're calling the backend API.
 
 export const generateChatResponse = async (params: {
   message: string;
@@ -23,173 +20,87 @@ export const generateChatResponse = async (params: {
   topK?: number;
   attachments?: { data: string, mimeType: string }[];
 }) => {
-  const hasAttachments = params.attachments && params.attachments.length > 0;
-
-  if (hasAttachments) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      // Mock response for missing API key
-      async function* mockStream() {
-        yield { text: "Commander, your Google AI API key is missing. Please set VITE_GEMINI_API_KEY in your environment variables to activate my full intelligence. For now, I'm running in demo mode." };
-      }
-      return mockStream();
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-    let modelName = "gemini-3.1-flash-lite-preview";
-    
-    const config: GenerateContentConfig = {
+  // All chat responses are now routed through the backend to ensure security of API keys
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: params.message,
+      history: params.history?.map((msg) => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+      })),
+      mode: params.mode,
       systemInstruction: params.systemInstruction,
-      temperature: params.temperature || 0.7,
-      topP: params.topP || 0.95,
-      topK: params.topK || 64,
-    };
+      temperature: params.temperature,
+      topP: params.topP,
+      topK: params.topK,
+      thinkingMode: params.thinkingMode,
+      searchGrounding: params.searchGrounding,
+      attachments: params.attachments
+    }),
+  });
 
-    if (params.searchGrounding) {
-      modelName = "gemini-3-flash-preview";
-      config.tools = [{ googleSearch: {} }];
-    }
+  if (!response.ok) {
+    let errorMsg = `Server returned ${response.status}`;
+    try {
+      const errData = await response.json();
+      if (errData.error) {
+        errorMsg = typeof errData.error === 'string' ? errData.error : JSON.stringify(errData.error);
+      } else if (errData.message) {
+        errorMsg = errData.message;
+      }
+    } catch (e) {}
+    throw new Error(errorMsg);
+  }
 
-    if (params.thinkingMode) {
-      config.thinkingConfig = { thinkingLevel: ThinkingLevel.HIGH };
-    }
+  if (!response.body) {
+    throw new Error("No response body returned from server.");
+  }
 
-    const contents: any[] = [];
-    if (params.history && Array.isArray(params.history)) {
-      params.history.forEach((msg) => {
-        if (msg.content) {
-          contents.push({
-            role: msg.role === 'model' ? 'model' : 'user',
-            parts: [{ text: msg.content }]
-          });
-        }
-      });
-    }
-    
-    const userParts: any[] = [];
-    if (hasAttachments) {
-      params.attachments!.forEach((att) => {
-        userParts.push({
-          inlineData: {
-            data: att.data,
-            mimeType: att.mimeType
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  async function* streamResponse() {
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6);
+          if (dataStr === '[DONE]') return;
+
+          let data;
+          try {
+            data = JSON.parse(dataStr);
+          } catch (e) {
+            continue;
           }
-        });
-      });
-    }
-    if (params.message && params.message.trim().length > 0) {
-      userParts.push({ text: params.message });
-    } else if (hasAttachments) {
-      userParts.push({ text: "Please analyze this image." });
-    } else {
-      userParts.push({ text: " " });
-    }
-    
-    contents.push({ role: 'user', parts: userParts });
 
-    const responseStream = await ai.models.generateContentStream({
-      model: modelName,
-      contents: contents,
-      config: config
-    });
-
-    async function* streamResponse() {
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          yield { text: chunk.text };
-        }
-      }
-    }
-    return streamResponse();
-
-  } else if (params.mode === "fast" || params.mode === "pro" || params.mode === "happy") {
-    // Pro and Happy modes use the Express backend to securely connect to Groq
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: params.message,
-        history: params.history?.map((msg) => ({
-          role: msg.role,
-          parts: [{ text: msg.content }] // Backend expects this format
-        })),
-        mode: params.mode,
-        systemInstruction: params.systemInstruction,
-        temperature: params.temperature,
-        topP: params.topP,
-      }),
-    });
-
-    if (!response.ok) {
-      // If there's an error, try to parse the error message, or fallback to generic
-      let errorMsg = `Server returned ${response.status}`;
-      try {
-        const errData = await response.json();
-        if (errData.error) {
-          errorMsg = typeof errData.error === 'string' ? errData.error : JSON.stringify(errData.error);
-        } else if (errData.message) {
-          errorMsg = errData.message;
-        }
-      } catch (e) {
-        // Failed to parse JSON, stick with generic
-      }
-      throw new Error(errorMsg);
-    }
-
-    if (!response.body) {
-      throw new Error("No response body returned from server.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    async function* streamResponse() {
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-
-        // Keep the last partial event in the buffer
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') {
+          if (data.error) {
+            if (typeof data.error === 'string' && data.error.includes("Groq or HuggingFace API Key is missing")) {
+              yield { text: "Commander, your Groq or HuggingFace API key is missing. Please add 'GROQ_API_KEY' or 'HF_TOKEN' to your AI Studio Secrets to enable Pro/Happy models." };
+              return;
+            } else if (typeof data.error === 'string' && data.error.includes("Groq API Key is missing")) {
+              yield { text: "Commander, your Groq API key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets to enable Pro/Happy models." };
               return;
             }
-            let data;
-            try {
-              data = JSON.parse(dataStr);
-            } catch (e) {
-              console.error("Error parsing SSE data:", e, "Raw data:", dataStr);
-              continue;
-            }
-
-            if (data.error) {
-              if (typeof data.error === 'string' && data.error.includes("Groq or HuggingFace API Key is missing")) {
-                yield { text: "Commander, your Groq or HuggingFace API key is missing. Please add 'GROQ_API_KEY' or 'HF_TOKEN' to your AI Studio Secrets to enable Pro/Happy models." };
-                return;
-              } else if (typeof data.error === 'string' && data.error.includes("Groq API Key is missing")) {
-                yield { text: "Commander, your Groq API key is missing. Please add 'GROQ_API_KEY' to your AI Studio Secrets to enable Pro/Happy models." };
-                return;
-              }
-              throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
-            }
-            if (data.text) {
-              yield { text: data.text };
-            }
+            throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+          }
+          if (data.text) {
+            yield { text: data.text };
           }
         }
       }
     }
-    return streamResponse();
   }
-  
-  throw new Error("Invalid mode selected");
+  return streamResponse();
 };
 
 export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = '1K') => {
@@ -211,9 +122,7 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
       } else if (errData.message) {
         errorMsg = errData.message;
       }
-    } catch (e) {
-      // Failed to parse JSON, stick with generic
-    }
+    } catch (e) {}
     throw new Error(errorMsg);
   }
 
@@ -232,21 +141,17 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
 
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n\n');
-
-    // Keep the last partial event in the buffer
     buffer = lines.pop() || "";
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         const dataStr = line.slice(6);
-        if (dataStr === '[DONE]') {
-          break;
-        }
+        if (dataStr === '[DONE]') break;
+
         let data;
         try {
           data = JSON.parse(dataStr);
         } catch (e) {
-          // Ignore parsing errors for empty or keep-alive lines
           continue;
         }
 
@@ -254,12 +159,10 @@ export const generateImage = async (prompt: string, _size: '1K' | '2K' | '4K' = 
           throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
         }
         if (data.text) {
-          // Extract the base64 URL from the markdown ![Generated Image](url)
           const match = data.text.match(/\!\[.*?\]\((.*?)\)/);
           if (match && match[1]) {
             base64Result = match[1];
           } else {
-             // Fallback if the raw text is the URL
              base64Result = data.text;
           }
         }
@@ -299,7 +202,7 @@ export const connectLiveSession = (callbacks: {
   onclose: () => void;
 }, systemInstruction?: string) => {
   const apiKey = getApiKey();
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set. Please set VITE_GEMINI_API_KEY in your environment to use Live Voice.");
 
   const ai = new GoogleGenAI({ apiKey });
   
