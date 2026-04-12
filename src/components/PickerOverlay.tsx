@@ -43,10 +43,10 @@ export const PickerOverlay: React.FC<PickerOverlayProps> = ({ showPicker, setSho
                               showPicker.onChange(val);
                               setShowPicker(null);
                             }}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isSelected ? 'bg-slate-900 dark:bg-white text-white dark:text-black' : 'hover:bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isSelected ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'hover:bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white'}`}
                           >
                             <div className="flex items-center gap-3">
-                              {Icon && <Icon className={`w-4 h-4 ${isSelected ? 'text-white dark:text-black' : 'text-slate-500 dark:text-[#717171]'}`} />}
+                              {Icon && <Icon className={`w-4 h-4 ${isSelected ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-[#717171]'}`} />}
                               <span className="text-sm font-bold capitalize">{label}</span>
                             </div>
                             {isSelected && <Zap className="w-3.5 h-3.5" />}

@@ -84,7 +84,7 @@ export default function App() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const { 
-    theme, setTheme, 
+    theme, resolvedTheme, setTheme,
     bgStyle, setBgStyle, 
     commanderName, setCommanderName, 
     avatarUrl, setAvatarUrl,
@@ -389,7 +389,7 @@ export default function App() {
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       <NetworkStatusIndicator />
       {/* 1. Background Layer (Fixed, never moves) */}
-      <AwakenedBackground isAwakened={isAwakened || effectBackground} bgStyle={bgStyle} theme={theme} />
+      <AwakenedBackground isAwakened={isAwakened || effectBackground} bgStyle={bgStyle} theme={resolvedTheme} />
 
       {/* 2. Awakening Overlays */}
       {awakening && (

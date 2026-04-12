@@ -72,7 +72,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { name: string, em
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSave(tempName, tempEmail)}
-          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold transition-all mt-4 shadow-xl"
+          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all mt-4 shadow-xl"
         >
           Save Changes
         </motion.button>
@@ -333,7 +333,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     whileHover={{ scale: 1.05, backgroundColor: "#f0f0f0" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowEditProfile(true)}
-                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5"
+                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5"
                   >
                     Edit Profile
                   </motion.button>
@@ -421,7 +421,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setModelMode(m as any)}
-                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
+                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
                             >
                               {m}
                             </motion.button>

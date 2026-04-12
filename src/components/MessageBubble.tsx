@@ -70,7 +70,13 @@ const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default'
 
 const MarkdownImage = ({ node, ...props }: any) => {
   if (!props.src) return null;
-  const isDataUri = props.src?.startsWith("data:");
+
+  // Clean URI for strict Android Capacitor WebViews which fail on spaces
+  const safeSrc = props.src.startsWith('data:')
+    ? props.src
+    : props.src.replace(/ /g, "%20");
+
+  const isDataUri = safeSrc.startsWith("data:");
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -84,6 +90,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
         {!hasError ? (
           <img
             {...props}
+            src={safeSrc}
             className={`w-full h-full object-cover transition-all duration-700 ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
             referrerPolicy="no-referrer"
             loading="lazy"
@@ -189,7 +196,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
               onClick={(e) => {
                 e.stopPropagation();
                 const link = document.createElement("a");
-                link.href = props.src;
+                link.href = safeSrc;
                 link.download = `loki-prime-gen-${Date.now()}.jpg`;
                 document.body.appendChild(link);
                 link.click();

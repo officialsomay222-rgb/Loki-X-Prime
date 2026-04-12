@@ -297,8 +297,10 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
   const clearAllSessions = useCallback(async () => {
     await localDb.sessions.clear();
     await localDb.messages.clear();
-    createNewSession();
-  }, [createNewSession]);
+    // Intentionally omit createNewSession() here because
+    // the useLiveQuery useEffect will automatically detect
+    // sessions.length === 0 and create one, avoiding duplicates.
+  }, []);
 
   const renameSession = useCallback(async (id: string, title: string) => {
     const session = await localDb.sessions.get(id);
