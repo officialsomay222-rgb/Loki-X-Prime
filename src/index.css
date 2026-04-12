@@ -249,6 +249,16 @@ body {
   @apply bg-white dark:bg-[#050508];
 }
 
+/* Base App Wrapper to handle native system bars */
+.app-wrapper {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 ::selection {
   background-color: rgba(0, 242, 255, 0.3);
   color: inherit;

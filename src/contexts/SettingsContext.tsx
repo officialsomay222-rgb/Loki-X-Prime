@@ -596,8 +596,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
         if (Capacitor.isNativePlatform()) {
           StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+          StatusBar.setBackgroundColor({ color: "#00000000" }).catch(() => {});
+          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
           NavigationBar.setColor({
-            color: isAwakened ? "#050508" : "#08080c",
+            color: "#00000000",
             darkButtons: false,
           }).catch(() => {});
         }
@@ -612,15 +614,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
         if (Capacitor.isNativePlatform()) {
           StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+          StatusBar.setBackgroundColor({ color: "#00000000" }).catch(() => {});
+          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
           NavigationBar.setColor({
-            color: isAwakened ? "#ffffff" : "#f8fafc",
+            color: "#00000000",
             darkButtons: true,
           }).catch(() => {});
         }
-      }
-
-      if (Capacitor.isNativePlatform()) {
-        NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
       }
     };
 

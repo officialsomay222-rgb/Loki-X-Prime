@@ -537,7 +537,7 @@ export default function App() {
 
   return (
     <div
-      className={`w-full h-full relative overflow-hidden flex flex-col ${theme} ${isAwakened ? "awakened-mode" : ""} ${fontClass}`}
+      className={`app-wrapper ${theme} ${isAwakened ? "awakened-mode" : ""} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
       <NetworkStatusIndicator />
@@ -779,7 +779,7 @@ export default function App() {
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
           {/* Header Spacer for Safe Area (instead of editing header height) */}
           <div
-            className={`w-full shrink-0 z-20 ${resolvedTheme === "light" ? "bg-[#ffffff]" : "bg-[#08080c]"}`}
+            className={`w-full shrink-0 z-20 bg-transparent`}
             style={{ height: "env(safe-area-inset-top)" }}
           ></div>
 
@@ -960,7 +960,10 @@ export default function App() {
           </AnimatePresence>
 
           {/* Input Area - Flex Item (Not Absolute) */}
-          <div className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}>
+          <div
+            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
             <ChatInput
               ref={inputRef}
               isAwakened={isAwakened}
