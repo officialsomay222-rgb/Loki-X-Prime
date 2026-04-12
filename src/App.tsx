@@ -704,7 +704,7 @@ export default function App() {
               ref={inputRef}
               isAwakened={isAwakened}
               isLoading={isLoading}
-              modelMode={sessions.find(s => s.id === currentSessionId)?.modelMode || modelMode}
+              modelMode={currentSession?.modelMode || modelMode}
               setModelMode={(mode) => {
                 setModelMode(mode as any);
                 if (currentSessionId) {
@@ -716,8 +716,8 @@ export default function App() {
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
-              draftText={sessions.find(s => s.id === currentSessionId)?.draftText || ""}
-              draftAttachments={sessions.find(s => s.id === currentSessionId)?.draftAttachments || []}
+              draftText={currentSession?.draftText || ""}
+              draftAttachments={currentSession?.draftAttachments || []}
               saveSessionDraft={saveSessionDraft}
             />
           </div>
