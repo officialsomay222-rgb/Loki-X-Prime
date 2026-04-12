@@ -553,8 +553,8 @@ export default function App() {
         <div
           className="fixed inset-0 z-[100000] pointer-events-none flex justify-center items-center"
           style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
           {/* Shockwave rendered strictly behind the avatar container */}
@@ -643,7 +643,7 @@ export default function App() {
         >
           <div
             className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 shrink-0"
-            style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+            style={{ paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }}
           >
             <div
               className={`flex items-center gap-2 font-montserrat font-bold ${isAwakened && theme === "light" ? "text-slate-900" : "text-slate-900 dark:text-white"}`}
@@ -780,10 +780,10 @@ export default function App() {
 
           {/* Header */}
           <header
-            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#08080c] premium-shadow z-30 shrink-0 h-16 sm:h-20"
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#08080c] premium-shadow z-30 shrink-0"
             style={{
-              paddingTop: "env(safe-area-inset-top)",
-              height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top))",
+              paddingTop: "env(safe-area-inset-top, 0px)",
+              height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top, 0px))",
             }}
           >
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
@@ -881,11 +881,11 @@ export default function App() {
             }}
           >
             {/* Inner spacer for floating header */}
-            <div style={{ height: "calc(var(--header-height, 4rem) + 16px + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
+            <div style={{ height: "calc(var(--header-height, 4rem) + 16px + env(safe-area-inset-top, 0px))", width: "100%", flexShrink: 0 }}></div>
 
             <div
               className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${!currentSession || currentSession.messages.length === 0 ? "justify-center items-center" : "pt-4 space-y-6 sm:space-y-8"}`}
-              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (var(--header-height, 4rem) + 16px + env(safe-area-inset-top)))" } : {}}
+              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (var(--header-height, 4rem) + 16px + env(safe-area-inset-top, 0px)))" } : {}}
             >
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div
