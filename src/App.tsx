@@ -640,12 +640,11 @@ export default function App() {
             mass: 0.8,
           }}
           className={`fixed inset-y-0 ${sidebarPosition === "right" ? "right-0 border-l" : "left-0 border-r"} z-50 w-72 bg-[#f8fafc] dark:bg-[#0a0a0a] shadow-2xl border-y-0 border-slate-200/30 dark:border-white/5 flex flex-col transform-gpu gpu-accelerate`}
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
         >
-          <div className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5">
+          <div
+            className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 shrink-0"
+            style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+          >
             <div
               className={`flex items-center gap-2 font-montserrat font-bold ${isAwakened && theme === "light" ? "text-slate-900" : "text-slate-900 dark:text-white"}`}
             >
@@ -679,6 +678,7 @@ export default function App() {
               WebkitOverflowScrolling: "touch",
               transform: "translateZ(0)",
               willChange: "transform",
+              paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))",
             }}
           >
             <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
@@ -777,14 +777,15 @@ export default function App() {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
-          {/* Header Spacer for Safe Area (instead of editing header height) */}
-          <div
-            className={`w-full shrink-0 z-20 bg-transparent`}
-            style={{ height: "env(safe-area-inset-top)" }}
-          ></div>
 
           {/* Header */}
-          <header className="h-16 sm:h-20 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-10 shrink-0">
+          <header
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-50 shrink-0"
+            style={{
+              paddingTop: "env(safe-area-inset-top)",
+              height: "calc(4rem + env(safe-area-inset-top))",
+            }}
+          >
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               {!isSidebarOpen && (
                 <button
@@ -879,8 +880,12 @@ export default function App() {
               willChange: "transform",
             }}
           >
+            {/* Inner spacer for floating header */}
+            <div style={{ height: "calc(4rem + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
+
             <div
               className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${!currentSession || currentSession.messages.length === 0 ? "justify-center items-center" : "pt-4 space-y-6 sm:space-y-8"}`}
+              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (4rem + env(safe-area-inset-top)))" } : {}}
             >
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div
@@ -962,7 +967,7 @@ export default function App() {
           {/* Input Area - Flex Item (Not Absolute) */}
           <div
             className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            /* Removing style prop because ChatInput component handles its own bottom padding */
           >
             <ChatInput
               ref={inputRef}
