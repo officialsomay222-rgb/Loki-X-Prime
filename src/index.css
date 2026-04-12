@@ -1259,20 +1259,10 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 }
 
 /* Ensure absolute backgrounds stretch to true edges, ignoring safe area padding */
-.edge-to-edge-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  /* Negative margins to counteract parent padding if applied to a child */
-  margin-left: calc(-1 * env(safe-area-inset-left, 0px));
-  margin-right: calc(-1 * env(safe-area-inset-right, 0px));
-}
 
 /* Fix for dynamic viewport and safe area app wrapper */
 .app-wrapper {
+
   height: 100dvh;
   width: 100%;
   position: relative;
@@ -1281,4 +1271,19 @@ html:not(.dark) .awakened-mode .glass-button:hover {
   flex-direction: column;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Ensure absolute backgrounds stretch to true edges, ignoring safe area padding */
+.edge-to-edge-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  /* Negative margins to counteract parent padding if applied to a child */
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+  margin-bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  margin-left: calc(-1 * env(safe-area-inset-left, 0px));
+  margin-right: calc(-1 * env(safe-area-inset-right, 0px));
 }

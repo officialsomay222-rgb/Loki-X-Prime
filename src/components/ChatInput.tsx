@@ -794,7 +794,7 @@ export const ChatInput = memo(
       };
 
       return (
-        <div className="w-full pt-1 px-3 sm:px-6 bg-transparent" style={{ paddingBottom: 'calc(max(env(safe-area-inset-bottom), 1rem) + 0.5rem)' }}>
+        <div className="w-full pt-1 px-3 sm:px-6 bg-transparent" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)' }}>
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ 
