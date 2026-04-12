@@ -34,13 +34,6 @@ public class MainActivity extends BridgeActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         }
 
-        // Fallback for extremely strict skins (like Funtouch OS)
-        window.getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        );
-
         // Prevent Android 10+ from artificially adding grey overlays for contrast
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.setStatusBarContrastEnforced(false);
