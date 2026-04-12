@@ -417,28 +417,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.add('dark');
       document.body.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
       document.documentElement.style.backgroundColor = isAwakened ? '#050508' : '#08080c';
-      try {
-        if (Capacitor.isNativePlatform()) {
-          StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-          NavigationBar.setColor({ color: '#08080c', darkButtons: false }).catch(() => {});
-          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
-        }
-      } catch (e) {
-        console.warn('System Bar dark config failed', e);
-      }
     } else {
       document.documentElement.classList.remove('dark');
       document.body.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
       document.documentElement.style.backgroundColor = isAwakened ? '#ffffff' : '#f8fafc';
-      try {
-        if (Capacitor.isNativePlatform()) {
-          StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-          NavigationBar.setColor({ color: '#f8fafc', darkButtons: true }).catch(() => {});
-          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
-        }
-      } catch (e) {
-        console.warn('System Bar light config failed', e);
-      }
     }
 
     // Apply global CSS variables
