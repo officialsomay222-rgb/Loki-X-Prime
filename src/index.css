@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --header-height: 4rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --header-height: 5rem;
+  }
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;

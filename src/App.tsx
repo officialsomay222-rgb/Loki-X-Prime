@@ -780,10 +780,10 @@ export default function App() {
 
           {/* Header */}
           <header
-            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-30 shrink-0"
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#08080c] premium-shadow z-30 shrink-0 h-16 sm:h-20"
             style={{
-              marginTop: "env(safe-area-inset-top)",
-              height: "4rem",
+              paddingTop: "env(safe-area-inset-top)",
+              height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top))",
             }}
           >
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
@@ -881,11 +881,11 @@ export default function App() {
             }}
           >
             {/* Inner spacer for floating header */}
-            <div style={{ height: "calc(4rem + 16px + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
+            <div style={{ height: "calc(var(--header-height, 4rem) + 16px + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
 
             <div
               className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${!currentSession || currentSession.messages.length === 0 ? "justify-center items-center" : "pt-4 space-y-6 sm:space-y-8"}`}
-              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (4rem + env(safe-area-inset-top)))" } : {}}
+              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (var(--header-height, 4rem) + 16px + env(safe-area-inset-top)))" } : {}}
             >
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div
@@ -968,7 +968,6 @@ export default function App() {
           <div
             className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
             style={{
-              paddingBottom: "env(safe-area-inset-bottom)",
               marginBottom: "8px",
             }}
           >

@@ -13,6 +13,9 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'native',
       resizeOnFullScreen: true,
+    },
+    StatusBar: {
+      overlaysWebView: true,
     }
   }
 };
