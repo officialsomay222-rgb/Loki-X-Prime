@@ -780,10 +780,10 @@ export default function App() {
 
           {/* Header */}
           <header
-            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-50 shrink-0"
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200/30 dark:border-white/5 glass-panel premium-shadow !border-t-0 !border-l-0 !border-r-0 z-30 shrink-0"
             style={{
-              paddingTop: "env(safe-area-inset-top)",
-              height: "calc(4rem + env(safe-area-inset-top))",
+              marginTop: "env(safe-area-inset-top)",
+              height: "4rem",
             }}
           >
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
@@ -881,7 +881,7 @@ export default function App() {
             }}
           >
             {/* Inner spacer for floating header */}
-            <div style={{ height: "calc(4rem + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
+            <div style={{ height: "calc(4rem + 16px + env(safe-area-inset-top))", width: "100%", flexShrink: 0 }}></div>
 
             <div
               className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${!currentSession || currentSession.messages.length === 0 ? "justify-center items-center" : "pt-4 space-y-6 sm:space-y-8"}`}
@@ -967,7 +967,10 @@ export default function App() {
           {/* Input Area - Flex Item (Not Absolute) */}
           <div
             className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
-            /* Removing style prop because ChatInput component handles its own bottom padding */
+            style={{
+              paddingBottom: "env(safe-area-inset-bottom)",
+              marginBottom: "8px",
+            }}
           >
             <ChatInput
               ref={inputRef}
