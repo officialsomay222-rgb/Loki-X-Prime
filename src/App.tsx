@@ -736,7 +736,7 @@ export default function App() {
 
           <div
             className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2 mt-auto"
-            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
           >
             {sessions.length > 0 && (
               <motion.button
@@ -783,7 +783,7 @@ export default function App() {
 
           {/* Header */}
           <header
-            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#08080c] premium-shadow z-30 shrink-0"
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50/80 dark:bg-[#08080c]/80 backdrop-blur-md premium-shadow z-30 shrink-0"
             style={{
               paddingTop: "env(safe-area-inset-top, 0px)",
               height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top, 0px))",

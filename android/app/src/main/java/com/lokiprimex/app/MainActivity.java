@@ -3,7 +3,6 @@ package com.lokiprimex.app;
 import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Color;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import androidx.core.view.WindowCompat;
@@ -12,12 +11,12 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Enforce true edge-to-edge for API 35 (Android 15) and below.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         super.onCreate(savedInstanceState);
 
         Window window = getWindow();
-
-        // Ensure standard edge-to-edge layout is active
-        WindowCompat.setDecorFitsSystemWindows(window, false);
 
         // Aggressively force layout to extend into the cutout/notch area
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -30,7 +29,7 @@ public class MainActivity extends BridgeActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.setStatusBarColor(Color.TRANSPARENT);
             window.setNavigationBarColor(Color.TRANSPARENT);
-            // Disable background draw constraints to allow full bleed
+            // Required for setStatusBarColor to work
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         }
 
