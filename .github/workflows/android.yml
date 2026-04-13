@@ -38,6 +38,12 @@ jobs:
       - name: Build web app
         run: npm run build
 
+      - name: Generate Assets
+        run: |
+          mkdir -p android/app/src/main/res/values
+          echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Loki Prime X</string></resources>' > android/app/src/main/res/values/strings.xml
+          npx @capacitor/assets generate --android --assetPath assets
+
       - name: Capacitor Sync
         run: npx cap sync android
 
@@ -46,23 +52,30 @@ jobs:
           rm -rf ~/.gradle/caches/
           rm -f android/gradle/wrapper/gradle-wrapper.jar
 
+      - name: Build Android App
+        run: |
+          cd android
+          gradle assembleRelease --no-daemon --refresh-dependencies
+
       - name: Generate Keystore
         run: |
           cd android/app
           keytool -genkey -v -keystore release.keystore -alias loki -keyalg RSA -keysize 2048 -validity 10000 -storepass loki123 -keypass loki123 -dname "CN=Loki Prime X, OU=Loki, O=Loki, L=Delhi, ST=Delhi, C=IN"
 
-      - name: Build Android App
-        env:
-          KEYSTORE_FILE: release.keystore
-          KEYSTORE_PASSWORD: loki123
-          KEY_ALIAS: loki
-          KEY_PASSWORD: loki123
+      - name: Sign APK
         run: |
-          cd android
-          gradle assembleRelease --no-daemon --refresh-dependencies
+          cd android/app/build/outputs/apk/release
+          # Find latest build tools
+          BUILD_TOOLS_PATH=$(ls -d /usr/local/lib/android/sdk/build-tools/* | tail -1)
+
+          # Zipalign the unsigned APK
+          $BUILD_TOOLS_PATH/zipalign -v -p 4 app-release-unsigned.apk app-release-aligned.apk
+
+          # Sign the aligned APK
+          $BUILD_TOOLS_PATH/apksigner sign --ks ../../../../../../android/app/release.keystore --ks-key-alias loki --ks-pass pass:loki123 --key-pass pass:loki123 --out app-release-signed.apk app-release-aligned.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: app-release-signed
+          path: android/app/build/outputs/apk/release/app-release-signed.apk
