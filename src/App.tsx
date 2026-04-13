@@ -9,6 +9,9 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
+import { StatusBar } from '@capacitor/status-bar';
+import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar';
+import { Capacitor } from '@capacitor/core';
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
@@ -229,6 +232,11 @@ export default function App() {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setOverlaysWebView({ overlay: true }).catch(console.error);
+      NavigationBar.setTransparency({ isTransparent: true }).catch(console.error);
+    }
+
     const timer = setTimeout(() => {
       setIsBooting(false);
     }, 4000);
