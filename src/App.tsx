@@ -734,7 +734,10 @@ export default function App() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2">
+          <div
+            className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2 mt-auto"
+            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+          >
             {sessions.length > 0 && (
               <motion.button
                 whileTap={{ scale: 0.97 }}
