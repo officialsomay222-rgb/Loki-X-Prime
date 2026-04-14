@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Keyboard: {
-      resize: 'native',
+      resize: 'native' as any,
       resizeOnFullScreen: true,
     },
     StatusBar: {

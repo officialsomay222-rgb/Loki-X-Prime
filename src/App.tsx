@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
 import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
@@ -228,6 +229,22 @@ export default function App() {
 
   const [showSkip, setShowSkip] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      Keyboard.addListener('keyboardWillShow', () => {
+        setIsKeyboardOpen(true);
+      });
+      Keyboard.addListener('keyboardWillHide', () => {
+        setIsKeyboardOpen(false);
+      });
+
+      return () => {
+        Keyboard.removeAllListeners();
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -901,6 +918,12 @@ export default function App() {
                 >
                   <div
                     className={`relative flex justify-center items-center transition-all duration-700 ${isAwakened ? "w-full max-w-[480px] sm:max-w-[700px] aspect-[2/1]" : "w-full max-w-[200px] sm:max-w-[280px] aspect-[2/1]"}`}
+                    style={{
+                      opacity: isKeyboardOpen ? 0 : 1,
+                      transform: isKeyboardOpen ? "scale(0.8)" : "scale(1)",
+                      pointerEvents: isKeyboardOpen ? "none" : "auto",
+                      maxHeight: isKeyboardOpen ? "0px" : "auto"
+                    }}
                   >
                     {isAwakened ? (
                       <div className="relative w-full h-full awakened-logo-container flex items-center justify-center">
@@ -919,7 +942,7 @@ export default function App() {
                       <InfinityLogo />
                     )}
                   </div>
-                  <div className="relative">
+                  <div className="relative" style={{ opacity: isKeyboardOpen ? 0 : 1, transition: 'opacity 0.3s ease' }}>
                     <p
                       className={`text-slate-500 dark:text-[#6b6b80] tracking-[4px] sm:tracking-[8px] text-[0.65rem] sm:text-xs font-montserrat font-bold uppercase drop-shadow-sm px-4 transition-all duration-1000 ${isAwakened ? "text-cyan-300 animate-pulse" : "opacity-80 hover:opacity-100"}`}
                       style={
