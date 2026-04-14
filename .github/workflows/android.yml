@@ -60,6 +60,7 @@ jobs:
       - name: Generate Keystore
         run: |
           cd android/app
+          rm -f release.keystore
           keytool -genkey -v -keystore release.keystore -alias loki -keyalg RSA -keysize 2048 -validity 10000 -storepass loki123 -keypass loki123 -dname "CN=Loki Prime X, OU=Loki, O=Loki, L=Delhi, ST=Delhi, C=IN"
 
       - name: Sign APK
