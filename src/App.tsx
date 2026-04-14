@@ -784,7 +784,7 @@ export default function App() {
 
           {/* Header */}
           <header
-            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-slate-50/80 dark:bg-[#08080c]/80 backdrop-blur-md premium-shadow z-30 shrink-0"
+            className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-[#08080c]/80 backdrop-blur-md premium-shadow z-30 shrink-0"
             style={{
               paddingTop: "env(safe-area-inset-top, 0px)",
               height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top, 0px))",

@@ -15,6 +15,11 @@ public class MainActivity extends BridgeActivity {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
+        // Ensure the native WebView background is transparent so the web background shows through
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
+        }
+
         // Enforce true edge-to-edge for API 35 (Android 15) and below.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
