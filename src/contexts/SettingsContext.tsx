@@ -588,10 +588,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       if (isDark) {
         document.documentElement.classList.add("dark");
         document.body.style.backgroundColor = isAwakened
-          ? "#050508"
+          ? "#08080c"
           : "#08080c";
         document.documentElement.style.backgroundColor = isAwakened
-          ? "#050508"
+          ? "#08080c"
           : "#08080c";
 
         if (Capacitor.isNativePlatform()) {
@@ -607,10 +607,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         document.documentElement.classList.remove("dark");
         document.body.style.backgroundColor = isAwakened
           ? "#ffffff"
-          : "#f8fafc";
+          : "#08080c";
         document.documentElement.style.backgroundColor = isAwakened
           ? "#ffffff"
-          : "#f8fafc";
+          : "#08080c";
 
         if (Capacitor.isNativePlatform()) {
           StatusBar.setStyle({ style: Style.Light }).catch(() => {});
