@@ -6,11 +6,13 @@ import android.graphics.Color;
 import android.view.Window;
 import android.view.WindowManager;
 import androidx.core.view.WindowCompat;
+import androidx.activity.EdgeToEdge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
         // Enforce true edge-to-edge for API 35 (Android 15) and below.
