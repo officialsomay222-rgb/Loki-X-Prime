@@ -11,6 +11,7 @@ import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
+import { StatusBar } from '@capacitor/status-bar';
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
@@ -233,6 +234,8 @@ export default function App() {
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
+      StatusBar.setOverlaysWebView({ overlay: true }).catch(console.warn);
+
       Keyboard.addListener('keyboardWillShow', () => {
         setIsKeyboardOpen(true);
       });
@@ -497,8 +500,8 @@ export default function App() {
       <div
         className={`fixed inset-0 w-full h-full z-[9999] flex flex-col justify-between items-center transition-opacity duration-700 pb-12 pt-24 ${resolvedTheme === "light" ? "bg-[#ffffff]" : "bg-[#08080c]"}`}
         style={{
-          paddingTop: "calc(6rem + env(safe-area-inset-top))",
-          paddingBottom: "calc(3rem + env(safe-area-inset-bottom))",
+          paddingTop: "calc(6rem + clamp(24px, env(safe-area-inset-top), 48px))",
+          paddingBottom: "calc(3rem + clamp(0px, env(safe-area-inset-bottom), 32px))",
         }}
       >
         <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[300px] my-auto mx-auto">
@@ -571,8 +574,8 @@ export default function App() {
         <div
           className="fixed inset-0 z-[100000] pointer-events-none flex justify-center items-center"
           style={{
-            paddingTop: "env(safe-area-inset-top, 0px)",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            paddingTop: "clamp(24px, env(safe-area-inset-top, 0px), 48px)",
+            paddingBottom: "clamp(0px, env(safe-area-inset-bottom, 0px), 32px)",
           }}
         >
           {/* Shockwave rendered strictly behind the avatar container */}
@@ -661,7 +664,7 @@ export default function App() {
         >
           <div
             className="p-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 shrink-0"
-            style={{ paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }}
+            style={{ paddingTop: "calc(1rem + clamp(24px, env(safe-area-inset-top, 0px), 48px))" }}
           >
             <div
               className={`flex items-center gap-2 font-montserrat font-bold ${isAwakened && theme === "light" ? "text-slate-900" : "text-slate-900 dark:text-white"}`}
@@ -696,7 +699,7 @@ export default function App() {
               WebkitOverflowScrolling: "touch",
               transform: "translateZ(0)",
               willChange: "transform",
-              paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))",
+              paddingBottom: "calc(0.5rem + clamp(0px, env(safe-area-inset-bottom), 32px))",
             }}
           >
             <div className="text-[0.65rem] font-bold text-slate-500 dark:text-[#6b6b80] uppercase tracking-[0.3em] mb-3 px-4 mt-2">
@@ -754,7 +757,7 @@ export default function App() {
 
           <div
             className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2 mt-auto"
-            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+            style={{ paddingBottom: "calc(1rem + clamp(16px, env(safe-area-inset-bottom, 0px), 32px))" }}
           >
             {sessions.length > 0 && (
               <motion.button
@@ -803,8 +806,8 @@ export default function App() {
           <header
             className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-8 border-b border-slate-200 dark:border-white/5 bg-[#08080c]/80 backdrop-blur-md premium-shadow z-30 shrink-0"
             style={{
-              paddingTop: "env(safe-area-inset-top, 0px)",
-              height: "calc(var(--header-height, 4rem) + env(safe-area-inset-top, 0px))",
+              paddingTop: "clamp(24px, env(safe-area-inset-top, 0px), 48px)",
+              height: "calc(var(--header-height, 4rem) + clamp(24px, env(safe-area-inset-top, 0px), 48px))",
             }}
           >
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
@@ -902,11 +905,11 @@ export default function App() {
             }}
           >
             {/* Inner spacer for floating header */}
-            <div style={{ height: "calc(var(--header-height, 4rem) + 16px + env(safe-area-inset-top, 0px))", width: "100%", flexShrink: 0 }}></div>
+            <div style={{ height: "calc(var(--header-height, 4rem) + 16px + clamp(24px, env(safe-area-inset-top, 0px), 48px))", width: "100%", flexShrink: 0 }}></div>
 
             <div
               className={`w-full ${appWidthClass} mx-auto px-3 sm:px-6 h-full flex flex-col ${!currentSession || currentSession.messages.length === 0 ? "justify-center items-center" : "pt-4 space-y-6 sm:space-y-8"}`}
-              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (var(--header-height, 4rem) + 16px + env(safe-area-inset-top, 0px)))" } : {}}
+              style={(!currentSession || currentSession.messages.length === 0) ? { height: "calc(100% - (var(--header-height, 4rem) + 16px + clamp(24px, env(safe-area-inset-top, 0px), 48px)))" } : {}}
             >
               {!currentSession || currentSession.messages.length === 0 ? (
                 <motion.div
@@ -995,7 +998,7 @@ export default function App() {
           <div
             className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
             style={{
-              paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+              paddingBottom: "calc(16px + clamp(0px, env(safe-area-inset-bottom, 0px), 24px))",
               paddingTop: "8px"
             }}
           >
