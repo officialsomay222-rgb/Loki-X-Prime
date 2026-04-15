@@ -126,7 +126,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               onBlur={submitRename}
               className="flex-1 bg-black/10 dark:bg-white/10 border-b border-cyan-500/50 outline-none text-sm px-1 py-0.5 text-inherit min-w-0"
             />
-            <button onClick={submitRename} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md">
+            <button onClick={submitRename} aria-label="Confirm rename" className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md">
               <Check className="w-3 h-3 text-cyan-500" />
             </button>
           </div>
@@ -145,6 +145,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               e.stopPropagation();
               onDelete(e, session.id);
             }}
+            aria-label="Delete timeline"
             className={`hidden md:flex p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-400 hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'} ${isMenuOpen ? 'hidden' : ''}`}
             title="Delete timeline"
           >
@@ -157,6 +158,9 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
+            aria-label="More options"
+            aria-expanded={isMenuOpen}
+            aria-haspopup="true"
             className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all md:opacity-0 ${isMenuOpen ? 'opacity-100 md:opacity-100 bg-slate-200 dark:bg-black/50' : 'opacity-100 md:pointer-events-none'} ${(isAwakened || effectSidebar) ? 'text-slate-400 hover:text-white' : 'text-slate-400 dark:text-[#6b6b80] hover:text-slate-800 dark:hover:text-white'}`}
           >
             <MoreVertical className="w-4 h-4" />
@@ -179,8 +183,10 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
                 : 'bg-white/95 dark:bg-[#1a1b26]/95 border-slate-200 dark:border-white/10 shadow-lg'
               }`}
             onClick={e => e.stopPropagation()}
+            role="menu"
           >
             <button
+              role="menuitem"
               onClick={() => {
                 setIsMenuOpen(false);
                 setIsEditing(true);
@@ -193,6 +199,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               Rename
             </button>
             <button
+              role="menuitem"
               onClick={() => {
                 onPin(session.id);
                 setIsMenuOpen(false);
@@ -206,6 +213,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             </button>
             <div className={`h-px w-full my-1 ${(isAwakened || effectSidebar) ? 'bg-white/10' : 'bg-slate-200 dark:bg-white/10'}`} />
             <button
+              role="menuitem"
               onClick={(e) => {
                 onDelete(e, session.id);
                 setIsMenuOpen(false);
