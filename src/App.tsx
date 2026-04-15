@@ -69,7 +69,6 @@ declare global {
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-
   const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
@@ -82,21 +81,17 @@ export default function App() {
       ? !localStorage.getItem("loki_hasSeenWelcome")
       : false;
   });
-
   const isSettingsOpen = activeModal === "settings";
   const isAppsOpen = activeModal === "apps";
   const isCommandPaletteOpen = activeModal === "commands";
-
   const openModal = useCallback((modalName: string) => {
     setActiveModal(modalName);
   }, []);
-
   const closeModal = useCallback(() => {
     setActiveModal(null);
   }, []);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
   const {
     theme,
     resolvedTheme,
@@ -178,10 +173,12 @@ export default function App() {
     messageShadow,
     resetSettings,
   } = useSettings();
+
   const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(
     isAwakened,
     setIsAwakened,
   );
+
   const {
     sessions,
     currentSessionId,
@@ -234,7 +231,13 @@ export default function App() {
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      StatusBar.setOverlaysWebView({ overlay: true }).catch(console.warn);
+      StatusBar.setOverlaysWebView({ overlay: true })
+        .then(() => {
+          setTimeout(() => {
+            StatusBar.show().catch(console.warn);
+          }, 100);
+        })
+        .catch(console.warn);
 
       Keyboard.addListener('keyboardWillShow', () => {
         setIsKeyboardOpen(true);
@@ -541,12 +544,14 @@ export default function App() {
       : fontStyle === "serif"
         ? "font-serif"
         : "font-mono";
+
   const radiusVar =
     borderRadius === "sharp"
       ? "0px"
       : borderRadius === "pill"
         ? "9999px"
         : "16px";
+
   const appWidthClass =
     appWidth === "narrow"
       ? "max-w-2xl"
