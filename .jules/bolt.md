@@ -1,0 +1,3 @@
+## 2026-04-15 - [O(N) List Re-renders]
+**Learning:** Passing a globally changing ID (like `copiedId` or `activeId`) to every item in a list causes an O(N) re-render of all items when the ID changes. Furthermore, using a custom `React.memo` equality function that ignores callback props is a dangerous anti-pattern that leads to stale closures.
+**Action:** Pass derived boolean flags (e.g., `isCopied={copiedId === message.id}`) to list items. Wrap list items in `React.memo` without custom equality functions (relying on shallow comparison), and ensure parent callbacks passed to them are stable using `useCallback`.
