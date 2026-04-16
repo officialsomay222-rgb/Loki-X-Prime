@@ -358,6 +358,9 @@ const customUrlTransform = (url: string) => {
   return defaultUrlTransform(url);
 };
 
+// Extracted to prevent recreation on every render during stream typing
+const markdownPlugins = [remarkGfm];
+
 const MemoizedMarkdown = memo(
   ({
     content,
@@ -382,7 +385,7 @@ const MemoizedMarkdown = memo(
 
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={markdownPlugins}
         components={components}
         urlTransform={customUrlTransform}
       >
