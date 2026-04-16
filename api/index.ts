@@ -39,7 +39,7 @@ app.post("/api/transcribe", async (req, res) => {
       return res.status(400).json({ error: "audioBase64 is required" });
     }
 
-    let groqKey = process.env.GROQ_API_KEY || process.env.GR;
+    let groqKey = process.env.GROQ_API_KEY;
     if (groqKey && (groqKey.includes("MY_GROQ") || groqKey.includes("YOUR_"))) groqKey = undefined;
 
     if (!groqKey) {
@@ -58,7 +58,7 @@ app.post("/api/transcribe", async (req, res) => {
     const path = await import('path');
     const os = await import('os');
     const { randomUUID } = await import('crypto');
-    const tempFilePath = path.join(os.tmpdir(), `audio_${randomUUID()}.${mimeType?.includes('mp4') ? 'mp4' : mimeType?.includes('ogg') ? 'ogg' : 'webm'}`);
+    const tempFilePath = path.join(os.tmpdir(), `audio_${randomUUID()}.webm`);
     
     fs.writeFileSync(tempFilePath, buffer);
 
@@ -90,8 +90,8 @@ app.post("/api/tts", async (req, res) => {
       return res.status(400).json({ error: "text is required" });
     }
 
-    let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
-    let googleKey = process.env.GOOGLE_AI_KEY || process.env.API_KEY;
+    let geminiKey = process.env.GEMINI_API_KEY;
+    let googleKey = process.env.GOOGLE_AI_KEY;
     const apiKey = googleKey || geminiKey;
 
     if (!apiKey) {
@@ -142,10 +142,10 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     if (mode === "fast" || mode === "pro" || mode === "happy") {
-      let geminiKey = process.env.GEMINI_API_KEY || process.env.GC;
+      let geminiKey = process.env.GEMINI_API_KEY;
       let googleKey = process.env.GOOGLE_AI_KEY;
-      let groqKey = process.env.GROQ_API_KEY || process.env.GR;
-      let hfKey = process.env.HF_TOKEN || process.env.HF;
+      let groqKey = process.env.GROQ_API_KEY;
+      let hfKey = process.env.HF_TOKEN;
       
       // Filter out placeholder keys
       if (geminiKey && (geminiKey.includes("MY_GEMINI") || geminiKey.includes("YOUR_"))) geminiKey = undefined;
@@ -153,7 +153,7 @@ app.post("/api/chat", async (req, res) => {
       if (groqKey && (groqKey.includes("MY_GROQ") || groqKey.includes("YOUR_"))) groqKey = undefined;
       if (hfKey && (hfKey.includes("MY_HF") || hfKey.includes("YOUR_"))) hfKey = undefined;
 
-      const apiKey = googleKey || geminiKey || process.env.API_KEY;
+      const apiKey = googleKey || geminiKey;
 
       const hasAttachments = attachments && attachments.length > 0;
 
