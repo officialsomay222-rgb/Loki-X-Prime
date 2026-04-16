@@ -31,7 +31,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/50 backdrop-blur-md z-[100]"
-            style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+            style={{ paddingTop: 'clamp(24px, env(safe-area-inset-top, 0px), 48px)', paddingBottom: 'clamp(0px, env(safe-area-inset-bottom, 0px), 32px)' }}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -39,7 +39,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: "spring", damping: 30, stiffness: 400, mass: 0.8 }}
             className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-lg glass-panel premium-shadow rounded-xl z-[101] overflow-hidden"
-            style={{ marginTop: 'env(safe-area-inset-top)' }}
+            style={{ marginTop: 'clamp(24px, env(safe-area-inset-top, 0px), 48px)' }}
           >
             <div className="flex items-center px-4 border-b border-slate-200/30 dark:border-white/10">
               <Search className="w-5 h-5 text-slate-400" />

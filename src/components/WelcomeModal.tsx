@@ -42,7 +42,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 transform-gpu"
-          style={{ transform: 'translateZ(0)', willChange: 'opacity', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ transform: 'translateZ(0)', willChange: 'opacity', paddingTop: 'clamp(24px, env(safe-area-inset-top, 0px), 48px)', paddingBottom: 'clamp(0px, env(safe-area-inset-bottom, 0px), 32px)' }}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}

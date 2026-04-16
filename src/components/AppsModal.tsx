@@ -27,7 +27,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 sm:p-8"
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ paddingTop: 'clamp(24px, env(safe-area-inset-top, 0px), 48px)', paddingBottom: 'clamp(0px, env(safe-area-inset-bottom, 0px), 32px)' }}
         >
           <motion.div
             initial={{ scale: 0.9, y: 20, opacity: 0 }}

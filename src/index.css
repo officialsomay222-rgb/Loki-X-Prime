@@ -1261,8 +1261,8 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 
 /* Safe Area Global Utility Classes */
 .safe-area-top {
-  padding-top: env(safe-area-inset-top);
+  padding-top: clamp(24px, env(safe-area-inset-top, 0px), 48px);
 }
 .safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: clamp(0px, env(safe-area-inset-bottom, 0px), 32px);
 }

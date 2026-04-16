@@ -173,7 +173,7 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-between pb-12 pt-8 overflow-hidden"
-          style={{ paddingTop: 'calc(2rem + env(safe-area-inset-top))', paddingBottom: 'calc(3rem + env(safe-area-inset-bottom))' }}
+          style={{ paddingTop: 'calc(2rem + clamp(24px, env(safe-area-inset-top, 0px), 48px))', paddingBottom: 'calc(3rem + clamp(0px, env(safe-area-inset-bottom, 0px), 32px))' }}
         >
           {/* Canvas Background */}
           <canvas
