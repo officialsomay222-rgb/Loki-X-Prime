@@ -8,16 +8,16 @@ interface TimelineItemProps {
   isActive: boolean;
   isAwakened: boolean;
   effectSidebar: boolean;
-  onClick: () => void;
+  onClick: (id: string) => void;
   onDelete: (e: React.MouseEvent, id: string) => void;
   onPin: (id: string) => void;
   onRename: (id: string, newTitle: string) => void;
   index: number;
 }
 
-export const TimelineItem: React.FC<TimelineItemProps> = ({
+export const TimelineItem = React.memo(({
   session, isActive, isAwakened, effectSidebar, onClick, onDelete, onPin, onRename, index
-}) => {
+}: TimelineItemProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(session.title);
@@ -90,7 +90,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4, delay: index * 0.03, ease: [0.16, 1, 0.3, 1] }}
       onClick={(e) => {
-        if (!isEditing && !isMenuOpen) onClick();
+        if (!isEditing && !isMenuOpen) onClick(session.id);
       }}
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
@@ -228,4 +228,4 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
       </AnimatePresence>
     </motion.div>
   );
-};
+});

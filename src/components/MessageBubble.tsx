@@ -526,7 +526,7 @@ interface MessageBubbleProps {
   message: Message;
   commanderName: string;
   avatarUrl: string;
-  copiedId: string | null;
+  isCopied: boolean;
   onCopy: (text: string, id: string) => void;
   onEdit?: (text: string) => void;
   onDelete?: (id: string) => void;
@@ -553,7 +553,7 @@ export const MessageBubble = memo(
     message,
     commanderName,
     avatarUrl,
-    copiedId,
+    isCopied,
     onCopy,
     onEdit,
     onDelete,
@@ -752,7 +752,7 @@ export const MessageBubble = memo(
                   className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass}`}
                   title="Copy text"
                 >
-                  {copiedId === message.id ? (
+                  {isCopied ? (
                     <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                   ) : (
                     <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -850,7 +850,7 @@ export const MessageBubble = memo(
                       className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                       title="Copy text"
                     >
-                      {copiedId === message.id ? (
+                      {isCopied ? (
                         <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                       ) : (
                         <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -894,7 +894,7 @@ export const MessageBubble = memo(
       prevProps.message.isVoiceResponse === nextProps.message.isVoiceResponse &&
       prevProps.commanderName === nextProps.commanderName &&
       prevProps.avatarUrl === nextProps.avatarUrl &&
-      prevProps.copiedId === nextProps.copiedId &&
+      prevProps.isCopied === nextProps.isCopied &&
       prevProps.bubbleStyle === nextProps.bubbleStyle &&
       prevProps.fontSize === nextProps.fontSize &&
       prevProps.messageAnimation === nextProps.messageAnimation &&

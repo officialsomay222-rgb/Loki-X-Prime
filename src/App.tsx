@@ -418,6 +418,13 @@ export default function App() {
     }
   }, [createNewSession, modelMode]);
 
+  const handleSessionClick = useCallback((id: string) => {
+    setCurrentSessionId(id);
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [setCurrentSessionId, setIsSidebarOpen]);
+
   const copyToClipboard = useCallback((text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -440,7 +447,7 @@ export default function App() {
         message={message}
         commanderName={commanderName}
         avatarUrl={avatarUrl}
-        copiedId={copiedId}
+        isCopied={copiedId === message.id}
         onCopy={copyToClipboard}
         onEdit={
           message.role === "user"
@@ -737,10 +744,7 @@ export default function App() {
                   isActive={currentSessionId === session.id}
                   isAwakened={isAwakened}
                   effectSidebar={effectSidebar}
-                  onClick={() => {
-                    setCurrentSessionId(session.id);
-                    if (window.innerWidth < 768) setIsSidebarOpen(false);
-                  }}
+                  onClick={handleSessionClick}
                   onDelete={handleDeleteSession}
                   onPin={togglePinSession}
                   onRename={renameSession}
