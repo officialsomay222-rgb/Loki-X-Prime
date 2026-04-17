@@ -192,7 +192,7 @@ export const TimelineItem = React.memo(({
                 setIsEditing(true);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors
-                ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
+                ${(isAwakened || effectSidebar) ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
               `}
             >
               <Edit2 className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export const TimelineItem = React.memo(({
                 setIsMenuOpen(false);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors
-                ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
+                ${(isAwakened || effectSidebar) ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
               `}
             >
               {session.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
