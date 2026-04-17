@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Keyboard: {
-      resize: 'none' as any,
+      resize: 'body' as any,
     },
     StatusBar: {
       overlaysWebView: true,
