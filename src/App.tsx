@@ -567,7 +567,14 @@ export default function App() {
     glowIntensity === "low" ? "0.2" : glowIntensity === "high" ? "0.8" : "0.5";
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{
+        duration: 0.6,
+        ease: [0.25, 1, 0.5, 1], // Custom sleek easing
+        opacity: { duration: 0.8 }
+      }}
       className={`app-wrapper ${theme} ${isAwakened ? "awakened-mode" : ""} ${fontClass}`}
     >
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeModal} />
@@ -1066,6 +1073,6 @@ export default function App() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

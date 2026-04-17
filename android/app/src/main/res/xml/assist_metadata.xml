@@ -3,5 +3,5 @@
     android:sessionService="com.lokiprimex.app.AssistantSessionService"
     android:recognitionService="com.lokiprimex.app.AssistantRecognitionService"
     android:supportsAssist="true"
-    android:supportsLaunchVoiceAssistFromKeyguard="true"
+    android:supportsLaunchVoiceAssistFromKeyguard="false"
     android:supportsLocalInteraction="true" />
