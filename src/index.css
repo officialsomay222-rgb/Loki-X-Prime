@@ -37,23 +37,33 @@
     transform: translateZ(0);
     will-change: transform, opacity;
   }
-  
+
   /* When content is rendered, we can hide the skeleton by using a child selector, but content-visibility doesn't have a pseudo-class. 
      However, the inner content will just render over it. To make it look like a bubble, we can limit its width. */
-  
+
   .skeleton-loader {
-    background-image: linear-gradient(90deg, rgba(255,255,255,0.01) 25%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 75%);
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.01) 25%,
+      rgba(255, 255, 255, 0.03) 50%,
+      rgba(255, 255, 255, 0.01) 75%
+    );
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
     border-radius: 1rem;
   }
 
-  .animate-shimmer { }
+  .animate-shimmer {
+  }
 }
 
 @keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes waveform-play {
@@ -83,54 +93,73 @@
 }
 
 @property --s1-len {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 75deg;
   inherits: false;
 }
 
 @property --s2-len {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 75deg;
   inherits: false;
 }
 
 @property --h1-pos {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 140deg;
   inherits: false;
 }
 
 @property --h2-pos {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 325deg;
   inherits: false;
 }
 
 @keyframes morph-segments {
-  0%, 100% { 
-    --s1-len: 135deg; --s2-len: 45deg; 
-    --h1-pos: 140deg; --h2-pos: 325deg;
+  0%,
+  100% {
+    --s1-len: 135deg;
+    --s2-len: 45deg;
+    --h1-pos: 140deg;
+    --h2-pos: 325deg;
   } /* 1. 3:1 Line Ratio, 3.5:1 Gap Ratio */
-  33% { 
-    --s1-len: 90deg; --s2-len: 90deg; 
-    --h1-pos: 90deg; --h2-pos: 270deg;
+  33% {
+    --s1-len: 90deg;
+    --s2-len: 90deg;
+    --h1-pos: 90deg;
+    --h2-pos: 270deg;
   } /* 2. Both Same Length (1:1) */
-  66% { 
-    --s1-len: 45deg; --s2-len: 135deg; 
-    --h1-pos: 45deg; --h2-pos: 220deg;
+  66% {
+    --s1-len: 45deg;
+    --s2-len: 135deg;
+    --h1-pos: 45deg;
+    --h2-pos: 220deg;
   } /* 3. 1:3 Line Ratio, 1:3.5 Gap Ratio */
 }
 
 @keyframes rotate-border {
-  0% { --border-angle: 0deg; }
-  100% { --border-angle: 360deg; }
+  0% {
+    --border-angle: 0deg;
+  }
+  100% {
+    --border-angle: 360deg;
+  }
 }
 
 @keyframes rotate-border-reverse {
-  0% { --border-angle-reverse: 0deg; }
-  48% { --border-angle-reverse: -180deg; }
-  52% { --border-angle-reverse: -180deg; } /* Professional pause at midpoint */
-  100% { --border-angle-reverse: -360deg; }
+  0% {
+    --border-angle-reverse: 0deg;
+  }
+  48% {
+    --border-angle-reverse: -180deg;
+  }
+  52% {
+    --border-angle-reverse: -180deg;
+  } /* Professional pause at midpoint */
+  100% {
+    --border-angle-reverse: -360deg;
+  }
 }
 
 .bootloader-border {
@@ -147,9 +176,10 @@
       #bd00ff 75%,
       #ff00ff 90%,
       #ff0000 100%
-    ) border-box;
+    )
+    border-box;
   -webkit-mask:
-    linear-gradient(#fff 0 0) padding-box, 
+    linear-gradient(#fff 0 0) padding-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -173,8 +203,12 @@
 }
 
 @keyframes rotateGradient {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .input-wrapper {
@@ -199,31 +233,38 @@
 }
 
 .input-border-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
-  background: conic-gradient(from 0deg, #4285f4, #ea4335, #fbbc04, #34a853, #4285f4);
+  background: conic-gradient(
+    from 0deg,
+    #4285f4,
+    #ea4335,
+    #fbbc04,
+    #34a853,
+    #4285f4
+  );
   -webkit-mask-image: conic-gradient(
-    transparent 0deg, 
-    black 144deg, 
-    transparent 144deg, 
-    transparent 180deg, 
-    transparent 180deg, 
-    black 324deg, 
-    transparent 324deg, 
+    transparent 0deg,
+    black 144deg,
+    transparent 144deg,
+    transparent 180deg,
+    transparent 180deg,
+    black 324deg,
+    transparent 324deg,
     transparent 360deg
   );
   mask-image: conic-gradient(
-    transparent 0deg, 
-    black 144deg, 
-    transparent 144deg, 
-    transparent 180deg, 
-    transparent 180deg, 
-    black 324deg, 
-    transparent 324deg, 
+    transparent 0deg,
+    black 144deg,
+    transparent 144deg,
+    transparent 180deg,
+    transparent 180deg,
+    black 324deg,
+    transparent 324deg,
     transparent 360deg
   );
   animation: rotateGradient 4s linear infinite;
@@ -239,7 +280,6 @@
   display: flex;
   flex-direction: column;
 }
-
 
 html,
 body {
@@ -280,8 +320,12 @@ html.awakened-mode-active.dark {
 }
 
 @keyframes spin-aura {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-spin-aura {
@@ -584,8 +628,13 @@ a:focus-visible {
 }
 
 @keyframes comet-glow {
-  0%, 100% { filter: brightness(1) blur(0px); }
-  50% { filter: brightness(1.3) blur(1px); }
+  0%,
+  100% {
+    filter: brightness(1) blur(0px);
+  }
+  50% {
+    filter: brightness(1.3) blur(1px);
+  }
 }
 
 @keyframes input-glow {
@@ -912,7 +961,8 @@ a:focus-visible {
 }
 
 @keyframes cosmic-aura-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.8;
     filter: hue-rotate(0deg);
   }
@@ -923,24 +973,50 @@ a:focus-visible {
 }
 
 .awakened-bg-aura {
-  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 242, 255, 0.1) 70%, rgba(189, 0, 255, 0.05) 100%);
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 40%,
+    rgba(0, 242, 255, 0.1) 70%,
+    rgba(189, 0, 255, 0.05) 100%
+  );
 }
 
 html:not(.dark) .awakened-bg-aura {
-  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 242, 255, 0.15) 70%, rgba(189, 0, 255, 0.1) 100%);
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 40%,
+    rgba(0, 242, 255, 0.15) 70%,
+    rgba(189, 0, 255, 0.1) 100%
+  );
 }
 
 .awakened-bg-nebula {
   background:
-    radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.08), transparent 70%),
-    radial-gradient(circle at 100% 100%, rgba(189, 0, 255, 0.05), transparent 50%),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 242, 255, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(189, 0, 255, 0.05),
+      transparent 50%
+    ),
     linear-gradient(to bottom, #08080c, #0a0a12);
 }
 
 html:not(.dark) .awakened-bg-nebula {
   background:
-    radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.12), transparent 70%),
-    radial-gradient(circle at 100% 100%, rgba(189, 0, 255, 0.08), transparent 50%),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 242, 255, 0.12),
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(189, 0, 255, 0.08),
+      transparent 50%
+    ),
     linear-gradient(to bottom, #ffffff, #f8fafc);
 }
 
@@ -996,14 +1072,14 @@ body.awakened-mode-active:not(.dark) ::-webkit-scrollbar-thumb {
   text-shadow: none !important;
 }
 
-html:not(.dark) .awakened-content-disabled .text-slate-700,
-html:not(.dark) .awakened-content-disabled .text-slate-600 {
+html:not(.dark) .awakened-mode .text-slate-700,
+html:not(.dark) .awakened-mode .text-slate-600 {
   color: #0f172a !important;
   text-shadow: none !important;
 }
 
-html:not(.dark) .awakened-content-disabled .text-slate-500,
-html:not(.dark) .awakened-content-disabled .text-slate-400 {
+html:not(.dark) .awakened-mode .text-slate-500,
+html:not(.dark) .awakened-mode .text-slate-400 {
   color: #475569 !important;
   text-shadow: none !important;
 }
@@ -1023,22 +1099,26 @@ html:not(.dark) .awakened-content-disabled .text-slate-400 {
 }
 
 /* Light Theme Awakened Mode Styles */
-html:not(.dark) .awakened-content-disabled .glass-panel {
+html:not(.dark) .awakened-mode .glass-panel {
   background: rgba(255, 255, 255, 0.8) !important;
   border: 1px solid rgba(0, 242, 255, 0.4) !important;
-  box-shadow: 0 12px 48px rgba(0, 242, 255, 0.15), 0 0 15px rgba(0, 242, 255, 0.05) inset !important;
+  box-shadow:
+    0 12px 48px rgba(0, 242, 255, 0.15),
+    0 0 15px rgba(0, 242, 255, 0.05) inset !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
   transform: translateZ(0);
 }
 
-html:not(.dark) .awakened-content-disabled .glass-panel:hover {
+html:not(.dark) .awakened-mode .glass-panel:hover {
   border-color: rgba(0, 242, 255, 0.6) !important;
-  box-shadow: 0 12px 48px rgba(0, 242, 255, 0.25), 0 0 20px rgba(0, 242, 255, 0.1) inset !important;
+  box-shadow:
+    0 12px 48px rgba(0, 242, 255, 0.25),
+    0 0 20px rgba(0, 242, 255, 0.1) inset !important;
 }
 
-html:not(.dark) .awakened-content-disabled .border-slate-200,
-html:not(.dark) .awakened-content-disabled .border-slate-100 {
+html:not(.dark) .awakened-mode .border-slate-200,
+html:not(.dark) .awakened-mode .border-slate-100 {
   border-color: rgba(0, 242, 255, 0.2) !important;
 }
 
@@ -1076,7 +1156,7 @@ html:not(.dark) .awakened-content-disabled .border-slate-100 {
 }
 
 /* Light theme awakened button */
-html:not(.dark) .awakened-content-disabled .glass-button {
+html:not(.dark) .awakened-mode .glass-button {
   background: rgba(0, 242, 255, 0.1) !important;
   border: 1px solid rgba(0, 242, 255, 0.4) !important;
   color: #0f172a !important;
@@ -1084,7 +1164,7 @@ html:not(.dark) .awakened-content-disabled .glass-button {
   backdrop-filter: none;
 }
 
-html:not(.dark) .awakened-content-disabled .glass-button:hover {
+html:not(.dark) .awakened-mode .glass-button:hover {
   background: rgba(0, 242, 255, 0.2) !important;
   border-color: rgba(0, 242, 255, 0.8) !important;
   box-shadow: 0 0 15px rgba(0, 242, 255, 0.2) !important;
@@ -1096,7 +1176,8 @@ html:not(.dark) .awakened-content-disabled .glass-button:hover {
   transform: translateZ(0); /* Hardware acceleration */
   will-change: transform, filter;
   animation: awakened-float 6s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
-  filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 0, 255, 0.3));
+  filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.5))
+    drop-shadow(0 0 40px rgba(255, 0, 255, 0.3));
 }
 
 .awakened-logo-image {
@@ -1128,11 +1209,21 @@ html:not(.dark) .awakened-content-disabled .glass-button:hover {
 }
 
 .awakened-logo-aura::before {
-  content: '';
+  content: "";
   position: absolute;
   /* Make the gradient large enough to cover the element while rotating */
   inset: -50%;
-  background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000);
+  background: conic-gradient(
+    from 0deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #00f0ff,
+    #bd00ff,
+    #ff00ff,
+    #ff0000
+  );
   animation: awakened-rgb-rotate 3s linear infinite;
   transform: translateZ(0);
 }
@@ -1167,19 +1258,33 @@ html:not(.dark) .awakened-content-disabled .glass-button:hover {
 }
 
 @keyframes awakened-rgb-rotate {
-  0% { transform: rotate(0deg) translateZ(0); }
-  100% { transform: rotate(360deg) translateZ(0); }
+  0% {
+    transform: rotate(0deg) translateZ(0);
+  }
+  100% {
+    transform: rotate(360deg) translateZ(0);
+  }
 }
 
 @keyframes awakened-shine-sweep {
-  0% { background-position: 200% center; }
-  20% { background-position: -200% center; }
-  100% { background-position: -200% center; }
+  0% {
+    background-position: 200% center;
+  }
+  20% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
 }
 
 @keyframes awakened-float {
-  0% { transform: translateY(0) scale(1) translateZ(0); }
-  100% { transform: translateY(-15px) scale(1.02) translateZ(0); }
+  0% {
+    transform: translateY(0) scale(1) translateZ(0);
+  }
+  100% {
+    transform: translateY(-15px) scale(1.02) translateZ(0);
+  }
 }
 
 /* Fallback for low-end devices to ensure 'makhan' requirement */
