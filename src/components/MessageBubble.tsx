@@ -34,6 +34,17 @@ import { AudioPlayer } from "./AudioPlayer";
 // Extract components to prevent re-creation on every render
 const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default', ...props }: any) => {
   const match = /language-(\w+)/.exec(className || "");
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    const codeToCopy = String(children).replace(/\n$/, "");
+    navigator.clipboard.writeText(codeToCopy).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy code: ', err);
+    });
+  };
   
   const themeClasses = {
     default: "bg-black/80 text-slate-400 border-white/5",
@@ -48,6 +59,14 @@ const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default'
     <div className={`rounded-md overflow-hidden my-4 border shadow-lg ${codeTheme === 'matrix' ? 'border-[#00ff00]/20' : codeTheme === 'neon' ? 'border-[#00f0ff]/20' : 'border-white/10'}`}>
       <div className={`text-xs px-4 py-1.5 flex justify-between items-center border-b ${headerClass}`}>
         <span className={codeTheme === 'matrix' || codeTheme === 'neon' ? 'font-bold tracking-wider' : ''}>{match[1]}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 hover:text-white transition-colors p-1 rounded-md"
+          title="Copy code"
+        >
+          {isCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+          <span className="text-[10px] uppercase font-bold">{isCopied ? 'Copied' : 'Copy'}</span>
+        </button>
       </div>
       <SyntaxHighlighter
         {...props}
@@ -264,6 +283,24 @@ const getMarkdownComponents = (
       h3({ node, children }: any) {
         return <h3 className="text-lg font-bold mt-4 mb-2">{children}</h3>;
       },
+      table({ node, children }: any) {
+        return <div className="overflow-x-auto my-4 rounded-lg border border-white/10 shadow-sm"><table className="w-full text-sm text-left border-collapse">{children}</table></div>;
+      },
+      thead({ node, children }: any) {
+        return <thead className="text-xs uppercase bg-black/10 dark:bg-white/5 border-b border-white/10">{children}</thead>;
+      },
+      tbody({ node, children }: any) {
+        return <tbody className="divide-y divide-white/5">{children}</tbody>;
+      },
+      tr({ node, children }: any) {
+        return <tr className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">{children}</tr>;
+      },
+      th({ node, children }: any) {
+        return <th className="px-4 py-3 font-semibold tracking-wider">{children}</th>;
+      },
+      td({ node, children }: any) {
+        return <td className="px-4 py-2.5">{children}</td>;
+      },
     };
   }
 
@@ -347,6 +384,33 @@ const getMarkdownComponents = (
           {children}
         </motion.h3>
       );
+    },
+    table({ node, children }: any) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: isTypewriter ? 5 : 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 * durationMultiplier, ease: "easeOut" }}
+          className="overflow-x-auto my-4 rounded-lg border border-white/10 shadow-sm"
+        >
+          <table className="w-full text-sm text-left border-collapse">{children}</table>
+        </motion.div>
+      );
+    },
+    thead({ node, children }: any) {
+      return <thead className="text-xs uppercase bg-black/10 dark:bg-white/5 border-b border-white/10">{children}</thead>;
+    },
+    tbody({ node, children }: any) {
+      return <tbody className="divide-y divide-white/5">{children}</tbody>;
+    },
+    tr({ node, children }: any) {
+      return <tr className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">{children}</tr>;
+    },
+    th({ node, children }: any) {
+      return <th className="px-4 py-3 font-semibold tracking-wider">{children}</th>;
+    },
+    td({ node, children }: any) {
+      return <td className="px-4 py-2.5">{children}</td>;
     },
   };
 };
