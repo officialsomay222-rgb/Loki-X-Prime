@@ -198,6 +198,7 @@ export default function App() {
   } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<ChatInputHandle>(null);
 
   useEffect(() => {
@@ -334,35 +335,25 @@ export default function App() {
     }
   }, [currentSession?.messages.length, currentSessionId, autoScroll]);
 
-  // Debounce scroll events to prevent checkerboarding and lag
-  useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
+  const checkScrollPosition = useCallback(() => {
+    const target = scrollContainerRef.current;
+    if (!target) return;
 
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (target.classList && target.classList.contains("overflow-y-auto")) {
-        const isNearBottom =
-          target.scrollHeight - target.scrollTop - target.clientHeight < 400;
-        setShowScrollToBottom(!isNearBottom);
-      }
+    // Check if there is enough content to scroll
+    if (target.scrollHeight <= target.clientHeight) {
+      setShowScrollToBottom(false);
+      return;
+    }
 
-      // Removed DOM class manipulation on body during scroll to prevent layout thrashing and severe lag
-
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        // Debounce empty callback placeholder
-      }, 150); // 150ms debounce
-    };
-
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-      capture: true,
-    });
-    return () => {
-      window.removeEventListener("scroll", handleScroll, { capture: true });
-      clearTimeout(scrollTimeout);
-    };
+    const isNearBottom =
+      target.scrollHeight - target.scrollTop - target.clientHeight < 400;
+    setShowScrollToBottom(!isNearBottom);
   }, []);
+
+  // Check scroll position when messages change or session changes
+  useEffect(() => {
+    checkScrollPosition();
+  }, [currentSession?.messages.length, currentSessionId, checkScrollPosition]);
 
   const handleSendMessage = useCallback(
     async (
@@ -906,6 +897,8 @@ export default function App() {
 
           {/* Chat Area - Scrollable */}
           <div
+            ref={scrollContainerRef}
+            onScroll={checkScrollPosition}
             className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu ${!currentSession || currentSession.messages.length === 0 ? "overflow-hidden" : "overflow-y-auto overscroll-auto"}`}
             style={{
               WebkitOverflowScrolling: "touch",
@@ -987,27 +980,29 @@ export default function App() {
             </div>
           </div>
 
-          {/* Scroll to Bottom Button */}
-          <AnimatePresence>
-            {showScrollToBottom &&
-              currentSession &&
-              currentSession.messages.length > 0 && (
-                <motion.button
-                  initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                  onClick={() => {
-                    messagesEndRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "end",
-                    });
-                  }}
-                  className="absolute bottom-32 sm:bottom-36 right-4 sm:right-8 z-30 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50"
-                >
-                  <ArrowDown className="w-5 h-5" />
-                </motion.button>
-              )}
-          </AnimatePresence>
+          {/* Scroll to Bottom Button Container */}
+          <div className={`relative w-full ${appWidthClass} mx-auto z-30 pointer-events-none h-0`}>
+            <AnimatePresence>
+              {showScrollToBottom &&
+                currentSession &&
+                currentSession.messages.length > 0 && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                    onClick={() => {
+                      messagesEndRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "end",
+                      });
+                    }}
+                    className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto"
+                  >
+                    <ArrowDown className="w-5 h-5" />
+                  </motion.button>
+                )}
+            </AnimatePresence>
+          </div>
 
           {/* Input Area - Flex Item (Not Absolute) */}
           <div
