@@ -935,7 +935,14 @@ a:focus-visible {
   --rgb-color-1: #00f2ff;
   --rgb-color-2: #bd00ff;
   --rgb-color-3: #ff0055;
+}
+
+.dark .awakened-mode {
   @apply bg-[#08080c] text-white;
+}
+
+html:not(.dark) .awakened-mode {
+  @apply bg-white text-slate-900;
 }
 
 /* Full-screen RGB Aura - Optimized */
