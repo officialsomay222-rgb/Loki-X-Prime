@@ -99,9 +99,9 @@ export const TimelineItem = React.memo(({
       className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
         isActive
           ? (isAwakened || effectSidebar)
-            ? 'bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
+            ? 'bg-cyan-500/20 text-slate-800 dark:text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
             : 'bg-white dark:bg-white/10 text-cyan-700 dark:text-white shadow-md border border-cyan-200/50 dark:border-white/10'
-          : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
+          : `hover:bg-white/50 dark:hover:bg-white/5 border border-transparent ${(isAwakened || effectSidebar) ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`
       }`}
     >
       {isActive && (
@@ -112,7 +112,7 @@ export const TimelineItem = React.memo(({
         {session.isPinned ? (
           <Pin className={`w-4 h-4 shrink-0 transition-colors text-amber-500 dark:text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]`} />
         ) : (
-          <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-cyan-600 dark:text-[#00f2ff]' : (isAwakened || effectSidebar) ? 'text-slate-400 group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
+          <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-cyan-600 dark:text-[#00f2ff]' : (isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
         )}
 
         {isEditing ? (
@@ -146,7 +146,7 @@ export const TimelineItem = React.memo(({
               onDelete(e, session.id);
             }}
             aria-label="Delete timeline"
-            className={`hidden md:flex p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-400 hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'} ${isMenuOpen ? 'hidden' : ''}`}
+            className={`hidden md:flex p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'} ${isMenuOpen ? 'hidden' : ''}`}
             title="Delete timeline"
           >
             <Trash2 className="w-4 h-4" />
@@ -161,7 +161,7 @@ export const TimelineItem = React.memo(({
             aria-label="More options"
             aria-expanded={isMenuOpen}
             aria-haspopup="true"
-            className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all md:opacity-0 ${isMenuOpen ? 'opacity-100 md:opacity-100 bg-slate-200 dark:bg-black/50' : 'opacity-100 md:pointer-events-none'} ${(isAwakened || effectSidebar) ? 'text-slate-400 hover:text-white' : 'text-slate-400 dark:text-[#6b6b80] hover:text-slate-800 dark:hover:text-white'}`}
+            className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all md:opacity-0 ${isMenuOpen ? 'opacity-100 md:opacity-100 bg-slate-200 dark:bg-black/50' : 'opacity-100 md:pointer-events-none'} ${(isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white' : 'text-slate-400 dark:text-[#6b6b80] hover:text-slate-800 dark:hover:text-white'}`}
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -192,7 +192,7 @@ export const TimelineItem = React.memo(({
                 setIsEditing(true);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors
-                ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
+                ${(isAwakened || effectSidebar) ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
               `}
             >
               <Edit2 className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export const TimelineItem = React.memo(({
                 setIsMenuOpen(false);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors
-                ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
+                ${(isAwakened || effectSidebar) ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
               `}
             >
               {session.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
