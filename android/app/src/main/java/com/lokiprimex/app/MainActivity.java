@@ -16,6 +16,7 @@ public class MainActivity extends BridgeActivity {
         SplashScreen.installSplashScreen(this);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
+        registerPlugin(AssistantSettingsPlugin.class);
 
         try {
             if (getSupportActionBar() != null) {

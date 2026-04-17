@@ -14,6 +14,7 @@ import { PrivacyOverlay } from './PrivacyOverlay';
 import { ReportOverlay } from './ReportOverlay';
 import { ClearConfirmOverlay } from './ClearConfirmOverlay';
 import { PickerOverlay } from './PickerOverlay';
+import { AssistantIntroOverlay } from './AssistantIntroOverlay';
 
 
 interface SettingsModalProps {
@@ -228,6 +229,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [showReport, setShowReport] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showPicker, setShowPicker] = useState<{ label: string, options: any[], value: any, onChange: (val: any) => void, rect?: DOMRect } | null>(null);
+  const [showAssistantIntro, setShowAssistantIntro] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -471,6 +473,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Voice & Input */}
                 <SettingSection title="Voice & Input" delay={0.3}>
+                  <SettingItem
+                    icon={Sparkles}
+                    label="AI Assistant"
+                    subLabel="Set as default digital assistant"
+                    onClick={() => setShowAssistantIntro(true)}
+                  />
                   <SettingItem 
                     icon={Smartphone} 
                     label="Live Audio" 
@@ -831,6 +839,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {showTerms && <TermsOverlay key="terms" onClose={() => setShowTerms(false)} />}
 
               {showPrivacy && <PrivacyOverlay key="privacy" onClose={() => setShowPrivacy(false)} />}
+
+              {showAssistantIntro && <AssistantIntroOverlay key="assistant-intro" onClose={() => setShowAssistantIntro(false)} />}
 
               {showReport && <ReportOverlay key="report" onClose={() => setShowReport(false)} />}
 
