@@ -551,6 +551,7 @@ interface MessageBubbleProps {
   codeTheme?: 'default' | 'matrix' | 'neon';
   avatarShape?: 'circle' | 'square' | 'rounded';
   messageShadow?: 'none' | 'sm' | 'md' | 'lg';
+  resolvedTheme?: 'light' | 'dark';
 }
 
 export const MessageBubble = memo(
@@ -578,6 +579,7 @@ export const MessageBubble = memo(
     codeTheme = 'default',
     avatarShape = 'circle',
     messageShadow = 'md',
+    resolvedTheme = 'dark',
   }: MessageBubbleProps) => {
     const [isThinkingOpen, setIsThinkingOpen] = useState(false);
 
@@ -598,8 +600,8 @@ export const MessageBubble = memo(
     const gapClass = messageDensity === 'compact' ? 'gap-1' : 'gap-2';
     const bubblePadding = messageDensity === 'compact' ? 'px-3 py-1.5 sm:px-4 sm:py-2' : 'px-4 py-3 sm:px-5 sm:py-4';
     
-    const accentHex = '#ffffff';
-    const accentClass = 'text-white';
+    const accentHex = resolvedTheme === 'light' ? '#0f172a' : '#ffffff';
+    const accentClass = resolvedTheme === 'light' ? 'text-slate-900' : 'text-white';
     const bgAccentClass = 'bg-white/10';
     const borderAccentClass = 'border-white/20';
 
@@ -914,7 +916,8 @@ export const MessageBubble = memo(
       prevProps.accentColor === nextProps.accentColor &&
       prevProps.messageDensity === nextProps.messageDensity &&
       prevProps.showAvatars === nextProps.showAvatars &&
-      prevProps.isAwakened === nextProps.isAwakened
+      prevProps.isAwakened === nextProps.isAwakened &&
+      prevProps.resolvedTheme === nextProps.resolvedTheme
     );
   }
 );

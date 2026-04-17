@@ -470,6 +470,7 @@ export default function App() {
         codeTheme={codeTheme}
         avatarShape={avatarShape}
         messageShadow={messageShadow}
+        resolvedTheme={resolvedTheme}
       />
     ));
   }, [
@@ -497,6 +498,7 @@ export default function App() {
     codeTheme,
     avatarShape,
     messageShadow,
+    resolvedTheme,
   ]);
 
   if (isBooting) {
