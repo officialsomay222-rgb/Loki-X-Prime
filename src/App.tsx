@@ -268,6 +268,17 @@ export default function App() {
           }
         });
       });
+
+      try {
+        const plugin = AssistantModePlugin as any;
+        plugin.addListener("assistantModeChanged", (info: any) => {
+          if (info && info.isAssistantMode !== undefined) {
+             setIsAssistantMode(info.isAssistantMode);
+          }
+        });
+      } catch (e) {
+        console.error("Failed to add listener to AssistantModePlugin", e);
+      }
     }
   }, []);
 
