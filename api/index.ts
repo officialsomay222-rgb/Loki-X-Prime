@@ -3,7 +3,7 @@ import cors from "cors";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import { performDuckDuckGoSearch } from "./ddg_search.ts";
+import { performDuckDuckGoSearch } from "./ddg_search.js";
 
 const app = express();
 
