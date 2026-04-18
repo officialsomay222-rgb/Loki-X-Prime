@@ -42,4 +42,20 @@ public class AssistantModePlugin extends Plugin {
         }
         call.resolve();
     }
+
+    @Override
+    protected void handleOnNewIntent(Intent intent) {
+        super.handleOnNewIntent(intent);
+
+        boolean isAssistantMode = false;
+        if (intent != null && intent.getBooleanExtra("assistant_mode", false)) {
+            isAssistantMode = true;
+        } else if (intent != null && Intent.ACTION_ASSIST.equals(intent.getAction())) {
+            isAssistantMode = true;
+        }
+
+        JSObject ret = new JSObject();
+        ret.put("isAssistantMode", isAssistantMode);
+        notifyListeners("assistantModeChanged", ret, true);
+    }
 }
