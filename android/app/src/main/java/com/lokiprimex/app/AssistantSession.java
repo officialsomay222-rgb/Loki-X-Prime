@@ -17,8 +17,7 @@ public class AssistantSession extends VoiceInteractionSession {
 
         Intent intent = new Intent(getContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("assistant_mode", true);
         getContext().startActivity(intent);
-
-        finish();
     }
 }

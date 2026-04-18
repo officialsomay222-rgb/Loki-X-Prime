@@ -17,6 +17,7 @@ public class MainActivity extends BridgeActivity {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         registerPlugin(AssistantSettingsPlugin.class);
+        registerPlugin(AssistantModePlugin.class);
 
         try {
             if (getSupportActionBar() != null) {

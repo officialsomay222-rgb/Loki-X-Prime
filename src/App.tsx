@@ -28,6 +28,8 @@ import { InfinityLogo, HeaderInfinityLogo } from "./components/Logos";
 import { TimelineItem } from "./components/TimelineItem";
 import { format, isToday } from "date-fns";
 import { TaskWidget } from "./features/tasks/components/TaskWidget";
+import { AssistantOverlay } from "./components/AssistantOverlay";
+import { registerPlugin } from "@capacitor/core";
 import {
   Plus,
   MessageSquare,
@@ -67,8 +69,11 @@ declare global {
   }
 }
 
+const AssistantModePlugin = registerPlugin("AssistantMode");
+
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isAssistantMode, setIsAssistantMode] = useState(false);
   const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
@@ -229,6 +234,28 @@ export default function App() {
   const [showSkip, setShowSkip] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const checkAssistantMode = async () => {
+      // Check URL search params
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("assistant") === "true") {
+        setIsAssistantMode(true);
+      }
+
+      // Check native plugin
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const plugin = AssistantModePlugin as any;
+          const { isAssistantMode: nativeMode } = await plugin.checkAssistantMode();
+          if (nativeMode) setIsAssistantMode(true);
+        } catch (e) {
+          console.warn("AssistantModePlugin not available");
+        }
+      }
+    };
+    checkAssistantMode();
+  }, []);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -565,6 +592,14 @@ export default function App() {
         : "max-w-4xl";
   const glowOpacity =
     glowIntensity === "low" ? "0.2" : glowIntensity === "high" ? "0.8" : "0.5";
+
+  if (isAssistantMode) {
+    return (
+      <div className={`app-wrapper ${theme} ${fontClass} bg-transparent`}>
+        <AssistantOverlay onClose={() => setIsAssistantMode(false)} />
+      </div>
+    );
+  }
 
   return (
     <motion.div
