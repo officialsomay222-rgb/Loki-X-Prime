@@ -38,6 +38,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
             {/* Close Button */}
             <button
               onClick={onClose}
+              aria-label="Close Apps Modal"
               className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-10 group"
             >
               <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />

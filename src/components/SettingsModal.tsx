@@ -41,6 +41,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { name: string, em
           whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
           whileTap={{ scale: 0.9 }}
           onClick={onClose} 
+          aria-label="Close Edit Profile"
           className="p-2 rounded-full transition-colors"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
@@ -276,6 +277,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose} 
+                  aria-label="Close Settings"
                   className="p-2 rounded-full transition-colors group"
                 >
                   <X className="w-6 h-6 text-slate-500 dark:text-[#717171] group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
