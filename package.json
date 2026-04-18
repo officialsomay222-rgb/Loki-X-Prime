@@ -38,6 +38,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "better-sqlite3": "^12.8.0",
     "capacitor-voice-recorder": "^7.0.6",
+    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cors": "^2.8.6",
