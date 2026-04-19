@@ -186,6 +186,7 @@ export const TimelineItem = React.memo(({
             role="menu"
           >
             <button
+              aria-label="Rename timeline"
               role="menuitem"
               onClick={() => {
                 setIsMenuOpen(false);
@@ -199,6 +200,7 @@ export const TimelineItem = React.memo(({
               Rename
             </button>
             <button
+              aria-label={session.isPinned ? 'Unpin timeline' : 'Pin timeline'}
               role="menuitem"
               onClick={() => {
                 onPin(session.id);
@@ -213,6 +215,7 @@ export const TimelineItem = React.memo(({
             </button>
             <div className={`h-px w-full my-1 ${(isAwakened || effectSidebar) ? 'bg-white/10' : 'bg-slate-200 dark:bg-white/10'}`} />
             <button
+              aria-label="Delete timeline"
               role="menuitem"
               onClick={(e) => {
                 onDelete(e, session.id);
