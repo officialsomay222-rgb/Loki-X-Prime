@@ -231,4 +231,21 @@ export const TimelineItem = React.memo(({
       </AnimatePresence>
     </motion.div>
   );
+}, (prevProps, nextProps) => {
+  // ⚡ BOLT OPTIMIZATION:
+  // Dexie's useLiveQuery recreates session objects on every DB update, destroying shallow equality.
+  // We perform a deep comparison on specifically rendered primitive fields to prevent O(N) sidebar re-renders.
+  return (
+    prevProps.session.id === nextProps.session.id &&
+    prevProps.session.title === nextProps.session.title &&
+    prevProps.session.isPinned === nextProps.session.isPinned &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.isAwakened === nextProps.isAwakened &&
+    prevProps.effectSidebar === nextProps.effectSidebar &&
+    prevProps.index === nextProps.index &&
+    prevProps.onClick === nextProps.onClick &&
+    prevProps.onDelete === nextProps.onDelete &&
+    prevProps.onPin === nextProps.onPin &&
+    prevProps.onRename === nextProps.onRename
+  );
 });
