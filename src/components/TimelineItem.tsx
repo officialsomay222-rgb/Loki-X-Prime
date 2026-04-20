@@ -126,7 +126,7 @@ export const TimelineItem = React.memo(({
               onBlur={submitRename}
               className="flex-1 bg-black/10 dark:bg-white/10 border-b border-cyan-500/50 outline-none text-sm px-1 py-0.5 text-inherit min-w-0"
             />
-            <button onClick={submitRename} aria-label="Confirm rename" className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md">
+            <button onClick={submitRename} title="Confirm rename" aria-label="Confirm rename" className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md">
               <Check className="w-3 h-3 text-cyan-500" />
             </button>
           </div>
@@ -145,9 +145,8 @@ export const TimelineItem = React.memo(({
               e.stopPropagation();
               onDelete(e, session.id);
             }}
-            aria-label="Delete timeline"
+            title="Delete timeline" aria-label="Delete timeline"
             className={`hidden md:flex p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'} ${isMenuOpen ? 'hidden' : ''}`}
-            title="Delete timeline"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -158,7 +157,7 @@ export const TimelineItem = React.memo(({
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
-            aria-label="More options"
+            title="More options" aria-label="More options"
             aria-expanded={isMenuOpen}
             aria-haspopup="true"
             className={`p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all md:opacity-0 ${isMenuOpen ? 'opacity-100 md:opacity-100 bg-slate-200 dark:bg-black/50' : 'opacity-100 md:pointer-events-none'} ${(isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white' : 'text-slate-400 dark:text-[#6b6b80] hover:text-slate-800 dark:hover:text-white'}`}
@@ -186,7 +185,7 @@ export const TimelineItem = React.memo(({
             role="menu"
           >
             <button
-              aria-label="Rename timeline"
+              title="Rename timeline" aria-label="Rename timeline"
               role="menuitem"
               onClick={() => {
                 setIsMenuOpen(false);
@@ -200,7 +199,7 @@ export const TimelineItem = React.memo(({
               Rename
             </button>
             <button
-              aria-label={session.isPinned ? 'Unpin timeline' : 'Pin timeline'}
+              title={session.isPinned ? 'Unpin timeline' : 'Pin timeline'} aria-label={session.isPinned ? 'Unpin timeline' : 'Pin timeline'}
               role="menuitem"
               onClick={() => {
                 onPin(session.id);
@@ -215,7 +214,7 @@ export const TimelineItem = React.memo(({
             </button>
             <div className={`h-px w-full my-1 ${(isAwakened || effectSidebar) ? 'bg-white/10' : 'bg-slate-200 dark:bg-white/10'}`} />
             <button
-              aria-label="Delete timeline"
+              title="Delete timeline" aria-label="Delete timeline"
               role="menuitem"
               onClick={(e) => {
                 onDelete(e, session.id);
