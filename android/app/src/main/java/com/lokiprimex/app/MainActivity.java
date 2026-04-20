@@ -9,14 +9,23 @@ import androidx.core.view.WindowCompat;
 import androidx.activity.EdgeToEdge;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
+import android.content.Intent;
 
 public class MainActivity extends BridgeActivity {
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         SplashScreen.installSplashScreen(this);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         registerPlugin(AssistantSettingsPlugin.class);
+        registerPlugin(AssistantModePlugin.class);
 
         try {
             if (getSupportActionBar() != null) {

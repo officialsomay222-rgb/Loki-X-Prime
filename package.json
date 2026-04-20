@@ -38,6 +38,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "better-sqlite3": "^12.8.0",
     "capacitor-voice-recorder": "^7.0.6",
+    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cors": "^2.8.6",
@@ -46,8 +47,10 @@
     "dexie-react-hooks": "^4.2.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.3.2",
     "framer-motion": "^12.35.0",
     "groq-sdk": "^0.37.0",
+    "helmet": "^8.1.0",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^0.546.0",
     "react": "^19.0.0",
@@ -75,6 +78,8 @@
     "@types/dom-mediacapture-record": "^1.0.22",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "autoprefixer": "^10.4.21",
     "jsdom": "^29.0.1",
@@ -84,6 +89,7 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "workbox-window": "^7.4.0"
   }
 }

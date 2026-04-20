@@ -1,8 +1,11 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
+import { performDuckDuckGoSearch } from "./ddg_search.js";
 
 const app = express();
 
@@ -12,12 +15,24 @@ const getTodayDateString = () => {
 };
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : '*'),
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Security middlewares
+app.use(helmet());
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: "Too many requests from this IP, please try again after 15 minutes" }
+});
+// Apply the rate limiting middleware to API calls only
+app.use("/api/", limiter);
 
 // API routes FIRST
 app.get("/api/health", (req, res) => {
@@ -157,8 +172,25 @@ app.post("/api/chat", async (req, res) => {
 
       const hasAttachments = attachments && attachments.length > 0;
 
-      // Use Gemini if attachments, thinkingMode, or searchGrounding is requested
-      if (hasAttachments || thinkingMode || searchGrounding) {
+      let searchContext = "";
+      if (searchGrounding) {
+        // Build search query: 20% history, 80% exact message
+        const lastFewMessages = (history || []).slice(-3).map((m: any) => m?.parts?.[0]?.text || "").join(" ");
+        const queryToSearch = `${lastFewMessages} ${message || ""}`.trim();
+        if (queryToSearch) {
+           searchContext = await performDuckDuckGoSearch(queryToSearch);
+        }
+      }
+
+      // Use Gemini if attachments or thinkingMode is requested, or if searchGrounding is requested and we fallback to it
+      // Wait, we don't *force* Gemini for searchGrounding anymore, but let's see.
+      // Actually, if we use Groq/HF, they can ALSO use the search context now.
+      // But the previous code forced Gemini for searchGrounding.
+      // Let's keep forcing Gemini ONLY IF attachments or thinkingMode are present.
+      // If ONLY searchGrounding is present, we can use Groq/HF if mode is fast/pro/happy!
+      // But wait, the original code forced Gemini if `searchGrounding` was requested.
+      // Let's modify the condition:
+      if (hasAttachments || thinkingMode) {
         if (!apiKey) {
           return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
         }
@@ -172,11 +204,6 @@ app.post("/api/chat", async (req, res) => {
           topP: topP || 0.95,
           topK: topK || 64,
         };
-
-        if (searchGrounding) {
-          modelName = "gemini-3-flash-preview";
-          config.tools = [{ googleSearch: {} }];
-        }
 
         if (thinkingMode) {
           config.thinkingConfig = { thinkingLevel: "HIGH" };
@@ -206,14 +233,17 @@ app.post("/api/chat", async (req, res) => {
             });
           });
         }
-        if (message && message.trim().length > 0) {
-          userParts.push({ text: message });
-        } else if (hasAttachments) {
-          userParts.push({ text: "Please analyze this image." });
-        } else {
-          userParts.push({ text: " " });
+
+        let finalMessage = message || " ";
+        if (!message || message.trim().length === 0) {
+           if (hasAttachments) finalMessage = "Please analyze this image.";
+        }
+
+        if (searchGrounding && searchContext) {
+           finalMessage = `Context from Web Search:\n${searchContext}\n\nBased on the above context, answer the following:\n${finalMessage}`;
         }
         
+        userParts.push({ text: finalMessage });
         contents.push({ role: 'user', parts: userParts });
 
         const responseStream = await ai.models.generateContentStream({
@@ -250,11 +280,13 @@ app.post("/api/chat", async (req, res) => {
           }));
 
         messages.push(...historyMessages);
-        if (message && message.trim() !== "") {
-          messages.push({ role: "user", content: message });
-        } else {
-          messages.push({ role: "user", content: " " });
+
+        let finalMessage = message && message.trim() !== "" ? message : " ";
+        if (searchGrounding && searchContext) {
+           finalMessage = `Context from Web Search:\n${searchContext}\n\nBased on the above context, answer the following:\n${finalMessage}`;
         }
+
+        messages.push({ role: "user", content: finalMessage });
 
         if (groqKey) {
           const groq = new Groq({ apiKey: groqKey });

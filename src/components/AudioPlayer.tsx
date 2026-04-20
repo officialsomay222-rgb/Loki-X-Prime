@@ -77,6 +77,7 @@ export const AudioPlayer = ({
     <div className="flex items-center gap-3 bg-black/40 dark:bg-black/60 rounded-lg p-2 pr-4 shadow-inner w-[260px] sm:w-[300px] border border-white/10 group/player">
       <button
         onClick={togglePlay}
+        aria-label={isPlaying ? "Pause" : "Play"}
         className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30"
       >
         {isPlaying ? (
