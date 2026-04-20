@@ -60,6 +60,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 
+const EMPTY_ARRAY: any[] = [];
+
 declare global {
   interface Window {
     aistudio?: {
@@ -428,6 +430,13 @@ export default function App() {
     },
     [sendMessage],
   );
+
+  const handleSetModelMode = useCallback((mode: string) => {
+    setModelMode(mode as any);
+    if (currentSessionId) {
+      setSessionModelMode(currentSessionId, mode);
+    }
+  }, [setModelMode, currentSessionId, setSessionModelMode]);
 
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
@@ -1125,19 +1134,14 @@ export default function App() {
               isAwakened={isAwakened}
               isLoading={isLoading}
               modelMode={currentSession?.modelMode || modelMode}
-              setModelMode={(mode) => {
-                setModelMode(mode as any);
-                if (currentSessionId) {
-                  setSessionModelMode(currentSessionId, mode);
-                }
-              }}
+              setModelMode={handleSetModelMode}
               onSendMessage={handleSendMessage}
               onDeleteSession={handleDeleteSession}
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
               draftText={currentSession?.draftText || ""}
-              draftAttachments={currentSession?.draftAttachments || []}
+              draftAttachments={currentSession?.draftAttachments || EMPTY_ARRAY}
               saveSessionDraft={saveSessionDraft}
             />
           </div>
