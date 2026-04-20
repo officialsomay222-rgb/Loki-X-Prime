@@ -264,6 +264,22 @@ const getMarkdownComponents = (
       h3({ node, children }: any) {
         return <h3 className="text-lg font-bold mt-4 mb-2">{children}</h3>;
       },
+      a({ node, children, href, ...props }: any) {
+        // Security enhancement: Prevent XSS from malicious markdown links and defend against tabnabbing
+        const isSafeProtocol = href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:'));
+        const safeHref = isSafeProtocol ? href : '#';
+        return (
+          <a
+            {...props}
+            href={safeHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-500 hover:text-cyan-400 underline decoration-cyan-500/30 hover:decoration-cyan-400 transition-all"
+          >
+            {children}
+          </a>
+        );
+      },
     };
   }
 
@@ -346,6 +362,25 @@ const getMarkdownComponents = (
         >
           {children}
         </motion.h3>
+      );
+    },
+    a({ node, children, href, ...props }: any) {
+      // Security enhancement: Prevent XSS from malicious markdown links and defend against tabnabbing
+      const isSafeProtocol = href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:'));
+      const safeHref = isSafeProtocol ? href : '#';
+      return (
+        <motion.a
+          {...props}
+          href={safeHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 * durationMultiplier }}
+          className="text-cyan-500 hover:text-cyan-400 underline decoration-cyan-500/30 hover:decoration-cyan-400 transition-all"
+        >
+          {children}
+        </motion.a>
       );
     },
   };
