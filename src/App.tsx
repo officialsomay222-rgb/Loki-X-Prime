@@ -60,6 +60,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 
+const EMPTY_ARRAY: any[] = [];
+
 declare global {
   interface Window {
     aistudio?: {
@@ -437,6 +439,13 @@ export default function App() {
     },
     [sendMessage],
   );
+
+  const handleSetModelMode = useCallback((mode: string) => {
+    setModelMode(mode as any);
+    if (currentSessionId) {
+      setSessionModelMode(currentSessionId, mode);
+    }
+  }, [setModelMode, currentSessionId, setSessionModelMode]);
 
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
