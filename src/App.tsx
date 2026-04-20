@@ -509,6 +509,13 @@ export default function App() {
     inputRef.current?.focus();
   }, []);
 
+  const handleSetModelMode = useCallback((mode: string) => {
+    setModelMode(mode as any);
+    if (currentSessionId) {
+      setSessionModelMode(currentSessionId, mode);
+    }
+  }, [setModelMode, currentSessionId, setSessionModelMode]);
+
   const handleDeleteMessage = useCallback((id: string) => {
     if (currentSessionId) {
       deleteMessage(currentSessionId, id);
