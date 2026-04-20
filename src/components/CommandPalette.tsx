@@ -47,11 +47,12 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
                 autoFocus
                 type="text"
                 placeholder="Search sessions or commands..."
+                aria-label="Search sessions or commands"
                 className="w-full bg-transparent p-4 text-slate-900 dark:text-white outline-none placeholder:text-slate-400"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <button onClick={onClose} className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-md transition-colors"><X className="w-4 h-4 text-slate-500 dark:text-slate-400" /></button>
+              <button onClick={onClose} aria-label="Close command palette" className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-md transition-colors"><X className="w-4 h-4 text-slate-500 dark:text-slate-400" /></button>
             </div>
             <div className="max-h-80 overflow-y-auto p-2 custom-scrollbar transform-gpu" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)', willChange: 'transform' }}>
               <button onClick={() => { createNewSession(); onClose(); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-800 dark:text-white transition-colors">

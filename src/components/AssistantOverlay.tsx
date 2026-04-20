@@ -21,16 +21,20 @@ export const AssistantOverlay = ({ onClose }: { onClose: () => void }) => {
   const latestMessage = recentMessages.length > 0 ? recentMessages[recentMessages.length - 1] : null;
   const isAssistantMessage = latestMessage?.role === 'model';
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = async (event: any, info: any) => {
     if (info.offset.y < -50) {
       // Dragged up
       setExpanded(true);
-      // Exit assistant mode and show full app
+      // Clean up the native intent so we don't get stuck in assistant mode
       if (Capacitor.isNativePlatform()) {
-         window.location.href = "/";
-      } else {
-         onClose();
+        try {
+          const plugin = AssistantModePlugin as any;
+          await plugin.clearAssistantMode();
+        } catch (e) {
+          console.error(e);
+        }
       }
+      onClose(); // This seamlessly unmounts the overlay and reveals the main app
     } else if (info.offset.y > 50) {
       // Dragged down - close
       closeOverlay();

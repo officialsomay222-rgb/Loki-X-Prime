@@ -60,6 +60,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 
+const EMPTY_ARRAY: any[] = [];
+
 declare global {
   interface Window {
     aistudio?: {
@@ -71,9 +73,11 @@ declare global {
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [isAssistantMode, setIsAssistantMode] = useState(false);
+  const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
   const [isAvatarActive, setIsAvatarActive] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
@@ -248,13 +252,38 @@ export default function App() {
         try {
           const plugin = AssistantModePlugin as any;
           const { isAssistantMode: nativeMode } = await plugin.checkAssistantMode();
-          if (nativeMode) setIsAssistantMode(true);
+          setIsAssistantMode(nativeMode);
         } catch (e) {
           console.warn("AssistantModePlugin not available");
+          setIsAssistantMode(false);
         }
+      } else {
+        setIsAssistantMode(false);
       }
     };
     checkAssistantMode();
+
+    // Re-check when app resumes
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/app').then(({ App }) => {
+        const appStateListener = App.addListener('appStateChange', (state) => {
+          if (state.isActive) {
+            checkAssistantMode();
+          }
+        });
+      });
+
+      try {
+        const plugin = AssistantModePlugin as any;
+        plugin.addListener("assistantModeChanged", (info: any) => {
+          if (info && info.isAssistantMode !== undefined) {
+             setIsAssistantMode(info.isAssistantMode);
+          }
+        });
+      } catch (e) {
+        console.error("Failed to add listener to AssistantModePlugin", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -382,6 +411,13 @@ export default function App() {
     checkScrollPosition();
   }, [currentSession?.messages.length, currentSessionId, checkScrollPosition]);
 
+  const handleSetModelMode = useCallback((mode: string) => {
+    setModelMode(mode as any);
+    if (currentSessionId) {
+      setSessionModelMode(currentSessionId, mode);
+    }
+  }, [currentSessionId, setModelMode, setSessionModelMode]);
+
   const handleSendMessage = useCallback(
     async (
       text: string,
@@ -403,6 +439,13 @@ export default function App() {
     },
     [sendMessage],
   );
+
+  const handleSetModelMode = useCallback((mode: string) => {
+    setModelMode(mode as any);
+    if (currentSessionId) {
+      setSessionModelMode(currentSessionId, mode);
+    }
+  }, [setModelMode, currentSessionId, setSessionModelMode]);
 
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
@@ -472,6 +515,17 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
+  const handleEditMessage = useCallback((text: string) => {
+    inputRef.current?.setInput(text);
+    inputRef.current?.focus();
+  }, []);
+
+  const handleDeleteMessage = useCallback((id: string) => {
+    if (currentSessionId) {
+      deleteMessage(currentSessionId, id);
+    }
+  }, [currentSessionId, deleteMessage]);
+
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
       <MessageBubble
@@ -519,8 +573,6 @@ export default function App() {
     accentColor,
     messageDensity,
     showAvatars,
-    handleEditMessage,
-    handleDeleteMessage,
     chatAlignment,
     blurIntensity,
     timestampFormat,
@@ -528,6 +580,8 @@ export default function App() {
     avatarShape,
     messageShadow,
     resolvedTheme,
+    handleEditMessage,
+    handleDeleteMessage,
   ]);
 
   if (isBooting) {
@@ -594,6 +648,12 @@ export default function App() {
         : "max-w-4xl";
   const glowOpacity =
     glowIntensity === "low" ? "0.2" : glowIntensity === "high" ? "0.8" : "0.5";
+
+  if (isAssistantMode === null) {
+    // Render an invisible layer while we check if it's assistant mode
+    // to prevent the entire main app from flashing into view briefly
+    return <div style={{ backgroundColor: 'transparent', width: '100%', height: '100%' }} />;
+  }
 
   if (isAssistantMode) {
     return (
@@ -731,6 +791,7 @@ export default function App() {
             </div>
             <button
               onClick={() => setIsSidebarOpen(false)}
+              aria-label="Close Sidebar"
               className={`p-2 rounded-lg transition-colors ${isAwakened && theme === "light" ? "hover:bg-slate-200 text-slate-600" : "hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white"}`}
             >
               <PanelLeftClose className="w-5 h-5" />
@@ -874,6 +935,7 @@ export default function App() {
               {!isSidebarOpen && (
                 <button
                   onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Open Sidebar"
                   className="p-2 sm:p-2.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-white"
                 >
                   <PanelLeftOpen className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -1092,19 +1154,14 @@ export default function App() {
               isAwakened={isAwakened}
               isLoading={isLoading}
               modelMode={currentSession?.modelMode || modelMode}
-              setModelMode={(mode) => {
-                setModelMode(mode as any);
-                if (currentSessionId) {
-                  setSessionModelMode(currentSessionId, mode);
-                }
-              }}
+              setModelMode={handleSetModelMode}
               onSendMessage={handleSendMessage}
               onDeleteSession={handleDeleteSession}
               currentSessionId={currentSessionId}
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
               draftText={currentSession?.draftText || ""}
-              draftAttachments={currentSession?.draftAttachments || []}
+              draftAttachments={currentSession?.draftAttachments || EMPTY_ARRAY}
               saveSessionDraft={saveSessionDraft}
             />
           </div>
