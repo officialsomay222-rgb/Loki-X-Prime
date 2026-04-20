@@ -47,6 +47,7 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
                 autoFocus
                 type="text"
                 placeholder="Search sessions or commands..."
+                aria-label="Search sessions or commands"
                 className="w-full bg-transparent p-4 text-slate-900 dark:text-white outline-none placeholder:text-slate-400"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
