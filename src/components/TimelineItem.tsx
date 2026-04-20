@@ -4,7 +4,9 @@ import { MessageSquare, Trash2, Pin, PinOff, Edit2, Check, MoreVertical } from '
 import { ChatSession } from '../contexts/ChatContext';
 
 interface TimelineItemProps {
-  session: ChatSession;
+  sessionId: string;
+  title: string;
+  isPinned?: boolean;
   isActive: boolean;
   isAwakened: boolean;
   effectSidebar: boolean;
@@ -16,11 +18,11 @@ interface TimelineItemProps {
 }
 
 export const TimelineItem = React.memo(({
-  session, isActive, isAwakened, effectSidebar, onClick, onDelete, onPin, onRename, index
+  sessionId, title, isPinned, isActive, isAwakened, effectSidebar, onClick, onDelete, onPin, onRename, index
 }: TimelineItemProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(session.title);
+  const [editTitle, setEditTitle] = useState(title);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,10 +66,10 @@ export const TimelineItem = React.memo(({
 
   const submitRename = () => {
     if (!isEditing) return;
-    if (editTitle.trim() && editTitle !== session.title) {
-      onRename(session.id, editTitle.trim());
+    if (editTitle.trim() && editTitle !== title) {
+      onRename(sessionId, editTitle.trim());
     } else {
-      setEditTitle(session.title);
+      setEditTitle(title);
     }
     setIsEditing(false);
     setIsMenuOpen(false);
@@ -77,7 +79,7 @@ export const TimelineItem = React.memo(({
     if (e.key === 'Enter') {
       submitRename();
     } else if (e.key === 'Escape') {
-      setEditTitle(session.title);
+      setEditTitle(title);
       setIsEditing(false);
       setIsMenuOpen(false);
     }
@@ -90,7 +92,7 @@ export const TimelineItem = React.memo(({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4, delay: index * 0.03, ease: [0.16, 1, 0.3, 1] }}
       onClick={(e) => {
-        if (!isEditing && !isMenuOpen) onClick(session.id);
+        if (!isEditing && !isMenuOpen) onClick(sessionId);
       }}
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
@@ -109,7 +111,7 @@ export const TimelineItem = React.memo(({
       )}
 
       <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
-        {session.isPinned ? (
+        {isPinned ? (
           <Pin className={`w-4 h-4 shrink-0 transition-colors text-amber-500 dark:text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]`} />
         ) : (
           <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-cyan-600 dark:text-[#00f2ff]' : (isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400' : 'text-slate-400 dark:text-[#6b6b80] group-hover:text-cyan-500'}`} />
@@ -132,7 +134,7 @@ export const TimelineItem = React.memo(({
           </div>
         ) : (
           <div className="truncate text-sm font-semibold tracking-tight">
-            {session.title}
+            {title}
           </div>
         )}
       </div>
@@ -143,7 +145,7 @@ export const TimelineItem = React.memo(({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(e, session.id);
+              onDelete(e, sessionId);
             }}
             aria-label="Delete timeline"
             className={`hidden md:flex p-1.5 hover:bg-slate-200 dark:hover:bg-black/50 rounded-lg transition-all opacity-0 md:group-hover:opacity-100 ${(isAwakened || effectSidebar) ? 'text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400' : 'text-slate-400 dark:text-[#6b6b80] hover:text-red-500 dark:hover:text-red-400'} ${isMenuOpen ? 'hidden' : ''}`}
@@ -200,25 +202,25 @@ export const TimelineItem = React.memo(({
               Rename
             </button>
             <button
-              aria-label={session.isPinned ? 'Unpin timeline' : 'Pin timeline'}
+              aria-label={isPinned ? 'Unpin timeline' : 'Pin timeline'}
               role="menuitem"
               onClick={() => {
-                onPin(session.id);
+                onPin(sessionId);
                 setIsMenuOpen(false);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors
                 ${(isAwakened || effectSidebar) ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}
               `}
             >
-              {session.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-              {session.isPinned ? 'Unpin' : 'Pin'}
+              {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+              {isPinned ? 'Unpin' : 'Pin'}
             </button>
             <div className={`h-px w-full my-1 ${(isAwakened || effectSidebar) ? 'bg-white/10' : 'bg-slate-200 dark:bg-white/10'}`} />
             <button
               aria-label="Delete timeline"
               role="menuitem"
               onClick={(e) => {
-                onDelete(e, session.id);
+                onDelete(e, sessionId);
                 setIsMenuOpen(false);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10`}

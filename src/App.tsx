@@ -826,7 +826,9 @@ export default function App() {
               {sortedAndFilteredSessions.map((session, index) => (
                 <TimelineItem
                   key={session.id}
-                  session={session}
+                  sessionId={session.id}
+                  title={session.title}
+                  isPinned={session.isPinned}
                   index={index}
                   isActive={currentSessionId === session.id}
                   isAwakened={isAwakened}
