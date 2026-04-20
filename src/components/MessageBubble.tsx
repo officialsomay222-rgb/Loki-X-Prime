@@ -61,6 +61,7 @@ const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default'
         <span className={codeTheme === 'matrix' || codeTheme === 'neon' ? 'font-bold tracking-wider' : ''}>{match[1]}</span>
         <button
           onClick={handleCopy}
+          aria-label="Copy code"
           className="flex items-center gap-1 hover:text-white transition-colors p-1 rounded-md"
           title="Copy code"
         >

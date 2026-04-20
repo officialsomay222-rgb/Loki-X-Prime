@@ -1112,6 +1112,7 @@ export default function App() {
                         block: "end",
                       });
                     }}
+                    aria-label="Scroll to bottom"
                     className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto"
                   >
                     <ArrowDown className="w-5 h-5" />

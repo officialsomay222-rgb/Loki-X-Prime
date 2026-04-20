@@ -988,6 +988,7 @@ export const ChatInput = memo(
                                     onClick={() =>
                                       setSearchGrounding(!searchGrounding)
                                     }
+                                    aria-label="Toggle Web Grounding"
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
@@ -1007,6 +1008,7 @@ export const ChatInput = memo(
 
                                   <button
                                     onClick={() => setIsImageMode(!isImageMode)}
+                                    aria-label="Toggle Image Mode"
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
