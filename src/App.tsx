@@ -73,8 +73,6 @@ declare global {
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
-const EMPTY_ARRAY: any[] = [];
-
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
@@ -440,13 +438,6 @@ export default function App() {
     [sendMessage],
   );
 
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
-
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
       e.preventDefault();
@@ -503,24 +494,6 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
-
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
 
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
@@ -824,6 +797,7 @@ export default function App() {
             <div className="px-3 mb-3 relative">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               <input
+                aria-label="Search timelines"
                 type="text"
                 placeholder="Search timelines..."
                 value={timelineSearchQuery}
@@ -1129,8 +1103,10 @@ export default function App() {
                       });
                     }}
                     className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto"
+                    aria-label="Scroll to bottom"
+                    title="Scroll to bottom"
                   >
-                    <ArrowDown className="w-5 h-5" />
+                    <ArrowDown className="w-5 h-5" aria-hidden="true" />
                   </motion.button>
                 )}
             </AnimatePresence>
