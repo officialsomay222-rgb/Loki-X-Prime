@@ -57,7 +57,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
                 >
                   <div className="absolute -inset-4 bg-cyan-500/20 blur-2xl rounded-full animate-pulse" />
                   <img
-                    src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"
+                    src="/Picsart_26-02-28_11-29-26-443.jpg"
                     alt="Krishna Avtaar"
                     className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-cyan-500/50 shadow-[0_0_30px_rgba(0,242,255,0.3)] relative z-1"
                   />
