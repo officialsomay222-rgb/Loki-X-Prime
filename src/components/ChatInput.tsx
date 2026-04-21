@@ -974,6 +974,8 @@ export const ChatInput = memo(
                                   {modelMode === 'pro' && (
                                     <button
                                       onClick={() => setThinkingMode(!thinkingMode)}
+                                      title="Toggle Deep Search"
+                                      aria-label="Toggle Deep Search"
                                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                     >
                                       <div className="flex items-center gap-3">
@@ -996,6 +998,8 @@ export const ChatInput = memo(
                                     onClick={() =>
                                       setSearchGrounding(!searchGrounding)
                                     }
+                                    title="Toggle Web Grounding"
+                                    aria-label="Toggle Web Grounding"
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
@@ -1015,6 +1019,8 @@ export const ChatInput = memo(
 
                                   <button
                                     onClick={() => setIsImageMode(!isImageMode)}
+                                    title="Toggle Image Mode"
+                                    aria-label="Toggle Image Mode"
                                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
@@ -1073,6 +1079,8 @@ export const ChatInput = memo(
                                 ].map((m) => (
                                   <button
                                     key={m.id}
+                                    title={`Select ${m.label} model`}
+                                    aria-label={`Select ${m.label} model`}
                                     onClick={() => {
                                       setModelMode(m.id as any);
                                       setIsModelMenuOpen(false);
@@ -1217,6 +1225,8 @@ export const ChatInput = memo(
 
                     <button
                       onClick={() => handleAttachmentOptionSelect('gallery')}
+                      title="Open Gallery"
+                      aria-label="Open Gallery"
                       className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
                     >
                       <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
@@ -1230,6 +1240,8 @@ export const ChatInput = memo(
 
                     <button
                       onClick={() => handleAttachmentOptionSelect('files')}
+                      title="Open File Manager"
+                      aria-label="Open File Manager"
                       className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
                     >
                       <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center">
