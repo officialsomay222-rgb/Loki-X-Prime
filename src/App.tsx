@@ -61,7 +61,6 @@ import {
 } from "lucide-react";
 
 const EMPTY_ARRAY: any[] = [];
-
 declare global {
   interface Window {
     aistudio?: {
@@ -72,7 +71,6 @@ declare global {
 }
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
-
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -481,17 +479,6 @@ export default function App() {
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
 
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
-
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
-
   const formatDate = useCallback((date: Date) => {
     if (isToday(date)) {
       return format(date, "HH:mm");
@@ -686,7 +673,7 @@ export default function App() {
             <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
             <img
               src={
-                "https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"
+                "/Picsart_26-02-28_11-29-26-443.jpg"
               }
               className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]"
               alt="Commander"
@@ -804,6 +791,7 @@ export default function App() {
             <div className="px-3 mb-3 relative">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               <input
+                aria-label="Search timelines"
                 type="text"
                 placeholder="Search timelines..."
                 value={timelineSearchQuery}
@@ -984,7 +972,7 @@ export default function App() {
                 )}
                 <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
                   <img
-                    src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"
+                    src="/Picsart_26-02-28_11-29-26-443.jpg"
                     className="w-full h-full object-cover"
                     alt="Commander"
                   />
@@ -1047,7 +1035,7 @@ export default function App() {
                         <div className="absolute inset-0 awakened-logo-shine"></div>
                         {/* Main Transparent Logo */}
                         <img
-                          src="https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png"
+                          src="/Picsart_26-03-05_20-52-27-601.png"
                           alt="Loki Prime Logo"
                           className="w-full h-full object-contain relative z-10 awakened-logo-image"
                         />
@@ -1106,8 +1094,10 @@ export default function App() {
                       });
                     }}
                     className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto"
+                    aria-label="Scroll to bottom"
+                    title="Scroll to bottom"
                   >
-                    <ArrowDown className="w-5 h-5" />
+                    <ArrowDown className="w-5 h-5" aria-hidden="true" />
                   </motion.button>
                 )}
             </AnimatePresence>

@@ -5,7 +5,32 @@ import rateLimit from "express-rate-limit";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import { performDuckDuckGoSearch } from "./ddg_search.js";
+import { performDuckDuckGoSearch, performDuckDuckGoImageSearch } from "./ddg_search.js";
+
+
+function extractImageQuery(message: string): string | null {
+  if (!message) return null;
+  const cleanMessage = message.replace(/^(show\s+me|give\s+me|send|find|search\s+for|i\s+need|mujhe|bhai|bro)\s+(an?\s+)?/i, "").trim();
+
+  const prefixRegex = /^(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)$/i;
+  const suffixRegex = /^(.+?)\s+(?:ki|ka|ke)?\s*(?:image|picture|photo|pic|img)s?(?:\s+(?:dikhao|do|bhejo|please|chahiye|de|dikhana))?$/i;
+
+  let match = cleanMessage.match(prefixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  match = cleanMessage.match(suffixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  const origRegex = /(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)/i;
+  match = message.match(origRegex);
+  if (match && match[1]) return match[1].trim();
+
+  const fallbackSuffixRegex = /(.+?)\s+(?:ki|ka|ke)?\s*(?:image|picture|photo|pic|img)s?/i;
+  match = message.match(fallbackSuffixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  return null;
+}
 
 const app = express();
 
@@ -173,12 +198,24 @@ app.post("/api/chat", async (req, res) => {
       const hasAttachments = attachments && attachments.length > 0;
 
       let searchContext = "";
+      let imageMarkdown = "";
+
       if (searchGrounding) {
         // Build search query: 20% history, 80% exact message
         const lastFewMessages = (history || []).slice(-3).map((m: any) => m?.parts?.[0]?.text || "").join(" ");
         const queryToSearch = `${lastFewMessages} ${message || ""}`.trim();
         if (queryToSearch) {
            searchContext = await performDuckDuckGoSearch(queryToSearch);
+
+           // Check if user is asking for an image
+           const imageQuery = extractImageQuery(message);
+
+           if (imageQuery) {
+              const imageUrls = await performDuckDuckGoImageSearch(imageQuery);
+              if (imageUrls && imageUrls.length > 0) {
+                 imageMarkdown = imageUrls.map(url => `![${imageQuery}](${url})`).join('\n\n') + '\n\n';
+              }
+           }
         }
       }
 
@@ -253,6 +290,11 @@ app.post("/api/chat", async (req, res) => {
         });
 
         setupSSE();
+
+        if (imageMarkdown) {
+          res.write(`data: ${JSON.stringify({ text: imageMarkdown })}\n\n`);
+        }
+
         for await (const chunk of responseStream) {
           if (chunk.text) {
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
@@ -302,6 +344,10 @@ app.post("/api/chat", async (req, res) => {
           });
 
           setupSSE();
+
+          if (imageMarkdown) {
+            res.write(`data: ${JSON.stringify({ text: imageMarkdown })}\n\n`);
+          }
 
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || "";
