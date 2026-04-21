@@ -891,7 +891,7 @@ export const ChatInput = memo(
                             <img src={att.url} alt={`attachment-${index}`} className="w-full h-full object-cover" />
                             <button
                               onClick={() => removeAttachment(index)}
-                              aria-label="Remove attachment"
+                              title="Remove attachment" aria-label="Remove attachment"
                               className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -901,6 +901,7 @@ export const ChatInput = memo(
                       </div>
                     )}
                     <textarea
+                      aria-label="Chat input"
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -944,7 +945,7 @@ export const ChatInput = memo(
                         <div className="relative options-menu-container">
                           <button
                             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
-                            aria-label="Options menu"
+                            title="Options menu" aria-label="Options menu"
                             className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                           >
                             <SlidersHorizontal className="w-5 h-5" />
@@ -1035,7 +1036,7 @@ export const ChatInput = memo(
                         <motion.div layout className="relative model-menu-container">
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                            aria-label="Select Model"
+                            title="Select Model" aria-label="Select Model"
                             className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${
                               isModelMenuOpen 
                                 ? "bg-slate-200 dark:bg-white/20 border-transparent text-slate-900 dark:text-[#E3E3E3] shadow-md" 
@@ -1087,7 +1088,7 @@ export const ChatInput = memo(
                           ref={micButtonRef}
                           onClick={toggleRecording}
                           disabled={isTranscribing}
-                          aria-label="Toggle Voice Input"
+                          title="Toggle Voice Input" aria-label="Toggle Voice Input"
                           className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border ${
                             isRecording 
                               ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 

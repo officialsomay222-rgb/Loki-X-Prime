@@ -1,0 +1,21 @@
+--- src/components/MessageBubble.tsx
++++ src/components/MessageBubble.tsx
+@@ -999,7 +999,17 @@
+       prevProps.messageDensity === nextProps.messageDensity &&
+       prevProps.showAvatars === nextProps.showAvatars &&
+       prevProps.isAwakened === nextProps.isAwakened &&
+-      prevProps.resolvedTheme === nextProps.resolvedTheme
++      prevProps.resolvedTheme === nextProps.resolvedTheme &&
++      prevProps.chatAlignment === nextProps.chatAlignment &&
++      prevProps.blurIntensity === nextProps.blurIntensity &&
++      prevProps.timestampFormat === nextProps.timestampFormat &&
++      prevProps.codeTheme === nextProps.codeTheme &&
++      prevProps.avatarShape === nextProps.avatarShape &&
++      prevProps.messageShadow === nextProps.messageShadow &&
++      prevProps.onCopy === nextProps.onCopy &&
++      prevProps.onEdit === nextProps.onEdit &&
++      prevProps.onDelete === nextProps.onDelete &&
++      prevProps.formatDate === nextProps.formatDate
+     );
+   }
+ );
