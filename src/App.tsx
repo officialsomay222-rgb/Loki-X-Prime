@@ -73,7 +73,6 @@ declare global {
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
-const EMPTY_ARRAY: any[] = [];
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -237,7 +236,7 @@ export default function App() {
 
   const [showSkip, setShowSkip] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
 
   useEffect(() => {
     const checkAssistantMode = async () => {
@@ -296,12 +295,6 @@ export default function App() {
         })
         .catch(console.warn);
 
-      Keyboard.addListener("keyboardWillShow", () => {
-        setIsKeyboardOpen(true);
-      });
-      Keyboard.addListener("keyboardWillHide", () => {
-        setIsKeyboardOpen(false);
-      });
 
       return () => {
         Keyboard.removeAllListeners();
@@ -440,13 +433,6 @@ export default function App() {
     [sendMessage],
   );
 
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
-
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
       e.preventDefault();
@@ -515,16 +501,6 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
-
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
 
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
@@ -1060,7 +1036,7 @@ export default function App() {
                   <div
                     className={`relative flex justify-center items-center transition-all duration-700 ${isAwakened ? "w-full max-w-[480px] sm:max-w-[700px] aspect-[2/1]" : "w-full max-w-[200px] sm:max-w-[280px] aspect-[2/1]"}`}
                     style={{
-                      transform: isKeyboardOpen ? "scale(0.85)" : "scale(1)",
+
                     }}
                   >
                     {isAwakened ? (
@@ -1083,11 +1059,8 @@ export default function App() {
                   <div
                     className="relative"
                     style={{
-                      opacity: isKeyboardOpen ? 0 : 1,
                       transition: "opacity 0.3s ease, max-height 0.3s ease",
-                      maxHeight: isKeyboardOpen ? "0px" : "50px",
                       overflow: "hidden",
-                      pointerEvents: isKeyboardOpen ? "none" : "auto",
                     }}
                   >
                     <p
@@ -1145,7 +1118,7 @@ export default function App() {
             className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
             style={{
               paddingBottom:
-                "calc(16px + clamp(24px, env(safe-area-inset-bottom, 24px), 48px))",
+                "calc(16px + clamp(0px, env(safe-area-inset-bottom, 0px), 48px))",
               paddingTop: "8px",
             }}
           >
