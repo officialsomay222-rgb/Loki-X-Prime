@@ -31,7 +31,6 @@ export const ReportOverlay: React.FC<ReportOverlayProps> = ({ onClose }) => {
                   <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
                     <p className="text-sm text-slate-500 dark:text-[#717171]">Describe the issue you're experiencing. Our team will look into it as soon as possible.</p>
                     <textarea
-                      aria-label="Report description"
                       value={reportText}
                       onChange={(e) => setReportText(e.target.value)}
                       placeholder="Type your message here..."

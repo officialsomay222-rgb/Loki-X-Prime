@@ -908,7 +908,6 @@ export const ChatInput = memo(
                       </div>
                     )}
                     <textarea
-                      aria-label="Chat input"
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}

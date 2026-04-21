@@ -1197,11 +1197,11 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 
 .awakened-logo-aura {
   /* Static container to hold the mask */
-  -webkit-mask-image: url("/Picsart_26-03-05_20-52-27-601.png");
+  -webkit-mask-image: url("https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png");
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
-  mask-image: url("/Picsart_26-03-05_20-52-27-601.png");
+  mask-image: url("https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png");
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
@@ -1249,11 +1249,11 @@ html:not(.dark) .awakened-mode .glass-button:hover {
   animation: awakened-shine-sweep 4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 
   /* Strict masking to the logo shape so the shine only appears *on* the logo */
-  -webkit-mask-image: url("/Picsart_26-03-05_20-52-27-601.png");
+  -webkit-mask-image: url("https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png");
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
-  mask-image: url("/Picsart_26-03-05_20-52-27-601.png");
+  mask-image: url("https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png");
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;

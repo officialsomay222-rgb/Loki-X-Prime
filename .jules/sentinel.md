@@ -12,8 +12,3 @@
 **Vulnerability:** The Express backend (`api/index.ts`) defaulted to `*` for its CORS `origin` policy regardless of the environment (unless `CORS_ORIGIN` was explicitly set). This means that in production, if `CORS_ORIGIN` was omitted, it would fall back to accepting requests from any origin, violating the principle of least privilege.
 **Learning:** Always explicitly check the environment (`NODE_ENV === 'production'`) when falling back on security configurations, rather than defaulting to the most permissive setting for developer convenience.
 **Prevention:** Default to `false` (or restrictive settings) in production, and only default to `*` (or permissive settings) in development.
-
-## 2026-04-21 - Prevent XSS and TabNabbing in ReactMarkdown
-**Vulnerability:** User-provided URLs in `react-markdown` links could potentially use malicious protocols (e.g., `javascript:`) to execute cross-site scripting (XSS), and external links without `rel="noopener noreferrer"` could expose the app to reverse tabnabbing.
-**Learning:** `react-markdown` does not sanitize `href` attributes for safe protocols by default. The custom renderer for the `a` tag must explicitly validate that the URL protocol is safe (e.g., `http:`, `https:`, `mailto:`, or relative URLs starting with `/`) and override it if not.
-**Prevention:** Always implement a custom `a` tag renderer in the `components` prop of `<ReactMarkdown>` that enforces a strict protocol whitelist (ignoring case) and applies `target="_blank"` with `rel="noopener noreferrer"`.
