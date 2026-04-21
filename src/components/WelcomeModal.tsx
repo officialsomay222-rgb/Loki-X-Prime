@@ -76,6 +76,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
               <div className="w-full space-y-6">
                 <div className="relative">
                   <input
+                    aria-label="Your name"
                     type="text"
                     value={tempName}
                     onChange={(e) => setTempName(e.target.value)}

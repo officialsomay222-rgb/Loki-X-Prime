@@ -50,8 +50,9 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
       </div>
       <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar transform-gpu" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)', willChange: 'transform' }}>
         <div className="space-y-4">
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Display Name</label>
+          <label htmlFor="display-name" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Display Name</label>
           <input 
+            id="display-name"
             type="text" 
             value={tempName}
             onChange={(e) => setTempName(e.target.value)}
@@ -61,8 +62,9 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           />
         </div>
         <div className="space-y-4">
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
+          <label htmlFor="email-address" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
           <input 
+            id="email-address"
             type="email" 
             value={tempEmail}
             onChange={(e) => setTempEmail(e.target.value)}
