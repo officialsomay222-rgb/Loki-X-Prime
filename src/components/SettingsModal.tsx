@@ -42,6 +42,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           whileTap={{ scale: 0.9 }}
           onClick={onClose} 
           aria-label="Collapse Menu"
+          title="Collapse Menu"
           className="p-2 rounded-full transition-colors"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
@@ -50,8 +51,8 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
       </div>
       <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar transform-gpu" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)', willChange: 'transform' }}>
         <div className="space-y-4">
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Display Name</label>
-          <input 
+          <label htmlFor="displayName" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Display Name</label>
+          <input id="displayName"
             type="text" 
             value={tempName}
             onChange={(e) => setTempName(e.target.value)}
@@ -61,8 +62,8 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           />
         </div>
         <div className="space-y-4">
-          <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
-          <input 
+          <label htmlFor="emailAddress" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
+          <input id="emailAddress"
             type="email" 
             value={tempEmail}
             onChange={(e) => setTempEmail(e.target.value)}
@@ -106,7 +107,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       case 'toggle':
         return (
           <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={label} />
             <div className="w-11 h-6 bg-slate-200 dark:bg-[#333] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900 dark:peer-checked:bg-white peer-checked:after:bg-white dark:peer-checked:after:bg-black"></div>
           </label>
         );
@@ -119,7 +120,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
               const rect = e.currentTarget.getBoundingClientRect();
               setShowPicker({ label, options, value, onChange, rect });
             }}
-            className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer"
+            className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer" aria-label={label}
           >
             <span className="capitalize">{value}</span>
             <ChevronRight className="w-4 h-4" />
@@ -132,6 +133,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
               type="range" min={min} max={max} step={step} value={value} 
               onChange={(e) => onChange(parseFloat(e.target.value))}
               className="flex-1 h-1 bg-slate-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-white"
+              aria-label={label}
             />
             <span className="text-[10px] font-mono text-slate-900 dark:text-white bg-slate-100 dark:bg-[#222] px-1.5 py-0.5 rounded min-w-[24px] text-center">{value}</span>
           </div>
@@ -144,6 +146,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
             onChange={(e) => onChange(e.target.value)}
             className="bg-transparent text-sm text-slate-900 dark:text-white text-right focus:outline-none w-32"
             placeholder="Enter..."
+            aria-label={label}
           />
         );
       default:
@@ -278,6 +281,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose} 
                   aria-label="Close Settings"
+                  title="Close Settings"
                   className="p-2 rounded-full transition-colors group"
                 >
                   <X className="w-6 h-6 text-slate-500 dark:text-[#717171] group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
