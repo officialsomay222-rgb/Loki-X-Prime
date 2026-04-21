@@ -73,7 +73,6 @@ declare global {
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
-const EMPTY_ARRAY: any[] = [];
 
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -440,12 +439,6 @@ export default function App() {
     [sendMessage],
   );
 
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
 
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
@@ -515,16 +508,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
 
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
 
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
@@ -710,7 +694,7 @@ export default function App() {
             <div className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura bg-cyan-500/50 shadow-[0_0_15px_rgba(0,242,255,0.5)]"></div>
             <img
               src={
-                "https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"
+                "/Picsart_26-02-28_11-29-26-443.jpg"
               }
               className="absolute inset-0 w-full h-full rounded-full object-cover z-[2] border-2 border-white dark:border-[#08080c]"
               alt="Commander"
@@ -1008,7 +992,7 @@ export default function App() {
                 )}
                 <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
                   <img
-                    src="https://i.ibb.co/ns3LTFwp/Picsart-26-02-28-11-29-26-443.jpg"
+                    src="/Picsart_26-02-28_11-29-26-443.jpg"
                     className="w-full h-full object-cover"
                     alt="Commander"
                   />
@@ -1071,7 +1055,7 @@ export default function App() {
                         <div className="absolute inset-0 awakened-logo-shine"></div>
                         {/* Main Transparent Logo */}
                         <img
-                          src="https://i.ibb.co/ch1LzzTD/Picsart-26-03-05-20-52-27-601.png"
+                          src="/Picsart_26-03-05_20-52-27-601.png"
                           alt="Loki Prime Logo"
                           className="w-full h-full object-contain relative z-10 awakened-logo-image"
                         />
