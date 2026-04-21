@@ -72,9 +72,6 @@ declare global {
 }
 
 const AssistantModePlugin = registerPlugin("AssistantMode");
-
-const EMPTY_ARRAY: any[] = [];
-
 export default function App() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
@@ -440,13 +437,6 @@ export default function App() {
     [sendMessage],
   );
 
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
-
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
       e.preventDefault();
@@ -494,17 +484,6 @@ export default function App() {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
-
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
-
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
 
   const formatDate = useCallback((date: Date) => {
     if (isToday(date)) {
