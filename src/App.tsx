@@ -494,6 +494,17 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
+  const handleEditMessage = useCallback((text: string) => {
+    inputRef.current?.setInput(text);
+    inputRef.current?.focus();
+  }, []);
+
+  const handleDeleteMessage = useCallback((id: string) => {
+    if (currentSessionId) {
+      deleteMessage(currentSessionId, id);
+    }
+  }, [currentSessionId, deleteMessage]);
+
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (
       <MessageBubble
