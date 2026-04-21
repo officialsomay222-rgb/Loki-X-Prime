@@ -7,6 +7,31 @@ import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
 import { performDuckDuckGoSearch, performDuckDuckGoImageSearch } from "./ddg_search.js";
 
+
+function extractImageQuery(message: string): string | null {
+  if (!message) return null;
+  const cleanMessage = message.replace(/^(show\s+me|give\s+me|send|find|search\s+for|i\s+need|mujhe|bhai|bro)\s+(an?\s+)?/i, "").trim();
+
+  const prefixRegex = /^(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)$/i;
+  const suffixRegex = /^(.+?)\s+(?:ki|ka|ke)?\s*(?:image|picture|photo|pic|img)s?(?:\s+(?:dikhao|do|bhejo|please|chahiye|de|dikhana))?$/i;
+
+  let match = cleanMessage.match(prefixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  match = cleanMessage.match(suffixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  const origRegex = /(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)/i;
+  match = message.match(origRegex);
+  if (match && match[1]) return match[1].trim();
+
+  const fallbackSuffixRegex = /(.+?)\s+(?:ki|ka|ke)?\s*(?:image|picture|photo|pic|img)s?/i;
+  match = message.match(fallbackSuffixRegex);
+  if (match && match[1]) return match[1].trim();
+
+  return null;
+}
+
 const app = express();
 
 const getTodayDateString = () => {
@@ -183,11 +208,9 @@ app.post("/api/chat", async (req, res) => {
            searchContext = await performDuckDuckGoSearch(queryToSearch);
 
            // Check if user is asking for an image
-           const imageRegex = /(image|picture|photo|pic)s?\s*(of|about|for)?\s+(.+)/i;
-           const imageMatch = message ? message.match(imageRegex) : null;
+           const imageQuery = extractImageQuery(message);
 
-           if (imageMatch && imageMatch[3]) {
-              const imageQuery = imageMatch[3].trim();
+           if (imageQuery) {
               const imageUrls = await performDuckDuckGoImageSearch(imageQuery);
               if (imageUrls && imageUrls.length > 0) {
                  imageMarkdown = imageUrls.map(url => `![${imageQuery}](${url})`).join('\n\n') + '\n\n';

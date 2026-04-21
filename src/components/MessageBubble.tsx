@@ -304,6 +304,11 @@ const getMarkdownComponents = (
       a({ node, children, href, ...props }: any) {
         const isSafeProtocol = href && (href.toLowerCase().startsWith('http://') || href.toLowerCase().startsWith('https://') || href.toLowerCase().startsWith('mailto:') || href.startsWith('/'));
         const safeHref = isSafeProtocol ? href : '#';
+
+        if (href && (href.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i) || children?.[0]?.toString().match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i))) {
+          return <MarkdownImage src={safeHref} alt="Linked Image" />;
+        }
+
         return <a href={safeHref} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline" {...props}>{children}</a>;
       },
     };
@@ -420,6 +425,11 @@ const getMarkdownComponents = (
     a({ node, children, href, ...props }: any) {
       const isSafeProtocol = href && (href.toLowerCase().startsWith('http://') || href.toLowerCase().startsWith('https://') || href.toLowerCase().startsWith('mailto:') || href.startsWith('/'));
       const safeHref = isSafeProtocol ? href : '#';
+
+      if (href && (href.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i) || children?.[0]?.toString().match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i))) {
+        return <MarkdownImage src={safeHref} alt="Linked Image" />;
+      }
+
       return <a href={safeHref} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline" {...props}>{children}</a>;
     },
   };
