@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import { performDuckDuckGoSearch, performDuckDuckGoImageSearch } from "./ddg_search.js";
+import { performDuckDuckGoSearch } from "./ddg_search.js";
 
 const app = express();
 
@@ -173,26 +173,12 @@ app.post("/api/chat", async (req, res) => {
       const hasAttachments = attachments && attachments.length > 0;
 
       let searchContext = "";
-      let imageMarkdown = "";
-
       if (searchGrounding) {
         // Build search query: 20% history, 80% exact message
         const lastFewMessages = (history || []).slice(-3).map((m: any) => m?.parts?.[0]?.text || "").join(" ");
         const queryToSearch = `${lastFewMessages} ${message || ""}`.trim();
         if (queryToSearch) {
            searchContext = await performDuckDuckGoSearch(queryToSearch);
-
-           // Check if user is asking for an image
-           const imageRegex = /(image|picture|photo|pic)s?\s*(of|about|for)?\s+(.+)/i;
-           const imageMatch = message ? message.match(imageRegex) : null;
-
-           if (imageMatch && imageMatch[3]) {
-              const imageQuery = imageMatch[3].trim();
-              const imageUrls = await performDuckDuckGoImageSearch(imageQuery);
-              if (imageUrls && imageUrls.length > 0) {
-                 imageMarkdown = imageUrls.map(url => `![${imageQuery}](${url})`).join('\n\n') + '\n\n';
-              }
-           }
         }
       }
 
@@ -267,11 +253,6 @@ app.post("/api/chat", async (req, res) => {
         });
 
         setupSSE();
-
-        if (imageMarkdown) {
-          res.write(`data: ${JSON.stringify({ text: imageMarkdown })}\n\n`);
-        }
-
         for await (const chunk of responseStream) {
           if (chunk.text) {
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
@@ -321,10 +302,6 @@ app.post("/api/chat", async (req, res) => {
           });
 
           setupSSE();
-
-          if (imageMarkdown) {
-            res.write(`data: ${JSON.stringify({ text: imageMarkdown })}\n\n`);
-          }
 
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || "";
