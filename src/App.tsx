@@ -60,7 +60,6 @@ import {
   ArrowDown,
 } from "lucide-react";
 
-const EMPTY_ARRAY: any[] = [];
 
 declare global {
   interface Window {
@@ -440,12 +439,7 @@ export default function App() {
     [sendMessage],
   );
 
-  const handleSetModelMode = useCallback((mode: string) => {
-    setModelMode(mode as any);
-    if (currentSessionId) {
-      setSessionModelMode(currentSessionId, mode);
-    }
-  }, [setModelMode, currentSessionId, setSessionModelMode]);
+
 
   const handleDeleteSession = useCallback(
     (e: React.MouseEvent, id: string) => {
@@ -515,16 +509,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleEditMessage = useCallback((text: string) => {
-    inputRef.current?.setInput(text);
-    inputRef.current?.focus();
-  }, []);
 
-  const handleDeleteMessage = useCallback((id: string) => {
-    if (currentSessionId) {
-      deleteMessage(currentSessionId, id);
-    }
-  }, [currentSessionId, deleteMessage]);
 
   const renderedMessages = useMemo(() => {
     return currentSession?.messages.map((message) => (

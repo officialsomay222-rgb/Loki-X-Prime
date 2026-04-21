@@ -22,7 +22,8 @@ import {
   Settings2,
   Paperclip,
   ArrowRight,
-  Rocket
+  Rocket,
+  Folder
 } from "lucide-react";
 import { useSettings } from "../contexts/SettingsContext";
 import { useGlobalInteraction } from "../contexts/GlobalInteractionContext";
@@ -91,6 +92,7 @@ export const ChatInput = memo(
       const [isTranscribing, setIsTranscribing] = useState(false);
       const [isFocused, setIsFocused] = useState(false);
       const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
+      const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
       const [userVolume, setUserVolume] = useState<number>(0);
       const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
@@ -191,61 +193,57 @@ export const ChatInput = memo(
 
       const handleAttachmentClick = async () => {
         if (Capacitor.isNativePlatform()) {
-          try {
-            const result = await ActionSheet.showActions({
-              title: 'Add Attachment',
-              options: [
-                { title: 'Photos (Gemini Style)', style: ActionSheetButtonStyle.Default },
-                { title: 'Other Files (Full File Manager)', style: ActionSheetButtonStyle.Default },
-                { title: 'Cancel', style: ActionSheetButtonStyle.Cancel }
-              ]
-            });
-
-            if (result.index === 0) {
-              const limit = 10 - attachments.length;
-              if (limit <= 0) return;
-
-              const photoResult = await Camera.pickImages({
-                limit: limit,
-              });
-
-              if (photoResult && photoResult.photos && photoResult.photos.length > 0) {
-                const newAttachments = [...attachments];
-                for (const photo of photoResult.photos) {
-                  if (newAttachments.length >= 10) break;
-                  if (photo.webPath) {
-                     try {
-                       const response = await fetch(photo.webPath);
-                       const blob = await response.blob();
-                       const reader = new FileReader();
-                       reader.readAsDataURL(blob);
-                       await new Promise<void>((resolve) => {
-                         reader.onload = () => {
-                           const base64Data = (reader.result as string).split(',')[1];
-                           newAttachments.push({
-                             data: base64Data,
-                             mimeType: `image/${photo.format || 'jpeg'}`,
-                             url: photo.webPath as string
-                           });
-                           resolve();
-                         };
-                       });
-                     } catch (err) {
-                       console.error("Failed to read picked image:", err);
-                     }
-                  }
-                }
-                setAttachments(newAttachments);
-              }
-            } else if (result.index === 1) {
-              // Open file manager for all file types
-              fileInputRef.current?.click();
-            }
-          } catch (error) {
-            console.error("Error picking attachments via Capacitor:", error);
-          }
+          setIsAttachmentMenuOpen(true);
         } else {
           fileInputRef.current?.click();
+        }
+      };
+
+      const handleAttachmentOptionSelect = async (option: 'gallery' | 'files') => {
+        setIsAttachmentMenuOpen(false);
+        try {
+          if (option === 'gallery') {
+            const limit = 10 - attachments.length;
+            if (limit <= 0) return;
+
+            const photoResult = await Camera.pickImages({
+              limit: limit,
+            });
+
+            if (photoResult && photoResult.photos && photoResult.photos.length > 0) {
+              const newAttachments = [...attachments];
+              for (const photo of photoResult.photos) {
+                if (newAttachments.length >= 10) break;
+                if (photo.webPath) {
+                   try {
+                     const response = await fetch(photo.webPath);
+                     const blob = await response.blob();
+                     const reader = new FileReader();
+                     reader.readAsDataURL(blob);
+                     await new Promise<void>((resolve) => {
+                       reader.onload = () => {
+                         const base64Data = (reader.result as string).split(',')[1];
+                         newAttachments.push({
+                           data: base64Data,
+                           mimeType: `image/${photo.format || 'jpeg'}`,
+                           url: photo.webPath as string
+                         });
+                         resolve();
+                       };
+                     });
+                   } catch (err) {
+                     console.error("Failed to read picked image:", err);
+                   }
+                }
+              }
+              setAttachments(newAttachments);
+            }
+          } else if (option === 'files') {
+            // Open file manager for all file types
+            fileInputRef.current?.click();
+          }
+        } catch (error) {
+          console.error("Error picking attachments:", error);
         }
       };
       
@@ -280,7 +278,7 @@ export const ChatInput = memo(
       const volumeAnimFrameRef = useRef<number>(0);
 
       useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
           if (
             isOptionsOpen &&
             !(e.target as Element).closest(".options-menu-container")
@@ -293,10 +291,19 @@ export const ChatInput = memo(
           ) {
             setIsModelMenuOpen(false);
           }
+          if (
+            isAttachmentMenuOpen &&
+            !(e.target as Element).closest(".attachment-menu-container")
+          ) {
+            setIsAttachmentMenuOpen(false);
+          }
         };
         document.addEventListener("mousedown", handleClickOutside);
-        return () =>
+        document.addEventListener("touchstart", handleClickOutside);
+        return () => {
           document.removeEventListener("mousedown", handleClickOutside);
+          document.removeEventListener("touchstart", handleClickOutside);
+        };
       }, [isOptionsOpen, isModelMenuOpen]);
 
       const autoResizeInput = () => {
@@ -1171,6 +1178,7 @@ export const ChatInput = memo(
               </motion.div>
           </motion.div>
           
+
           <LiveVoiceOverlay
             isOpen={isVoiceOverlayOpen}
             userVolume={userVolume}
@@ -1184,6 +1192,58 @@ export const ChatInput = memo(
               stopLiveSession();
             }}
           />
+
+          <AnimatePresence>
+            {isAttachmentMenuOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsAttachmentMenuOpen(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998]"
+                />
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="fixed bottom-0 left-0 right-0 z-[999] attachment-menu-container rounded-t-3xl bg-white dark:bg-[#1E1F20] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 dark:border-white/10"
+                  style={{ paddingBottom: 'clamp(24px, env(safe-area-inset-bottom), 48px)' }}
+                >
+                  <div className="flex flex-col p-4 sm:p-6 gap-4">
+                    <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/20 rounded-full mx-auto mb-2" />
+
+                    <button
+                      onClick={() => handleAttachmentOptionSelect('gallery')}
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-base font-semibold text-slate-900 dark:text-white">Gallery</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Photos and videos</span>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => handleAttachmentOptionSelect('files')}
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                        <Folder className="w-6 h-6" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-base font-semibold text-slate-900 dark:text-white">File Manager</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Documents and other files</span>
+                      </div>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       );
     },
