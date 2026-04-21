@@ -61,7 +61,6 @@ import {
 } from "lucide-react";
 
 const EMPTY_ARRAY: any[] = [];
-
 declare global {
   interface Window {
     aistudio?: {
