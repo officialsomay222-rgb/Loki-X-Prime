@@ -428,8 +428,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     </div>
                     <div className="space-y-6 pl-9">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] mb-3 uppercase tracking-[0.2em]">Model Mode</label>
-                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-[#222] rounded-xl">
+                        <div id="model-mode-label" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] mb-3 uppercase tracking-[0.2em]">Model Mode</div>
+                        <div role="group" aria-labelledby="model-mode-label" className="flex gap-2 p-1 bg-slate-100 dark:bg-[#222] rounded-xl">
                           {['pro', 'fast', 'happy'].map((m) => (
                             <motion.button
                               key={m}
@@ -445,10 +445,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       </div>
                       <div>
                         <div className="flex justify-between items-center mb-3">
-                          <label className="text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Temperature</label>
+                          <label htmlFor="temperature-slider" className="text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Temperature</label>
                           <span className="text-xs font-mono text-slate-900 dark:text-white bg-slate-100 dark:bg-[#222] px-2 py-0.5 rounded border border-slate-100 dark:border-white/5">{temperature}</span>
                         </div>
                         <input 
+                          id="temperature-slider"
                           type="range" min="0" max="2" step="0.1" value={temperature} 
                           onChange={(e) => setTemperature(parseFloat(e.target.value))}
                           className="w-full h-1.5 bg-slate-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-white"

@@ -55,11 +55,11 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
               <button onClick={onClose} aria-label="Close command palette" title="Close command palette" className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-md transition-colors"><X className="w-4 h-4 text-slate-500 dark:text-slate-400" /></button>
             </div>
             <div className="max-h-80 overflow-y-auto p-2 custom-scrollbar transform-gpu" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)', willChange: 'transform' }}>
-              <button onClick={() => { createNewSession(); onClose(); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-800 dark:text-white transition-colors">
+              <button onClick={() => { createNewSession(); onClose(); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-white/5 focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none rounded-lg text-slate-800 dark:text-white transition-colors">
                 <Plus className="w-4 h-4" /> New Awakening
               </button>
               {filteredSessions.map(session => (
-                <button key={session.id} onClick={() => { setCurrentSessionId(session.id); onClose(); }} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-700 dark:text-slate-300 transition-colors">
+                <button key={session.id} onClick={() => { setCurrentSessionId(session.id); onClose(); }} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none rounded-lg text-slate-700 dark:text-slate-300 transition-colors">
                   {session.title}
                 </button>
               ))}

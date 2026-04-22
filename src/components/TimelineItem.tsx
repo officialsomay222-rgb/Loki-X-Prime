@@ -124,6 +124,7 @@ export const TimelineItem = React.memo(({
               onChange={e => setEditTitle(e.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={submitRename}
+              aria-label="Rename timeline"
               className="flex-1 bg-black/10 dark:bg-white/10 border-b border-cyan-500/50 outline-none text-sm px-1 py-0.5 text-inherit min-w-0"
             />
             <button onClick={submitRename} title="Confirm rename" aria-label="Confirm rename" className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md">
