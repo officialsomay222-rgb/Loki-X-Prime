@@ -488,7 +488,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const onEditMessageAction = useCallback((text: string) => {
+   const onEditMessageAction = useCallback((text: string) => {
     if (inputRef.current) {
       inputRef.current.setInput(text);
       inputRef.current.focus();
