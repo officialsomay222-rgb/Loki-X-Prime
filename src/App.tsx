@@ -488,7 +488,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleEditMessage = useCallback((text: string) => {
+  const onEditMessageAction = useCallback((text: string) => {
     if (inputRef.current) {
       inputRef.current.setInput(text);
       inputRef.current.focus();
@@ -510,7 +510,7 @@ export default function App() {
         avatarUrl={avatarUrl}
         isCopied={copiedId === message.id}
         onCopy={copyToClipboard}
-        onEdit={message.role === "user" ? handleEditMessage : undefined}
+        onEdit={message.role === "user" ? onEditMessageAction : undefined}
         onDelete={handleDeleteMessage}
         formatDate={formatDate}
         bubbleStyle={bubbleStyle}
@@ -555,7 +555,7 @@ export default function App() {
     avatarShape,
     messageShadow,
     resolvedTheme,
-    handleEditMessage,
+    onEditMessageAction,
     handleDeleteMessage,
   ]);
 
