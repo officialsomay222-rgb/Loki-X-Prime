@@ -27,6 +27,7 @@ export const TaskWidget: React.FC = () => {
 
       <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
         <input
+          aria-label="New task title"
           type="text"
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -35,8 +36,10 @@ export const TaskWidget: React.FC = () => {
         />
         <button
           type="submit"
+          aria-label="Add task"
+          title="Add task"
           disabled={!newTaskTitle.trim()}
-          className="bg-white hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg p-2 transition-colors flex items-center justify-center"
+          className="bg-white hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg p-2 transition-colors flex items-center justify-center"
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -67,7 +70,9 @@ export const TaskWidget: React.FC = () => {
               >
                 <button
                   onClick={() => toggleTask(task.id)}
-                  className={`shrink-0 transition-colors ${task.completed ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                  aria-label={task.completed ? "Mark task as incomplete" : "Mark task as complete"}
+                  title={task.completed ? "Mark task as incomplete" : "Mark task as complete"}
+                  className={`shrink-0 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none rounded-sm ${task.completed ? 'text-white' : 'text-slate-400 hover:text-white'}`}
                 >
                   {task.completed ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                 </button>
@@ -78,7 +83,9 @@ export const TaskWidget: React.FC = () => {
 
                 <button
                   onClick={() => deleteTask(task.id)}
-                  className="shrink-0 text-slate-500 hover:text-red-400 transition-colors p-1"
+                  aria-label="Delete task"
+                  title="Delete task"
+                  className="shrink-0 text-slate-500 hover:text-red-400 transition-colors p-1 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none rounded-sm"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
