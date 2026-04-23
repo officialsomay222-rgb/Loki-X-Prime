@@ -1,0 +1,18 @@
+{
+  "name": "Loki Prime X",
+  "shortName": "Loki X",
+  "themeColor": "#08080c",
+  "backgroundColor": "#08080c",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "startUrl": "/",
+  "iconUrl": "https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png",
+  "maskableIconUrl": "https://i.ibb.co/5XjVRg3S/Picsart-26-03-07-20-42-18-789.png",
+  "host": "loki-x-prime.vercel.app",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "packageId": "com.lokiprimex.twa",
+  "webManifestUrl": "https://loki-x-prime.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {}
+}
