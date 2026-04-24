@@ -20,6 +20,8 @@ export const PrivacyOverlay: React.FC<PrivacyOverlayProps> = ({ onClose }) => {
                       whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
+                      aria-label="Close"
+                      title="Close"
                       className="p-2 rounded-full transition-colors"
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />

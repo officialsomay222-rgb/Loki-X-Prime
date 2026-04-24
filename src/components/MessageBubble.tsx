@@ -191,6 +191,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
         >
           <button
             aria-label="Close fullscreen"
+            title="Close fullscreen"
             className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50"
             onClick={(e) => {
               e.stopPropagation();
