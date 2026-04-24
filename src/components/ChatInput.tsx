@@ -36,6 +36,13 @@ import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
+// ⚡ Bolt: Extracted default array to a stable module-level constant
+// 🎯 Why: Passing an inline fallback like `draftAttachments = []` to a `React.memo` wrapped component
+// creates a new array reference on every render of the parent component.
+// 📊 Impact: This prevents severe rendering bottlenecks by ensuring the memoization is not defeated
+// by unstable prop references.
+const EMPTY_ARRAY: any[] = [];
+
 const sharedPcmData = new Int16Array(4096);
 const sharedUint8Data = new Uint8Array(sharedPcmData.buffer);
 
@@ -79,7 +86,7 @@ export const ChatInput = memo(
         enterToSend,
         isAwakened,
         draftText = "",
-        draftAttachments = [],
+        draftAttachments = EMPTY_ARRAY,
         saveSessionDraft,
       },
       ref,
