@@ -101,7 +101,7 @@ export const AssistantOverlay = ({ onClose }: { onClose: () => void }) => {
                   message={latestMessage}
                   commanderName="Owner"
                   avatarUrl=""
-                  isCopied={false}
+
                   onCopy={() => {}}
                   onEdit={() => {}}
                   onDelete={() => {}}

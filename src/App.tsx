@@ -97,7 +97,6 @@ export default function App() {
     setActiveModal(null);
   }, []);
 
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const {
     theme,
     resolvedTheme,
@@ -475,8 +474,6 @@ export default function App() {
 
   const copyToClipboard = useCallback((text: string, id: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
   }, []);
 
   const formatDate = useCallback((date: Date) => {
@@ -508,7 +505,7 @@ export default function App() {
         message={message}
         commanderName={commanderName}
         avatarUrl={avatarUrl}
-        isCopied={copiedId === message.id}
+
         onCopy={copyToClipboard}
         onEdit={message.role === "user" ? onEditMessageAction : undefined}
         onDelete={handleDeleteMessage}
@@ -537,7 +534,6 @@ export default function App() {
     effectMessageBubbles,
     commanderName,
     avatarUrl,
-    copiedId,
     copyToClipboard,
     formatDate,
     bubbleStyle,

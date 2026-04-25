@@ -11,3 +11,6 @@
 ## 2026-04-16 - [React.memo Invalidation via Default Prop References]
 **Learning:** Passing inline fallbacks (e.g., `draftAttachments={data || []}`) or inline functions to components wrapped in `React.memo` (like `ChatInput`) defeats memoization entirely. Every render of the parent (`App.tsx`) generates a new array reference (`[]`) and a new function reference, causing the expensive child component to re-render constantly.
 **Action:** Always extract default arrays to stable module-level constants (e.g., `const EMPTY_ARRAY = []`) and extract inline functions to `useCallback` when passing them to memoized components.
+## 2024-05-19 - [Localizing Interactive State to Prevent O(N) Re-renders]
+**Learning:** Even passing a derived boolean flag like `isCopied={copiedId === message.id}` from a parent component to items in a mapped list triggers a re-render of the parent whenever the state changes. If the list is large, this can be slow. Furthermore, it adds unnecessary props to the item component.
+**Action:** Instead of managing transient interactive state (like `isCopied`, `isHovered`, etc.) globally in the parent and passing it down, localize this state entirely within the child component (e.g., `MessageBubble`). This ensures that interacting with a single item only re-renders that specific item, preserving O(1) performance and simplifying parent components.

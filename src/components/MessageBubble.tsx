@@ -615,7 +615,6 @@ interface MessageBubbleProps {
   message: Message;
   commanderName: string;
   avatarUrl: string;
-  isCopied: boolean;
   onCopy: (text: string, id: string) => void;
   onEdit?: (text: string) => void;
   onDelete?: (id: string) => void;
@@ -643,7 +642,6 @@ export const MessageBubble = memo(
     message,
     commanderName,
     avatarUrl,
-    isCopied,
     onCopy,
     onEdit,
     onDelete,
@@ -666,6 +664,16 @@ export const MessageBubble = memo(
     resolvedTheme = 'dark',
   }: MessageBubbleProps) => {
     const [isThinkingOpen, setIsThinkingOpen] = useState(false);
+
+    // ⚡ BOLT OPTIMIZATION:
+    // Localized isCopied state prevents O(N) re-renders of the parent list
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopy = () => {
+      onCopy(message.content, message.id);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    };
 
     const fontSizeClass =
       fontSize === "small"
@@ -840,7 +848,7 @@ export const MessageBubble = memo(
             {message.content && (
               <div className="absolute -right-2 sm:-right-4 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button
-                  onClick={() => onCopy(message.content, message.id)}
+                  onClick={handleCopy}
                   aria-label="Copy text"
                   className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass}`}
                   title="Copy text"
@@ -940,7 +948,7 @@ export const MessageBubble = memo(
                 {!message.audioUrl && (
                   <>
                     <button
-                      onClick={() => onCopy(message.content, message.id)}
+                      onClick={handleCopy}
                       aria-label="Copy text"
                       className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
                       title="Copy text"
@@ -991,7 +999,6 @@ export const MessageBubble = memo(
       prevProps.message.isVoiceResponse === nextProps.message.isVoiceResponse &&
       prevProps.commanderName === nextProps.commanderName &&
       prevProps.avatarUrl === nextProps.avatarUrl &&
-      prevProps.isCopied === nextProps.isCopied &&
       prevProps.bubbleStyle === nextProps.bubbleStyle &&
       prevProps.fontSize === nextProps.fontSize &&
       prevProps.messageAnimation === nextProps.messageAnimation &&
