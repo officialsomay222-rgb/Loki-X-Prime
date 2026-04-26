@@ -11,3 +11,7 @@
 ## 2024-05-25 - Comprehensive Keyboard Focus Indicator Enhancement
 **Learning:** Found that numerous interactive components such as `ChatInput.tsx` action buttons, `TimelineItem.tsx` list options, and `MessageBubble.tsx` interaction controls were lacking keyboard navigation focus indicators. This makes the UI unnavigable for non-mouse users.
 **Action:** Always include `focus-visible` CSS properties (e.g., `focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none`) across all interactive `button` elements to ensure a clear visual indicator during keyboard navigation.
+
+## 2024-05-25 - Accessibility Enhancements for Framer Motion Interactive Elements
+**Learning:** Custom interactive elements built with Framer Motion (`motion.div`) often act as pseudo-buttons but inherently lack semantic meaning and keyboard operability. Without explicit attributes, they are invisible to screen readers and cannot be activated via keyboard.
+**Action:** Always ensure that interactive `motion.div` elements (e.g., custom dropdown triggers, selectable list items, or stylized image upload buttons) include `role="button"`, `tabIndex={0}`, an appropriate `aria-label` or `title`, and an `onKeyDown` handler to listen for 'Enter' and 'Space' keypresses to trigger their intended action. Additionally, they must have `focus-visible` classes to show an outline when focused via keyboard.
