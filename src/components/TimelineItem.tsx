@@ -93,6 +93,7 @@ export const TimelineItem = React.memo(({
         if (!isEditing && !isMenuOpen) onClick(session.id);
       }}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (!isEditing && !isMenuOpen && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick(session.id);
