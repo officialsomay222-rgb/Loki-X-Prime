@@ -20,6 +20,7 @@ import { MessageBubble } from "./components/MessageBubble";
 import { AwakenedBackground } from "./components/AwakenedBackground";
 import { CommandPalette } from "./components/CommandPalette";
 import { SettingsModal } from "./components/SettingsModal";
+import { useDeepCompareMemo } from "./hooks/useDeepCompareMemo";
 import { AppsModal } from "./components/AppsModal";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { useSettings } from "./contexts/SettingsContext";
@@ -351,6 +352,14 @@ export default function App() {
   }, []);
 
   const currentSession = sessions.find((s) => s.id === currentSessionId);
+
+  // ⚡ BOLT OPTIMIZATION:
+  // Dexie's useLiveQuery creates new array references for draftAttachments on every DB update.
+  // We use useDeepCompareMemo to stabilize the reference before passing it to the heavily
+  // memoized ChatInput, preventing expensive O(N) child re-renders during text streaming.
+  const memoizedDraftAttachments = useDeepCompareMemo(() => {
+    return currentSession?.draftAttachments || EMPTY_ARRAY;
+  }, [currentSession?.draftAttachments]);
 
   // Search and sort timelines
   const sortedAndFilteredSessions = React.useMemo(() => {
@@ -1125,7 +1134,7 @@ export default function App() {
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
               draftText={currentSession?.draftText || ""}
-              draftAttachments={currentSession?.draftAttachments || EMPTY_ARRAY}
+              draftAttachments={memoizedDraftAttachments}
               saveSessionDraft={saveSessionDraft}
             />
           </div>
