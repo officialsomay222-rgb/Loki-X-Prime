@@ -159,7 +159,15 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={onClick ? { scale: 0.995 } : {}}
       onClick={onClick}
-      className={`flex items-center justify-between p-4 transition-colors ${onClick ? 'cursor-pointer' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick(e as any);
+        }
+      }}
+      className={`flex items-center justify-between p-4 transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none focus-visible:-outline-offset-2 rounded-lg ${onClick ? 'cursor-pointer' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
     >
       <div className="flex items-center gap-4 flex-1 mr-4">
         {Icon && <Icon className={`w-5 h-5 shrink-0 ${danger ? 'text-red-500' : 'text-slate-500 dark:text-[#717171]'}`} />}
