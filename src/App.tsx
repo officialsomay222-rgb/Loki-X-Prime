@@ -24,6 +24,8 @@ import { useDeepCompareMemo } from "./hooks/useDeepCompareMemo";
 import { AppsModal } from "./components/AppsModal";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { useSettings } from "./contexts/SettingsContext";
+import { useAuth } from "./contexts/AuthContext";
+import { SignInOverlay } from "./components/SignInOverlay";
 import { useChat } from "./contexts/ChatContext";
 import { InfinityLogo, HeaderInfinityLogo } from "./components/Logos";
 import { TimelineItem } from "./components/TimelineItem";
@@ -74,6 +76,8 @@ declare global {
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
 export default function App() {
+  const { isLoggedIn } = useAuth();
+  const [showSignInOverlay, setShowSignInOverlay] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
   const [isAvatarActive, setIsAvatarActive] = useState(false);
@@ -180,10 +184,18 @@ export default function App() {
     resetSettings,
   } = useSettings();
 
-  const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(
+  const { awakening, triggerAwakening: originalTriggerAwakening, handleAwakeningResponse } = useAwakening(
     isAwakened,
     setIsAwakened,
   );
+
+  const triggerAwakening = useCallback((e: React.MouseEvent) => {
+    if (!isLoggedIn) {
+      setShowSignInOverlay(true);
+      return;
+    }
+    originalTriggerAwakening(e);
+  }, [isLoggedIn, originalTriggerAwakening]);
 
   const {
     sessions,
@@ -816,32 +828,50 @@ export default function App() {
               />
             </div>
 
-            <AnimatePresence>
-              {sortedAndFilteredSessions.map((session, index) => (
-                <TimelineItem
-                  key={session.id}
-                  session={session}
-                  index={index}
-                  isActive={currentSessionId === session.id}
-                  isAwakened={isAwakened}
-                  effectSidebar={effectSidebar}
-                  onClick={handleSessionClick}
-                  onDelete={handleDeleteSession}
-                  onPin={togglePinSession}
-                  onRename={renameSession}
-                />
-              ))}
-            </AnimatePresence>
-            {sortedAndFilteredSessions.length === 0 && (
+            {!isLoggedIn ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
               >
-                {sessions.length === 0
-                  ? "No timelines yet. Initiate an awakening."
-                  : "No matching timelines found."}
+                <p className="mb-4">Please sign in to the app</p>
+                <button
+                  onClick={() => setShowSignInOverlay(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
+                >
+                  Sign In
+                </button>
               </motion.div>
+            ) : (
+              <>
+                <AnimatePresence>
+                  {sortedAndFilteredSessions.map((session, index) => (
+                    <TimelineItem
+                      key={session.id}
+                      session={session}
+                      index={index}
+                      isActive={currentSessionId === session.id}
+                      isAwakened={isAwakened}
+                      effectSidebar={effectSidebar}
+                      onClick={handleSessionClick}
+                      onDelete={handleDeleteSession}
+                      onPin={togglePinSession}
+                      onRename={renameSession}
+                    />
+                  ))}
+                </AnimatePresence>
+                {sortedAndFilteredSessions.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
+                  >
+                    {sessions.length === 0
+                      ? "No timelines yet. Initiate an awakening."
+                      : "No matching timelines found."}
+                  </motion.div>
+                )}
+              </>
             )}
           </div>
 
@@ -959,35 +989,44 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
-              <div
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? "opacity-0" : "opacity-100"}`}
-                title={commanderName}
-                onClick={triggerAwakening}
-                onMouseDown={() => setIsAvatarActive(true)}
-                onMouseUp={() => setIsAvatarActive(false)}
-                onMouseLeave={() => setIsAvatarActive(false)}
-                onTouchStart={() => setIsAvatarActive(true)}
-                onTouchEnd={() => setIsAvatarActive(false)}
-              >
-                <AvatarShockwave isActive={isAvatarActive} />
-                {(isAwakened || effectAvatar) && (
-                  <div
-                    className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura"
-                    style={{
-                      background:
-                        "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)",
-                      boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
-                    }}
-                  ></div>
-                )}
-                <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
-                  <img
-                    src="/Picsart-26-02-28-11-29-26-443.jpg"
-                    className="w-full h-full object-cover"
-                    alt="Commander"
-                  />
+              {isLoggedIn ? (
+                <div
+                  className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? "opacity-0" : "opacity-100"}`}
+                  title={commanderName}
+                  onClick={triggerAwakening}
+                  onMouseDown={() => setIsAvatarActive(true)}
+                  onMouseUp={() => setIsAvatarActive(false)}
+                  onMouseLeave={() => setIsAvatarActive(false)}
+                  onTouchStart={() => setIsAvatarActive(true)}
+                  onTouchEnd={() => setIsAvatarActive(false)}
+                >
+                  <AvatarShockwave isActive={isAvatarActive} />
+                  {(isAwakened || effectAvatar) && (
+                    <div
+                      className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura"
+                      style={{
+                        background:
+                          "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)",
+                        boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                      }}
+                    ></div>
+                  )}
+                  <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
+                    <img
+                      src="/Picsart-26-02-28-11-29-26-443.jpg"
+                      className="w-full h-full object-cover"
+                      alt="Commander"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <button
+                  onClick={() => setShowSignInOverlay(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95"
+                >
+                  Sign Up
+                </button>
+              )}
             </div>
           </header>
 
@@ -1138,6 +1177,9 @@ export default function App() {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {showSignInOverlay && <SignInOverlay onClose={() => setShowSignInOverlay(false)} />}
+      </AnimatePresence>
     </motion.div>
   );
 }

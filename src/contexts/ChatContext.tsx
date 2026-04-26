@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { useSettings } from './SettingsContext';
+import { useAuth } from './AuthContext';
+import { incrementTextCount, incrementImageCount, canSendTextMessage, canGenerateImage } from '../services/GuestUsageService';
 import { localDb } from '../lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { toast } from 'sonner';
@@ -74,6 +76,8 @@ const processAudioUrl = async (audioUrl?: string): Promise<string | undefined> =
   }
 };
 
+// updateSessionMessage is outside component scope, so we just check if it was able to get the message
+// If user wasn't logged in, the message wouldn't be in the db in the first place, so this is safe.
 const updateSessionMessage = async (sessionId: string, messageId: string, content: string, reasoning?: string): Promise<void> => {
   const message = await localDb.messages.get(messageId);
   if (message && message.sessionId === sessionId) {
@@ -104,6 +108,7 @@ const extractModelReasoning = (text: string): { content: string; reasoning?: str
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const { isLoggedIn } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
@@ -348,6 +353,22 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
   const sendMessage = useCallback(async (text: string, isImageMode?: boolean, audioUrl?: string, attachments?: { data: string, mimeType: string }[]) => {
     if ((!text.trim() && !audioUrl && (!attachments || attachments.length === 0)) || !currentSessionId || isLoading) return;
 
+    if (!isLoggedIn) {
+        if (isImageMode) {
+             if (!canGenerateImage()) {
+                 toast.error("Please sign in to the app to continue generating images.");
+                 return;
+             }
+             incrementImageCount();
+        } else {
+             if (!canSendTextMessage()) {
+                 toast.error("Please sign in to the app to continue sending messages.");
+                 return;
+             }
+             incrementTextCount();
+        }
+    }
+
     // Check for network connectivity
     let isConnected = true;
     try {
@@ -407,10 +428,12 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       ? getNewTitle()
       : session.title;
 
-    session.title = title;
-    session.updatedAt = new Date();
-    await localDb.sessions.put(session);
-    await localDb.messages.add({ ...userMessage, sessionId: currentSessionId });
+    if (isLoggedIn) {
+      session.title = title;
+      session.updatedAt = new Date();
+      await localDb.sessions.put(session);
+      await localDb.messages.add({ ...userMessage, sessionId: currentSessionId });
+    }
 
     setIsLoading(true);
     const controller = new AbortController();
@@ -426,14 +449,20 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       isImage: isImageMode
     };
 
-    await localDb.messages.add({ ...modelMessage, sessionId: currentSessionId });
+    if (isLoggedIn) {
+      await localDb.messages.add({ ...modelMessage, sessionId: currentSessionId });
+    }
 
     try {
-      const currentMessages = await localDb.messages.where('sessionId').equals(currentSessionId).sortBy('timestamp');
-      const history = currentMessages.slice(0, -1).map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+      let history: { role: 'user' | 'model', content: string }[] = [];
+      if (isLoggedIn) {
+        const currentMessages = await localDb.messages.where('sessionId').equals(currentSessionId).sortBy('timestamp');
+        history = currentMessages.slice(0, -1).map(m => ({
+          role: m.role,
+          content: m.content
+        }));
+      }
+
 
       if (isImageMode) {
         const imageUrl = await generateImage(processedText, imageSize);
