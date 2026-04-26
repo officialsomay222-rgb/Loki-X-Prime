@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, Sparkles, Rocket, AppWindow } from 'lucide-react';
+import { X, ExternalLink, Sparkles, Rocket, AppWindow, Globe, ChevronRight } from 'lucide-react';
 
 interface AppsModalProps {
   isOpen: boolean;
@@ -84,6 +84,26 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
                     Digital Architect & Visionary
                   </motion.p>
                 </div>
+
+                {/* Visit Homepage Button */}
+                <motion.a
+                  href="https://owner-official.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ delay: 0.55 }}
+                  className="group relative flex items-center justify-center gap-3 px-8 py-4 -mt-2 rounded-2xl bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 hover:border-cyan-400/80 shadow-[0_0_20px_rgba(0,242,255,0.15)] hover:shadow-[0_0_40px_rgba(0,242,255,0.4)] transition-all overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <Globe className="w-6 h-6 text-cyan-400 relative z-10" />
+                  <span className="text-white font-bold tracking-wide text-lg relative z-10 group-hover:text-cyan-50 transition-colors">Visit Our Homepage</span>
+                  <ChevronRight className="w-6 h-6 text-cyan-500 group-hover:text-cyan-300 group-hover:translate-x-1 transition-transform relative z-10" />
+                </motion.a>
 
                 {/* Greeting Message */}
                 <motion.div

@@ -1261,4 +1261,21 @@ export const ChatInput = memo(
       );
     },
   ),
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isLoading === nextProps.isLoading &&
+      prevProps.modelMode === nextProps.modelMode &&
+      prevProps.currentSessionId === nextProps.currentSessionId &&
+      prevProps.enterToSend === nextProps.enterToSend &&
+      prevProps.isAwakened === nextProps.isAwakened &&
+      prevProps.draftText === nextProps.draftText &&
+      prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
+      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      prevProps.setModelMode === nextProps.setModelMode &&
+      prevProps.onSendMessage === nextProps.onSendMessage &&
+      prevProps.onDeleteSession === nextProps.onDeleteSession &&
+      prevProps.onStopGeneration === nextProps.onStopGeneration &&
+      prevProps.saveSessionDraft === nextProps.saveSessionDraft
+    );
+  }
 );
