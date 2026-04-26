@@ -39,7 +39,7 @@ export const TaskWidget: React.FC = () => {
           aria-label="Add task"
           title="Add task"
           disabled={!newTaskTitle.trim()}
-          className="bg-white hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg p-2 transition-colors flex items-center justify-center"
+          className="bg-white hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg p-2 transition-colors flex items-center justify-center"
         >
           <Plus className="w-6 h-6" />
         </button>
