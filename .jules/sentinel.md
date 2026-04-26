@@ -17,3 +17,8 @@
 **Vulnerability:** User-provided URLs in `react-markdown` links could potentially use malicious protocols (e.g., `javascript:`) to execute cross-site scripting (XSS), and external links without `rel="noopener noreferrer"` could expose the app to reverse tabnabbing.
 **Learning:** `react-markdown` does not sanitize `href` attributes for safe protocols by default. The custom renderer for the `a` tag must explicitly validate that the URL protocol is safe (e.g., `http:`, `https:`, `mailto:`, or relative URLs starting with `/`) and override it if not.
 **Prevention:** Always implement a custom `a` tag renderer in the `components` prop of `<ReactMarkdown>` that enforces a strict protocol whitelist (ignoring case) and applies `target="_blank"` with `rel="noopener noreferrer"`.
+
+## 2025-04-26 - Prevent Application DoS and Detail Leakage in API
+**Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
+**Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
+**Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
