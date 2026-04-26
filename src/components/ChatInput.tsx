@@ -36,6 +36,13 @@ import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
+// ⚡ Bolt: Extracted default array to a stable module-level constant
+// 🎯 Why: Passing an inline fallback like `draftAttachments = []` to a `React.memo` wrapped component
+// creates a new array reference on every render of the parent component.
+// 📊 Impact: This prevents severe rendering bottlenecks by ensuring the memoization is not defeated
+// by unstable prop references.
+const EMPTY_ARRAY: any[] = [];
+
 const sharedPcmData = new Int16Array(4096);
 const sharedUint8Data = new Uint8Array(sharedPcmData.buffer);
 
@@ -79,7 +86,7 @@ export const ChatInput = memo(
         enterToSend,
         isAwakened,
         draftText = "",
-        draftAttachments = [],
+        draftAttachments = EMPTY_ARRAY,
         saveSessionDraft,
       },
       ref,
@@ -899,7 +906,7 @@ export const ChatInput = memo(
                             <button
                               onClick={() => removeAttachment(index)}
                               title="Remove attachment" aria-label="Remove attachment"
-                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                             >
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
@@ -943,7 +950,7 @@ export const ChatInput = memo(
                         <button
                           onClick={handleAttachmentClick}
                           aria-label="Attach file"
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3] transition-all"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3] transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                           title="Attach file"
                         >
                           <Plus className="w-6 h-6" />
@@ -953,7 +960,7 @@ export const ChatInput = memo(
                           <button
                             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
                             title="Options menu" aria-label="Options menu"
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                           >
                             <SlidersHorizontal className="w-5 h-5" />
                           </button>
@@ -976,7 +983,7 @@ export const ChatInput = memo(
                                       onClick={() => setThinkingMode(!thinkingMode)}
                                       title="Toggle Deep Search"
                                       aria-label="Toggle Deep Search"
-                                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                     >
                                       <div className="flex items-center gap-3">
                                         <Sparkles className="w-4 h-4" />
@@ -1000,7 +1007,7 @@ export const ChatInput = memo(
                                     }
                                     title="Toggle Web Grounding"
                                     aria-label="Toggle Web Grounding"
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <Globe className="w-4 h-4" />
@@ -1021,7 +1028,7 @@ export const ChatInput = memo(
                                     onClick={() => setIsImageMode(!isImageMode)}
                                     title="Toggle Image Mode"
                                     aria-label="Toggle Image Mode"
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <ImageIcon className="w-4 h-4" />
@@ -1050,7 +1057,7 @@ export const ChatInput = memo(
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
                             title="Select Model" aria-label="Select Model"
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${
                               isModelMenuOpen 
                                 ? "bg-slate-200 dark:bg-white/20 border-transparent text-slate-900 dark:text-[#E3E3E3] shadow-md" 
                                 : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
@@ -1085,7 +1092,7 @@ export const ChatInput = memo(
                                       setModelMode(m.id as any);
                                       setIsModelMenuOpen(false);
                                     }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${modelMode === m.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3]" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${modelMode === m.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3]" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <m.icon className="w-4 h-4" />
                                     <span className="text-[0.75rem] font-bold uppercase tracking-wider">
@@ -1104,7 +1111,7 @@ export const ChatInput = memo(
                           onClick={toggleRecording}
                           disabled={isTranscribing}
                           title="Toggle Voice Input" aria-label="Toggle Voice Input"
-                          className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border ${
+                          className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${
                             isRecording 
                               ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 
                               : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
@@ -1132,7 +1139,7 @@ export const ChatInput = memo(
                                 startLiveSession();
                               }}
                               aria-label="Start Live Conversation"
-                              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
+                              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                             >
                               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 11v3M12 7v10M16 10v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -1152,7 +1159,7 @@ export const ChatInput = memo(
                                 <button
                                   onClick={onStopGeneration}
                                   aria-label="Stop Generation"
-                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group"
+                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                                   title="Stop Generation"
                                 >
                                   <div className="w-6 h-6 rounded-full border-2 border-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform bg-rose-400/10">
@@ -1164,7 +1171,7 @@ export const ChatInput = memo(
                                   onClick={handleSend}
                                   disabled={!(input.trim() || attachments.length > 0)}
                                   aria-label="Send Message"
-                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${(input.trim() || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${(input.trim() || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
                                 >
                                   {sendButtonIcon === 'arrow' ? (
                                     <ArrowRight className="w-5 h-5" />
@@ -1227,7 +1234,7 @@ export const ChatInput = memo(
                       onClick={() => handleAttachmentOptionSelect('gallery')}
                       title="Open Gallery"
                       aria-label="Open Gallery"
-                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none"
                     >
                       <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
                         <ImageIcon className="w-6 h-6" />
@@ -1242,7 +1249,7 @@ export const ChatInput = memo(
                       onClick={() => handleAttachmentOptionSelect('files')}
                       title="Open File Manager"
                       aria-label="Open File Manager"
-                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none"
                     >
                       <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center">
                         <Folder className="w-6 h-6" />
@@ -1261,4 +1268,21 @@ export const ChatInput = memo(
       );
     },
   ),
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isLoading === nextProps.isLoading &&
+      prevProps.modelMode === nextProps.modelMode &&
+      prevProps.currentSessionId === nextProps.currentSessionId &&
+      prevProps.enterToSend === nextProps.enterToSend &&
+      prevProps.isAwakened === nextProps.isAwakened &&
+      prevProps.draftText === nextProps.draftText &&
+      prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
+      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      prevProps.setModelMode === nextProps.setModelMode &&
+      prevProps.onSendMessage === nextProps.onSendMessage &&
+      prevProps.onDeleteSession === nextProps.onDeleteSession &&
+      prevProps.onStopGeneration === nextProps.onStopGeneration &&
+      prevProps.saveSessionDraft === nextProps.saveSessionDraft
+    );
+  }
 );
