@@ -159,7 +159,15 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={onClick ? { scale: 0.995 } : {}}
       onClick={onClick}
-      className={`flex items-center justify-between p-4 transition-colors ${onClick ? 'cursor-pointer' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`flex items-center justify-between p-4 transition-colors ${onClick ? 'cursor-pointer focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 rounded-lg' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
     >
       <div className="flex items-center gap-4 flex-1 mr-4">
         {Icon && <Icon className={`w-5 h-5 shrink-0 ${danger ? 'text-red-500' : 'text-slate-500 dark:text-[#717171]'}`} />}
@@ -375,6 +383,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    aria-label="Try Loki Prime X Pro"
                     className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                   >
                     Try Now

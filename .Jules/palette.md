@@ -7,3 +7,7 @@
 ## 2024-05-24 - Accessibility Enhancements for Inline Inputs, Orphaned Labels, and Focus Indicators
 **Learning:** Discovered that inline edit inputs (like renaming a timeline) lacked `aria-label`s, making them opaque to screen readers. Additionally, standard labels (like "Temperature" for a range slider) were visually present but not programmatically linked (`htmlFor`/`id`) to their inputs, and interactive lists (like Command Palette) lacked visible keyboard focus indicators (`focus-visible`).
 **Action:** Always provide an `aria-label` for inline inputs without visible text labels. Ensure all visual labels are explicitly linked to their form controls using `htmlFor` and `id` attributes. Add `focus-visible` classes to all interactive elements to support keyboard navigation.
+
+## 2024-05-24 - Accessibility Enhancements for Interactive Motion Elements
+**Learning:** Found that custom interactive list elements (like `SettingItem` using `motion.div`) with `onClick` handlers often lack proper keyboard accessibility, making them unusable for non-mouse users.
+**Action:** When creating or modifying custom interactive elements (like `div` or `motion.div`), always ensure they have `role="button"`, `tabIndex={0}`, an `onKeyDown` handler to trigger the click action via 'Enter' or 'Space', and visible focus indicators (e.g., `focus-visible:ring-2`).
