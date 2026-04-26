@@ -61,7 +61,7 @@ const MarkdownCode = ({ node, inline, className, children, codeTheme = 'default'
         <span className={codeTheme === 'matrix' || codeTheme === 'neon' ? 'font-bold tracking-wider' : ''}>{match[1]}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors p-1 rounded-md"
+          className="flex items-center gap-1 hover:text-white transition-colors p-1 rounded-md focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
           title="Copy code" aria-label="Copy code"
         >
           {isCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -191,7 +191,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
         >
           <button
             aria-label="Close fullscreen"
-            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50"
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
             onClick={(e) => {
               e.stopPropagation();
               setIsFullscreen(false);
@@ -225,7 +225,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
                 document.body.removeChild(link);
               }}
               aria-label="Download image"
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:text-white border border-white/50 transition-all z-50 flex items-center gap-2 font-bold tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full bg-white/20 text-white hover:bg-white/40 hover:text-white border border-white/50 transition-all z-50 flex items-center gap-2 font-bold tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -661,6 +661,17 @@ export const MessageBubble = memo(
     messageShadow = 'md',
     resolvedTheme = 'dark',
   }: MessageBubbleProps) => {
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(message.content).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }).catch(err => {
+        console.error('Failed to copy message: ', err);
+      });
+    };
+
     const [isThinkingOpen, setIsThinkingOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
 
@@ -723,7 +734,7 @@ export const MessageBubble = memo(
                   <button
                     onClick={() => setIsThinkingOpen(!isThinkingOpen)}
                     title="Toggle thinking" aria-label="Toggle thinking"
-                    className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono tracking-wider text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors uppercase"
+                    className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono tracking-wider text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors uppercase focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                   >
                     <Sparkles className="w-3 h-3 text-blue-500 dark:text-blue-400" />
                     <span>Loki's Thinking</span>
@@ -845,7 +856,7 @@ export const MessageBubble = memo(
                 <button
                   onClick={handleCopy}
                   aria-label="Copy text"
-                  className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass}`}
+                  className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:${accentClass} focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none`}
                   title="Copy text"
                 >
                   {isCopied ? (
@@ -858,7 +869,7 @@ export const MessageBubble = memo(
                   <button
                     onClick={() => onDelete(message.id)}
                     aria-label="Delete message"
-                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm"
+                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                     title="Delete message"
                   >
                     <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -945,7 +956,7 @@ export const MessageBubble = memo(
                     <button
                       onClick={handleCopy}
                       aria-label="Copy text"
-                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
+                      className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                       title="Copy text"
                     >
                       {isCopied ? (
@@ -958,7 +969,7 @@ export const MessageBubble = memo(
                       <button
                         onClick={() => onEdit(message.content)}
                         aria-label="Edit message"
-                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white"
+                        className="p-1.5 rounded-lg bg-white/80 dark:bg-black/80 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                         title="Edit message"
                       >
                         <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -970,7 +981,7 @@ export const MessageBubble = memo(
                   <button
                     onClick={() => onDelete(message.id)}
                     aria-label="Delete message"
-                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm"
+                    className="p-1.5 rounded-lg bg-white/50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                     title="Delete message"
                   >
                     <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
