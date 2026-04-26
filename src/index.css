@@ -1378,3 +1378,14 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 .safe-area-bottom {
   padding-bottom: clamp(0px, env(safe-area-inset-bottom, 0px), 32px);
 }
+.keyboard-safe-area-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-bottom, 0px));
+}
+
+.input-keyboard-safe-area {
+  padding-bottom: calc(16px + max(clamp(0px, env(safe-area-inset-bottom, 0px), 48px), env(keyboard-inset-bottom, 0px)));
+}
+
+.attachment-keyboard-safe-area {
+  padding-bottom: max(clamp(24px, env(safe-area-inset-bottom, 0px), 48px), env(keyboard-inset-bottom, 0px));
+}
