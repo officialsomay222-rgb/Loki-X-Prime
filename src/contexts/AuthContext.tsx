@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export interface AuthState {
   isLoggedIn: boolean;
-  signIn: () => void;
-  signOut: () => void;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -11,23 +14,40 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem('loki_isLoggedIn');
-    if (storedAuth === 'true') {
-      setIsLoggedIn(true);
-    }
-    setIsAuthLoaded(true);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setIsLoggedIn(true);
+        setUser(currentUser);
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+      setIsAuthLoaded(true);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const signIn = () => {
-    localStorage.setItem('loki_isLoggedIn', 'true');
-    setIsLoggedIn(true);
+  const signIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
   };
 
-  const signOut = () => {
-    localStorage.removeItem('loki_isLoggedIn');
-    setIsLoggedIn(false);
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   };
 
   if (!isAuthLoaded) {
@@ -35,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, signIn, signOut }}>
+    <AuthContext.Provider value={{ isLoggedIn, signIn, signOut, user }}>
       {children}
     </AuthContext.Provider>
   );

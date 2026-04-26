@@ -436,6 +436,11 @@ export default function App() {
       audioUrl?: boolean | string,
       attachments?: { data: string; mimeType: string }[],
     ) => {
+      if (!isLoggedIn) {
+        setShowSignInOverlay(true);
+        return;
+      }
+
       await sendMessage(
         text,
         isImageMode,
@@ -448,7 +453,7 @@ export default function App() {
         }, 10);
       }
     },
-    [sendMessage],
+    [sendMessage, isLoggedIn],
   );
 
   const handleDeleteSession = useCallback(
