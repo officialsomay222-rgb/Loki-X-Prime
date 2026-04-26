@@ -100,6 +100,7 @@ const SettingSection = ({ title, children }: any) => (
 );
 
 const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, danger, noBorder, type, options, min, max, step, onChange, checked, setShowPicker }: any) => {
+  const inputId = label ? label.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
   const renderControl = () => {
     if (children) return children;
     
@@ -107,7 +108,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       case 'toggle':
         return (
           <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={label} />
+            <input id={inputId} type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={label} />
             <div className="w-11 h-6 bg-slate-200 dark:bg-[#333] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900 dark:peer-checked:bg-white peer-checked:after:bg-white dark:peer-checked:after:bg-black"></div>
           </label>
         );
@@ -120,7 +121,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
               const rect = e.currentTarget.getBoundingClientRect();
               setShowPicker({ label, options, value, onChange, rect });
             }}
-            className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer" aria-label={label}
+            id={inputId} role="button" className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer" aria-labelledby={inputId + "-label"}
           >
             <span className="capitalize">{value}</span>
             <ChevronRight className="w-4 h-4" />
@@ -130,6 +131,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
         return (
           <div className="flex items-center gap-3 min-w-[120px]">
             <input 
+              id={inputId}
               type="range" min={min} max={max} step={step} value={value} 
               onChange={(e) => onChange(parseFloat(e.target.value))}
               className="flex-1 h-1 bg-slate-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-white"
@@ -141,6 +143,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       case 'text':
         return (
           <input 
+            id={inputId}
             type="text" 
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -164,7 +167,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       <div className="flex items-center gap-4 flex-1 mr-4">
         {Icon && <Icon className={`w-5 h-5 shrink-0 ${danger ? 'text-red-500' : 'text-slate-500 dark:text-[#717171]'}`} />}
         <div className="flex-1 min-w-0">
-          <div className={`text-sm font-bold truncate ${danger ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{label}</div>
+          <label htmlFor={['toggle', 'range', 'text'].includes(type) ? inputId : undefined} id={inputId + "-label"} className={`block text-sm font-bold truncate ${danger ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{label}</label>
           {subLabel && <div className="text-xs text-slate-500 dark:text-[#717171] line-clamp-1">{subLabel}</div>}
         </div>
       </div>
