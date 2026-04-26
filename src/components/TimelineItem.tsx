@@ -92,11 +92,20 @@ export const TimelineItem = React.memo(({
       onClick={(e) => {
         if (!isEditing && !isMenuOpen) onClick(session.id);
       }}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (!isEditing && !isMenuOpen && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick(session.id);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchEnd}
-      className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 ${
+      className={`group relative flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
         isActive
           ? (isAwakened || effectSidebar)
             ? 'bg-cyan-500/20 text-slate-800 dark:text-white shadow-[0_0_15px_rgba(0,242,255,0.15)] border border-cyan-500/40'
