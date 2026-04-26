@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { applyDevicePerformanceClass } from './utils/performance';
 import { Capacitor } from '@capacitor/core';
+import './lib/firebase';
 
 // Apply performance class early in the lifecycle
 applyDevicePerformanceClass();
