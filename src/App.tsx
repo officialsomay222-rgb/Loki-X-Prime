@@ -1115,10 +1115,8 @@ export default function App() {
 
           {/* Input Area - Flex Item (Not Absolute) */}
           <div
-            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
+            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto input-keyboard-safe-area`}
             style={{
-              paddingBottom:
-                "calc(16px + clamp(0px, env(safe-area-inset-bottom, 0px), 48px))",
               paddingTop: "8px",
             }}
           >

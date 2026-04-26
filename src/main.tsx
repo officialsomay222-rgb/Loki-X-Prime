@@ -15,6 +15,11 @@ import { Capacitor } from '@capacitor/core';
 // Apply performance class early in the lifecycle
 applyDevicePerformanceClass();
 
+// Enable VirtualKeyboard API for smooth keyboard transitions
+if ('virtualKeyboard' in navigator) {
+  (navigator as any).virtualKeyboard.overlaysContent = true;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

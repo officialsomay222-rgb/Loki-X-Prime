@@ -1224,8 +1224,7 @@ export const ChatInput = memo(
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="fixed bottom-0 left-0 right-0 z-[999] attachment-menu-container rounded-t-3xl bg-white dark:bg-[#1E1F20] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 dark:border-white/10"
-                  style={{ paddingBottom: 'clamp(24px, env(safe-area-inset-bottom), 48px)' }}
+                  className="fixed bottom-0 left-0 right-0 z-[999] attachment-menu-container rounded-t-3xl bg-white dark:bg-[#1E1F20] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 dark:border-white/10 attachment-keyboard-safe-area"
                 >
                   <div className="flex flex-col p-4 sm:p-6 gap-4">
                     <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/20 rounded-full mx-auto mb-2" />
