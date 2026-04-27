@@ -1276,7 +1276,10 @@ export const ChatInput = memo(
       prevProps.isAwakened === nextProps.isAwakened &&
       prevProps.draftText === nextProps.draftText &&
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      (prevProps.draftAttachments || []).every((att, i) => {
+        const nextAtt = (nextProps.draftAttachments || [])[i];
+        return att.mimeType === nextAtt?.mimeType && att.data.length === nextAtt?.data.length;
+      }) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
