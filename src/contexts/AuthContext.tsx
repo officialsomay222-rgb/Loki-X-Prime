@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { GoogleAuthProvider, signInWithRedirect, signInWithPopup, getRedirectResult, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { Capacitor } from '@capacitor/core';
 
@@ -18,11 +18,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check for redirect result in case of web redirect flow
-    getRedirectResult(auth).catch((error) => {
-      console.error('Error in getRedirectResult:', error);
-    });
-
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setIsLoggedIn(true);
@@ -40,10 +35,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
+
       if (Capacitor.isNativePlatform()) {
-        await signInWithPopup(auth, provider);
+        // Native Google Auth requires a dedicated Capacitor plugin!
+        // Standard Firebase web auth will not work here.
+        console.error("Native Google Auth requires a Capacitor plugin. Cannot use web popup.");
+        throw new Error("Native auth not implemented yet.");
       } else {
-        await signInWithRedirect(auth, provider);
+        // Use Popup for the web browser, it's way more reliable than Redirect
+        await signInWithPopup(auth, provider);
       }
     } catch (error) {
       console.error('Error signing in with Google:', error);
