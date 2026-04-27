@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { GoogleAuthProvider, signInWithRedirect, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, signInWithPopup, getRedirectResult, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { Capacitor } from '@capacitor/core';
 
 export interface AuthState {
   isLoggedIn: boolean;
@@ -17,6 +18,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Check for redirect result in case of web redirect flow
+    getRedirectResult(auth).catch((error) => {
+      console.error('Error in getRedirectResult:', error);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setIsLoggedIn(true);
@@ -34,7 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      if (Capacitor.isNativePlatform()) {
+        await signInWithPopup(auth, provider);
+      } else {
+        await signInWithRedirect(auth, provider);
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
