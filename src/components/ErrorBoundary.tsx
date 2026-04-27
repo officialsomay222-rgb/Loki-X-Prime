@@ -37,7 +37,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             )}
           </div>
           <button 
-            className="px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-slate-200 transition-all"
+            className="px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-slate-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             onClick={() => window.location.reload()}
           >
             RE-INITIALIZE CORE

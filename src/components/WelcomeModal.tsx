@@ -100,7 +100,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit}
-                  className="w-full py-4 rounded-full font-bold transition-all shadow-xl flex items-center justify-center gap-2 group bg-gradient-to-r from-cyan-600 to-violet-600 text-white hover:from-cyan-500 hover:to-violet-500 shadow-cyan-500/25"
+                  className="w-full py-4 rounded-full font-bold transition-all shadow-xl flex items-center justify-center gap-2 group bg-gradient-to-r from-cyan-600 to-violet-600 text-white hover:from-cyan-500 hover:to-violet-500 shadow-cyan-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   <span>Start Experience</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
