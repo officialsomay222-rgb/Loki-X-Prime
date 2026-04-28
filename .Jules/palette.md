@@ -11,3 +11,7 @@
 ## 2024-05-25 - Comprehensive Keyboard Focus Indicator Enhancement
 **Learning:** Found that numerous interactive components such as `ChatInput.tsx` action buttons, `TimelineItem.tsx` list options, and `MessageBubble.tsx` interaction controls were lacking keyboard navigation focus indicators. This makes the UI unnavigable for non-mouse users.
 **Action:** Always include `focus-visible` CSS properties (e.g., `focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none`) across all interactive `button` elements to ensure a clear visual indicator during keyboard navigation.
+
+## 2024-05-25 - Explicit Focus Indicators for Standalone Overlay Elements
+**Learning:** Discovered that primary buttons in custom full-screen overlays (like `SignInOverlay`, `ErrorBoundary`, `LiveVoiceOverlay`, etc.) were missing visual keyboard focus indicators. Since these are standalone, custom components not inheriting default form styles, keyboard navigability is severely compromised.
+**Action:** Always apply explicit Tailwind `focus-visible` utility classes (e.g., `focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none`) to primary action buttons inside overlay and modal components to guarantee proper keyboard focus visibility.

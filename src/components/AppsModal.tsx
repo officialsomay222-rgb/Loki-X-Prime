@@ -40,7 +40,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
               onClick={onClose}
               aria-label="Close Apps Menu"
               title="Close Apps Menu"
-              className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-10 group"
+              className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-10 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
             </button>

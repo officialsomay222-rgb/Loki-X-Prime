@@ -61,7 +61,7 @@ export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
         <button
           onClick={handleSignIn}
           disabled={isSigningIn}
-          className={`w-full group relative flex items-center justify-center gap-3 bg-white text-slate-900 py-4 px-8 rounded-2xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] ${isSigningIn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-50 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98]"}`}
+          className={`w-full group relative flex items-center justify-center gap-3 bg-white text-slate-900 py-4 px-8 rounded-2xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-500/50 ${isSigningIn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-50 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98]"}`}
         >
           {isSigningIn ? (
             <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin"></div>
@@ -100,7 +100,7 @@ export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
             </button>
             <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white transition-colors text-sm font-medium"
+                className="text-slate-400 hover:text-white transition-colors text-sm font-medium px-4 py-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
             >
                 Cancel
             </button>

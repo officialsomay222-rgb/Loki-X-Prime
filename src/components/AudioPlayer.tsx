@@ -78,7 +78,7 @@ export const AudioPlayer = ({
       <button
         onClick={togglePlay}
         aria-label={isPlaying ? "Pause" : "Play"} title={isPlaying ? "Pause" : "Play"}
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30"
+        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
       >
         {isPlaying ? (
           <svg

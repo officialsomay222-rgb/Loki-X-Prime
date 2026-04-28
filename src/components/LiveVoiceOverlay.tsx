@@ -198,7 +198,7 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
                 onClick={onHold}
                 aria-label="Hold call"
                 title="Hold call"
-                className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.5)] border border-white/5 active:scale-95 transition-transform"
+                className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.5)] border border-white/5 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
               >
                 <Pause className="w-8 h-8 text-white fill-white" />
               </button>
@@ -210,7 +210,7 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
                 onClick={onClose}
                 aria-label="End call"
                 title="End call"
-                className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-[0_8px_30px_rgba(220,38,38,0.4)] active:scale-95 transition-transform"
+                className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-[0_8px_30px_rgba(220,38,38,0.4)] active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500/50"
               >
                 <X className="w-8 h-8 text-white" />
               </button>
