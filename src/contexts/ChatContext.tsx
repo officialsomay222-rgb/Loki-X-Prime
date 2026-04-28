@@ -428,12 +428,10 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       ? getNewTitle()
       : session.title;
 
-    if (isLoggedIn) {
-      session.title = title;
-      session.updatedAt = new Date();
-      await localDb.sessions.put(session);
-      await localDb.messages.add({ ...userMessage, sessionId: currentSessionId });
-    }
+    session.title = title;
+    session.updatedAt = new Date();
+    await localDb.sessions.put(session);
+    await localDb.messages.add({ ...userMessage, sessionId: currentSessionId });
 
     setIsLoading(true);
     const controller = new AbortController();
@@ -449,19 +447,15 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       isImage: isImageMode
     };
 
-    if (isLoggedIn) {
-      await localDb.messages.add({ ...modelMessage, sessionId: currentSessionId });
-    }
+    await localDb.messages.add({ ...modelMessage, sessionId: currentSessionId });
 
     try {
       let history: { role: 'user' | 'model', content: string }[] = [];
-      if (isLoggedIn) {
-        const currentMessages = await localDb.messages.where('sessionId').equals(currentSessionId).sortBy('timestamp');
-        history = currentMessages.slice(0, -1).map(m => ({
-          role: m.role,
-          content: m.content
-        }));
-      }
+      const currentMessages = await localDb.messages.where('sessionId').equals(currentSessionId).sortBy('timestamp');
+      history = currentMessages.slice(0, -1).map(m => ({
+        role: m.role,
+        content: m.content
+      }));
 
 
       if (isImageMode) {

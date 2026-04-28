@@ -5,8 +5,10 @@ import { Capacitor } from '@capacitor/core';
 
 export interface AuthState {
   isLoggedIn: boolean;
+  isGuest: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  continueAsGuest: () => void;
   user: User | null;
 }
 
@@ -14,6 +16,9 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isGuest, setIsGuest] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('loki_isGuest') === 'true' : false;
+  });
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -22,6 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (currentUser) {
         setIsLoggedIn(true);
         setUser(currentUser);
+        setIsGuest(false);
+        localStorage.removeItem('loki_isGuest');
       } else {
         setIsLoggedIn(false);
         setUser(null);
@@ -31,6 +38,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+
+  const continueAsGuest = () => {
+    setIsGuest(true);
+    localStorage.setItem('loki_isGuest', 'true');
+  };
 
   const signIn = async () => {
     try {
@@ -65,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, signIn, signOut, user }}>
+    <AuthContext.Provider value={{ isLoggedIn, isGuest, signIn, signOut, continueAsGuest, user }}>
       {children}
     </AuthContext.Provider>
   );
