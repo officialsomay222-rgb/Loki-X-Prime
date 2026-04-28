@@ -76,7 +76,7 @@ declare global {
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
 export default function App() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isGuest } = useAuth();
   const [showSignInOverlay, setShowSignInOverlay] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
@@ -190,12 +190,12 @@ export default function App() {
   );
 
   const triggerAwakening = useCallback((e: React.MouseEvent) => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn && !isGuest) {
       setShowSignInOverlay(true);
       return;
     }
     originalTriggerAwakening(e);
-  }, [isLoggedIn, originalTriggerAwakening]);
+  }, [isLoggedIn, isGuest, originalTriggerAwakening]);
 
   const {
     sessions,
@@ -436,7 +436,7 @@ export default function App() {
       audioUrl?: boolean | string,
       attachments?: { data: string; mimeType: string }[],
     ) => {
-      if (!isLoggedIn) {
+      if (!isLoggedIn && !isGuest) {
         setShowSignInOverlay(true);
         return;
       }
@@ -833,7 +833,7 @@ export default function App() {
               />
             </div>
 
-            {!isLoggedIn ? (
+            {(!isLoggedIn && !isGuest) ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -994,7 +994,7 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
-              {isLoggedIn ? (
+              {(isLoggedIn || isGuest) ? (
                 <div
                   className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? "opacity-0" : "opacity-100"}`}
                   title={commanderName}

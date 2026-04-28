@@ -7,7 +7,7 @@ interface SignInOverlayProps {
 }
 
 export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
-  const { signIn } = useAuth();
+  const { signIn, continueAsGuest } = useAuth();
   const [isSigningIn, setIsSigningIn] = React.useState(false);
 
   const handleSignIn = async () => {
@@ -88,7 +88,16 @@ export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
           {isSigningIn ? "Signing in..." : "Sign in with Google"}
         </button>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col gap-4 items-center">
+            <button
+                onClick={() => {
+                    continueAsGuest();
+                    onClose();
+                }}
+                className="w-full text-slate-300 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest py-3 border border-white/10 rounded-xl hover:bg-white/5"
+            >
+                Continue as Guest
+            </button>
             <button
                 onClick={onClose}
                 className="text-slate-400 hover:text-white transition-colors text-sm font-medium"
