@@ -453,7 +453,7 @@ export default function App() {
         }, 10);
       }
     },
-    [sendMessage, isLoggedIn],
+    [sendMessage, isLoggedIn, isGuest],
   );
 
   const handleDeleteSession = useCallback(
