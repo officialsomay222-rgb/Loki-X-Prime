@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { Capacitor } from '@capacitor/core';
 
@@ -21,6 +21,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
+
+  useEffect(() => {
+    // Handle redirect result
+    getRedirectResult(auth)
+      .then((result) => {
+        // Result is handled by onAuthStateChanged if successful
+      })
+      .catch((error) => {
+        console.error('Error with redirect sign-in:', error);
+      });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -47,18 +59,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
-
-      if (Capacitor.isNativePlatform()) {
-        // Native Google Auth requires a dedicated Capacitor plugin!
-        // Standard Firebase web auth will not work here.
-        console.error("Native Google Auth requires a Capacitor plugin. Cannot use web popup.");
-        throw new Error("Native auth not implemented yet.");
-      } else {
-        // Use Popup for the web browser, it's way more reliable than Redirect
-        await signInWithPopup(auth, provider);
-      }
+      // Use redirect for both web and mobile
+      await signInWithRedirect(auth, provider);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error('Error initiating redirect sign-in:', error);
       throw error;
     }
   };
