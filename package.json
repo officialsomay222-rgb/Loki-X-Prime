@@ -15,6 +15,7 @@
     "twa:update": "cd twa && bubblewrap update"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^8.2.0",
     "@capacitor/action-sheet": "^8.1.1",
     "@capacitor/android": "^8.3.0",
     "@capacitor/app": "^8.1.0",

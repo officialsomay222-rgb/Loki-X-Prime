@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 export interface AuthState {
   isLoggedIn: boolean;
@@ -49,10 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const provider = new GoogleAuthProvider();
 
       if (Capacitor.isNativePlatform()) {
-        // Native Google Auth requires a dedicated Capacitor plugin!
-        // Standard Firebase web auth will not work here.
-        console.error("Native Google Auth requires a Capacitor plugin. Cannot use web popup.");
-        throw new Error("Native auth not implemented yet.");
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        if (result.credential?.idToken) {
+          const credential = GoogleAuthProvider.credential(result.credential.idToken);
+          await signInWithCredential(auth, credential);
+        } else {
+          throw new Error('Google Sign-In failed: No ID Token returned.');
+        }
       } else {
         // Use Popup for the web browser, it's way more reliable than Redirect
         await signInWithPopup(auth, provider);
@@ -65,6 +69,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      if (Capacitor.isNativePlatform()) {
+        await FirebaseAuthentication.signOut();
+      }
       await firebaseSignOut(auth);
     } catch (error) {
       console.error('Error signing out:', error);
