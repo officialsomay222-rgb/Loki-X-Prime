@@ -33,6 +33,7 @@ function extractImageQuery(message: string): string | null {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -75,8 +76,8 @@ app.get("/api/quota", (req, res) => {
 app.post("/api/transcribe", async (req, res) => {
   try {
     const { audioBase64, mimeType } = req.body;
-    if (!audioBase64) {
-      return res.status(400).json({ error: "audioBase64 is required" });
+    if (!audioBase64 || typeof audioBase64 !== 'string') {
+      return res.status(400).json({ error: "audioBase64 is required and must be a string" });
     }
 
     let groqKey = process.env.GROQ_API_KEY;
@@ -119,15 +120,15 @@ app.post("/api/transcribe", async (req, res) => {
     }
   } catch (error: any) {
     console.error("Transcription Error:", error);
-    res.status(500).json({ error: error.message || "Internal server error during transcription." });
+    res.status(500).json({ error: "Internal server error during transcription." });
   }
 });
 
 app.post("/api/tts", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: "text is required" });
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: "text is required and must be a string" });
     }
 
     let geminiKey = process.env.GEMINI_API_KEY;
@@ -160,7 +161,7 @@ app.post("/api/tts", async (req, res) => {
     }
   } catch (error: any) {
     console.error("TTS Error:", error);
-    res.status(500).json({ error: error.message || "Internal server error during TTS." });
+    res.status(500).json({ error: "Internal server error during TTS." });
   }
 });
 
