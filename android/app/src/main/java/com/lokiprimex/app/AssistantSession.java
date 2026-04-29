@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.service.voice.VoiceInteractionSession;
+import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,7 +36,8 @@ public class AssistantSession extends VoiceInteractionSession {
 
     @Override
     public View onCreateContentView() {
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        ContextThemeWrapper themedContext = new ContextThemeWrapper(getContext(), R.style.AppTheme);
+        LayoutInflater inflater = LayoutInflater.from(themedContext);
         mRootView = inflater.inflate(R.layout.assistant_overlay, null);
 
         mLayoutProcessingMode = mRootView.findViewById(R.id.layout_processing_mode);
