@@ -76,10 +76,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  if (!isAuthLoaded) {
-    return null; // Or a loading spinner, but we want it to be fast.
-  }
-
   return (
     <AuthContext.Provider value={{ isLoggedIn, isGuest, signIn, signOut, continueAsGuest, user }}>
       {children}
