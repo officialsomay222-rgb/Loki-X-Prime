@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
 import { Capacitor } from "@capacitor/core";
@@ -402,25 +403,30 @@ export default function App() {
     }
   }, [currentSession?.messages.length, currentSessionId, autoScroll]);
 
-  const checkScrollPosition = useCallback(() => {
-    const target = scrollContainerRef.current;
+  // Use IntersectionObserver to toggle scroll-to-bottom button
+  useEffect(() => {
+    const target = messagesEndRef.current;
     if (!target) return;
 
-    // Check if there is enough content to scroll
-    if (target.scrollHeight <= target.clientHeight) {
-      setShowScrollToBottom(false);
-      return;
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        // Show scroll-to-bottom if the end ref is not intersecting
+        setShowScrollToBottom(!entry.isIntersecting);
+      },
+      {
+        root: scrollContainerRef.current,
+        threshold: 0,
+      }
+    );
 
-    const isNearBottom =
-      target.scrollHeight - target.scrollTop - target.clientHeight < 400;
-    setShowScrollToBottom(!isNearBottom);
-  }, []);
+    observer.observe(target);
 
-  // Check scroll position when messages change or session changes
-  useEffect(() => {
-    checkScrollPosition();
-  }, [currentSession?.messages.length, currentSessionId, checkScrollPosition]);
+    return () => {
+      observer.unobserve(target);
+      observer.disconnect();
+    };
+  }, [currentSession?.messages.length, currentSessionId]);
 
   const handleSetModelMode = useCallback((mode: string) => {
     setModelMode(mode as any);
@@ -520,59 +526,66 @@ export default function App() {
     }
   }, [currentSessionId, deleteMessage]);
 
-  const renderedMessages = useMemo(() => {
-    return currentSession?.messages.map((message) => (
-      <MessageBubble
-        key={message.id}
-        message={message}
-        commanderName={commanderName}
-        avatarUrl={avatarUrl}
-        onEdit={message.role === "user" ? onEditMessageAction : undefined}
-        onDelete={handleDeleteMessage}
-        formatDate={formatDate}
-        bubbleStyle={bubbleStyle}
-        fontSize={fontSize}
-        messageAnimation={messageAnimation}
-        textReveal={textReveal}
-        animationSpeed={animationSpeed}
-        accentColor={accentColor}
-        messageDensity={messageDensity}
-        showAvatars={showAvatars}
-        isAwakened={isAwakened || effectMessageBubbles}
-        chatAlignment={chatAlignment}
-        blurIntensity={blurIntensity}
-        timestampFormat={timestampFormat}
-        codeTheme={codeTheme}
-        avatarShape={avatarShape}
-        messageShadow={messageShadow}
-        resolvedTheme={resolvedTheme}
-      />
-    ));
-  }, [
-    currentSession?.messages,
-    isAwakened,
-    effectMessageBubbles,
-    commanderName,
-    avatarUrl,
-    formatDate,
-    bubbleStyle,
-    fontSize,
-    messageAnimation,
-    textReveal,
-    animationSpeed,
-    accentColor,
-    messageDensity,
-    showAvatars,
-    chatAlignment,
-    blurIntensity,
-    timestampFormat,
-    codeTheme,
-    avatarShape,
-    messageShadow,
-    resolvedTheme,
-    onEditMessageAction,
-    handleDeleteMessage,
-  ]);
+  const rowVirtualizer = useVirtualizer({
+    count: currentSession?.messages.length || 0,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 100, // Reasonable fallback, will adjust dynamically
+  });
+
+  const renderedMessages = (
+    <div
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        width: '100%',
+        position: 'relative',
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const message = currentSession?.messages[virtualRow.index];
+        if (!message) return null;
+
+        return (
+          <div
+            key={virtualRow.key}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            <MessageBubble
+              message={message}
+              commanderName={commanderName}
+              avatarUrl={avatarUrl}
+              onEdit={message.role === "user" ? onEditMessageAction : undefined}
+              onDelete={handleDeleteMessage}
+              formatDate={formatDate}
+              bubbleStyle={bubbleStyle}
+              fontSize={fontSize}
+              messageAnimation={messageAnimation}
+              textReveal={textReveal}
+              animationSpeed={animationSpeed}
+              accentColor={accentColor}
+              messageDensity={messageDensity}
+              showAvatars={showAvatars}
+              isAwakened={isAwakened || effectMessageBubbles}
+              chatAlignment={chatAlignment}
+              blurIntensity={blurIntensity}
+              timestampFormat={timestampFormat}
+              codeTheme={codeTheme}
+              avatarShape={avatarShape}
+              messageShadow={messageShadow}
+              resolvedTheme={resolvedTheme}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 
   if (isBooting) {
     return (
@@ -1038,7 +1051,6 @@ export default function App() {
           {/* Chat Area - Scrollable */}
           <div
             ref={scrollContainerRef}
-            onScroll={checkScrollPosition}
             className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu ${!currentSession || currentSession.messages.length === 0 ? "overflow-hidden" : "overflow-y-auto overscroll-contain"}`}
             style={{
               WebkitOverflowScrolling: "touch",
