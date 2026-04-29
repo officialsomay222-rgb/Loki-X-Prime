@@ -1362,7 +1362,10 @@ export const ChatInput = memo(
       prevProps.isAwakened === nextProps.isAwakened &&
       prevProps.draftText === nextProps.draftText &&
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      (!prevProps.draftAttachments || prevProps.draftAttachments.every((att, i) => {
+        const nextAtt = nextProps.draftAttachments![i];
+        return att === nextAtt || (att.mimeType === nextAtt.mimeType && att.data?.length === nextAtt.data?.length && att.url === nextAtt.url);
+      })) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
