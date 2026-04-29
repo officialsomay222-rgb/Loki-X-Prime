@@ -43,7 +43,7 @@ export const ClearConfirmOverlay: React.FC<ClearConfirmOverlayProps> = ({
                           onParentClose();
                           setShowClearConfirm(false);
                         }}
-                        className="w-full py-4 bg-red-600 text-white rounded-full font-bold transition-all shadow-xl shadow-red-600/20"
+                        className="w-full py-4 bg-red-600 text-white rounded-full font-bold transition-all shadow-xl shadow-red-600/20 focus-visible:ring-4 focus-visible:ring-red-500/50 focus-visible:outline-none"
                       >
                         Clear Everything
                       </motion.button>
@@ -51,7 +51,7 @@ export const ClearConfirmOverlay: React.FC<ClearConfirmOverlayProps> = ({
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowClearConfirm(false)}
-                        className="w-full py-4 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white rounded-full font-bold transition-all"
+                        className="w-full py-4 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white rounded-full font-bold transition-all focus-visible:ring-4 focus-visible:ring-slate-400/50 focus-visible:outline-none"
                       >
                         Cancel
                       </motion.button>

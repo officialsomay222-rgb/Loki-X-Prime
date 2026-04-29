@@ -1,0 +1,3 @@
+## 2024-04-29 - Missing Focus Indicators on Custom Overlay CTAs
+**Learning:** Custom full-screen overlays (like `SignInOverlay` or `ErrorBoundary`) often use standalone primary CTA buttons that lack the default form context or global standard component styling. As a result, these critical interaction points frequently miss keyboard focus indicators, making them completely inaccessible to keyboard users navigating via Tab.
+**Action:** Always explicitly verify and apply `focus-visible` utility classes (e.g., `focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none`) to all standalone CTA buttons within custom overlays, dialogs, or error boundaries to ensure proper keyboard navigation visibility.
