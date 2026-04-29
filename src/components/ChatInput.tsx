@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo, forwardRef } from "react";
+import React, { useState, useRef, useEffect, memo, forwardRef, useImperativeHandle, useCallback } from "react";
 import {
   Plus,
   Mic,
@@ -72,6 +72,98 @@ interface ChatInputProps {
   saveSessionDraft?: (id: string, text: string, attachments: any[]) => void;
 }
 
+
+export interface MemoizedTextAreaHandle {
+  setInput: (text: string) => void;
+  getValue: () => string;
+  focus: () => void;
+}
+
+interface MemoizedTextAreaProps {
+  initialValue: string;
+  onChange: (value: string) => void;
+  onDebouncedChange: (value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  isTranscribing: boolean;
+  isRecording: boolean;
+  isImageMode: boolean;
+  isAwakened?: boolean;
+  effectInputBox?: boolean;
+  isLoading: boolean;
+}
+
+const MemoizedTextArea = memo(forwardRef<MemoizedTextAreaHandle, MemoizedTextAreaProps>(({
+  initialValue,
+  onChange,
+  onDebouncedChange,
+  onKeyDown,
+  isTranscribing,
+  isRecording,
+  isImageMode,
+  isAwakened,
+  effectInputBox,
+  isLoading
+}, ref) => {
+  const [localValue, setLocalValue] = useState(initialValue);
+  const internalRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    setInput: (val: string) => {
+      setLocalValue(val);
+      onChange(val);
+    },
+    getValue: () => localValue,
+    focus: () => {
+      internalRef.current?.focus();
+    }
+  }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    onChange(val);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onDebouncedChange(localValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localValue, onDebouncedChange]);
+
+  useEffect(() => {
+    if (internalRef.current) {
+      internalRef.current.style.height = "auto";
+      const scrollHeight = internalRef.current.scrollHeight;
+      internalRef.current.style.height = `${Math.min(scrollHeight, 150)}px`;
+      internalRef.current.style.overflowY = scrollHeight > 80 ? "auto" : "hidden";
+    }
+  }, [localValue]);
+
+  return (
+    <textarea
+      aria-label="Chat input"
+      ref={internalRef}
+      value={localValue}
+      onChange={handleChange}
+      onKeyDown={onKeyDown}
+      placeholder={
+        isTranscribing
+          ? "Transcribing..."
+          : isRecording
+            ? "Listening..."
+            : isImageMode
+              ? "Describe the image for LOKI..."
+              : "Ask AI..."
+      }
+      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
+      rows={1}
+      readOnly={isRecording || isTranscribing}
+      disabled={isLoading}
+    />
+  );
+}));
+
 export const ChatInput = memo(
   forwardRef<ChatInputHandle, ChatInputProps>(
     (
@@ -91,17 +183,36 @@ export const ChatInput = memo(
       },
       ref,
     ) => {
-      const [input, setInput] = useState(draftText);
+      const textValueRef = useRef(draftText);
+      const childInputRef = useRef<MemoizedTextAreaHandle>(null);
+      const [hasInput, setHasInput] = useState(draftText.trim().length > 0);
+
+      const setInput = (val: string) => {
+        textValueRef.current = val;
+        setHasInput(val.trim().length > 0);
+        if (childInputRef.current) {
+           childInputRef.current.setInput(val);
+        }
+      };
+
+      const handleInputChange = useCallback((val: string) => {
+        textValueRef.current = val;
+        setHasInput(val.trim().length > 0);
+      }, []);
+
+      const handleDebouncedChange = useCallback((val: string) => {
+        if (saveSessionDraft && currentSessionId) {
+          saveSessionDraft(currentSessionId, val, attachments);
+        }
+      }, [saveSessionDraft, currentSessionId, attachments]);
       const [isOptionsOpen, setIsOptionsOpen] = useState(false);
       const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
       const [isImageMode, setIsImageMode] = useState(false);
       const [isRecording, setIsRecording] = useState(false);
       const [isTranscribing, setIsTranscribing] = useState(false);
-      const [isFocused, setIsFocused] = useState(false);
-      const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
+            const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
       const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
-      const [userVolume, setUserVolume] = useState<number>(0);
-      const [isSuccessFlash, setIsSuccessFlash] = useState(false);
+            const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
       const [transcriptionError, setTranscriptionError] = useState<
         string | null
@@ -113,18 +224,20 @@ export const ChatInput = memo(
       
       React.useImperativeHandle(ref, () => ({
         focus: () => {
-          internalRef.current?.focus();
+          if (childInputRef.current && childInputRef.current.focus) {
+             childInputRef.current.focus();
+          }
         },
         setInput: (text: string) => {
           setInput(text);
         },
         get value() {
-          return input;
+          return textValueRef.current;
         },
         set value(text: string) {
           setInput(text);
         }
-      }), [input]);
+      }), []);
 
       const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
 
@@ -134,22 +247,12 @@ export const ChatInput = memo(
       }, [currentSessionId]);
 
       // Use a ref to track the latest input/attachments to avoid adding them to dependency array
-      const draftStateRef = useRef({ input, attachments });
+      const draftStateRef = useRef({ attachments });
       useEffect(() => {
-        draftStateRef.current = { input, attachments };
-      }, [input, attachments]);
+        draftStateRef.current = { attachments };
+      }, [attachments]);
 
-      useEffect(() => {
-        if (!saveSessionDraft || !currentSessionId) return;
-
-        const timeoutId = setTimeout(() => {
-          saveSessionDraft(currentSessionId, input, attachments);
-        }, 500);
-
-        return () => {
-          clearTimeout(timeoutId);
-        };
-      }, [input, attachments, currentSessionId, saveSessionDraft]);
+      // Draft saving is now debounced in MemoizedTextArea
 
       // Only save on unmount/session switch, reading from the ref to get latest state
       useEffect(() => {
@@ -157,7 +260,7 @@ export const ChatInput = memo(
 
         return () => {
            // When switching sessions, save the last known state of the *previous* session
-           saveSessionDraft(currentSessionId, draftStateRef.current.input, draftStateRef.current.attachments);
+           saveSessionDraft(currentSessionId, textValueRef.current, draftStateRef.current.attachments);
         };
       }, [currentSessionId, saveSessionDraft]);
 
@@ -283,6 +386,7 @@ export const ChatInput = memo(
       const audioQueueRef = useRef<Float32Array[]>([]);
       const isPlayingRef = useRef(false);
       const volumeAnimFrameRef = useRef<number>(0);
+      const userVolumeRef = useRef<number>(0);
 
       useEffect(() => {
         const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -313,20 +417,7 @@ export const ChatInput = memo(
         };
       }, [isOptionsOpen, isModelMenuOpen]);
 
-      const autoResizeInput = () => {
-        if (inputRef.current) {
-          inputRef.current.style.height = "auto";
-          const scrollHeight = inputRef.current.scrollHeight;
-          inputRef.current.style.height = `${Math.min(scrollHeight, 150)}px`;
-          // Show scrollbar only if content exceeds roughly 2 lines (approx 72px)
-          inputRef.current.style.overflowY =
-            scrollHeight > 80 ? "auto" : "hidden";
-        }
-      };
 
-      useEffect(() => {
-        autoResizeInput();
-      }, [input]);
 
       const getOptionsIcon = () => {
         if (isImageMode) return <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />;
@@ -346,17 +437,16 @@ export const ChatInput = memo(
         }
       };
 
-      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (enterToSend && e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           handleSend();
         }
-        // If enterToSend is false, or if shift+enter is pressed, it naturally adds a new line
-      };
+      }, [enterToSend, handleSend]);
 
       const handleSend = () => {
-        if ((!input.trim() && attachments.length === 0) || isLoading) return;
-        onSendMessage(input.trim(), isImageMode, undefined, attachments);
+        if ((!textValueRef.current.trim() && attachments.length === 0) || isLoading) return;
+        onSendMessage(textValueRef.current.trim(), isImageMode, undefined, attachments);
         setInput("");
         setAttachments([]);
         if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
@@ -439,7 +529,7 @@ export const ChatInput = memo(
           mediaRecorder.onstop = () => {
             setTimeout(async () => {
               // If no audio was detected at all, just cancel
-              if (!hasSpokenRef.current && !input.trim()) {
+              if (!hasSpokenRef.current && !textValueRef.current.trim()) {
                 setIsRecording(false);
                 stopRecording();
                 return;
@@ -452,7 +542,7 @@ export const ChatInput = memo(
               const audioUrl = URL.createObjectURL(audioBlob);
 
               setIsTranscribing(true);
-              const currentInput = input.trim();
+              const currentInput = textValueRef.current.trim();
               setInput("");
 
               const reader = new FileReader();
@@ -700,6 +790,11 @@ export const ChatInput = memo(
           analyser.fftSize = 256;
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
+          // TODO: Migrate from deprecated ScriptProcessor to AudioWorklet.
+          // 1. Create a public/audio-processor.js file extending AudioWorkletProcessor.
+          // 2. Call await audioCtx.audioWorklet.addModule('/audio-processor.js').
+          // 3. const processor = new AudioWorkletNode(audioCtx, 'audio-processor').
+          // This will prevent the main UI thread from blocking during live audio encoding.
           const processor = audioCtx.createScriptProcessor(4096, 1, 1);
 
           source.connect(analyser);
@@ -713,7 +808,7 @@ export const ChatInput = memo(
               sum += dataArray[i];
             }
             const average = sum / dataArray.length;
-            setUserVolume(average);
+            userVolumeRef.current = average;
             volumeAnimFrameRef.current = requestAnimationFrame(updateVolume);
           };
           updateVolume();
@@ -888,7 +983,7 @@ export const ChatInput = memo(
                   <div
                     className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
                       isAwakened || effectInputBox
-                        ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 ${isFocused ? 'shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]' : 'shadow-[inset_0_0_30px_rgba(0,242,255,0.1)]'}` 
+                        ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 shadow-[inset_0_0_30px_rgba(0,242,255,0.1)] focus-within:shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]`
                         : "bg-slate-100/20 dark:bg-white/5"
                     } ${
                       isSuccessFlash
@@ -914,27 +1009,18 @@ export const ChatInput = memo(
                         ))}
                       </div>
                     )}
-                    <textarea
-                      aria-label="Chat input"
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
+                    <MemoizedTextArea
+                      ref={childInputRef}
+                      initialValue={textValueRef.current}
+                      onChange={handleInputChange}
+                      onDebouncedChange={handleDebouncedChange}
                       onKeyDown={handleKeyDown}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      placeholder={
-                        isTranscribing
-                          ? "Transcribing..."
-                          : isRecording
-                            ? "Listening..."
-                            : isImageMode
-                              ? "Describe the image for LOKI..."
-                              : "Ask AI..."
-                      }
-                      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
-                      rows={1}
-                      readOnly={isRecording || isTranscribing}
-                      disabled={isLoading}
+                      isTranscribing={isTranscribing}
+                      isRecording={isRecording}
+                      isImageMode={isImageMode}
+                      isAwakened={isAwakened}
+                      effectInputBox={effectInputBox}
+                      isLoading={isLoading}
                     />
                     
                     <div className="flex items-center justify-between mt-1 sm:mt-2 px-1 relative">
@@ -1127,7 +1213,7 @@ export const ChatInput = memo(
                         </motion.button>
 
                         <AnimatePresence mode="popLayout">
-                          {!(input.trim() || attachments.length > 0) && !isLoading ? (
+                          {!(hasInput || attachments.length > 0) && !isLoading ? (
                             <motion.button
                               key="live-conv-btn"
                               layout
@@ -1169,9 +1255,9 @@ export const ChatInput = memo(
                               ) : (
                                 <button
                                   onClick={handleSend}
-                                  disabled={!(input.trim() || attachments.length > 0)}
+                                  disabled={!(hasInput || attachments.length > 0)}
                                   aria-label="Send Message"
-                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${(input.trim() || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${(hasInput || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
                                 >
                                   {sendButtonIcon === 'arrow' ? (
                                     <ArrowRight className="w-5 h-5" />
@@ -1197,7 +1283,7 @@ export const ChatInput = memo(
 
           <LiveVoiceOverlay
             isOpen={isVoiceOverlayOpen}
-            userVolume={userVolume}
+            userVolumeRef={userVolumeRef}
             onClose={() => {
               setIsVoiceOverlayOpen(false);
               stopLiveSession();
