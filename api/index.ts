@@ -68,15 +68,16 @@ app.get("/api/quota", (req, res) => {
   try {
     res.json({ date: getTodayDateString(), fast_count: 0, generate_count: 0, ultra_count: 0 });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("Quota API Error:", error);
+    res.status(500).json({ error: "Internal server error while fetching quota." });
   }
 });
 
 app.post("/api/transcribe", async (req, res) => {
   try {
     const { audioBase64, mimeType } = req.body;
-    if (!audioBase64) {
-      return res.status(400).json({ error: "audioBase64 is required" });
+    if (!audioBase64 || typeof audioBase64 !== 'string') {
+      return res.status(400).json({ error: "audioBase64 string is required" });
     }
 
     let groqKey = process.env.GROQ_API_KEY;
@@ -119,15 +120,15 @@ app.post("/api/transcribe", async (req, res) => {
     }
   } catch (error: any) {
     console.error("Transcription Error:", error);
-    res.status(500).json({ error: error.message || "Internal server error during transcription." });
+    res.status(500).json({ error: "Internal server error during transcription." });
   }
 });
 
 app.post("/api/tts", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: "text is required" });
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: "text string is required" });
     }
 
     let geminiKey = process.env.GEMINI_API_KEY;
@@ -160,7 +161,7 @@ app.post("/api/tts", async (req, res) => {
     }
   } catch (error: any) {
     console.error("TTS Error:", error);
-    res.status(500).json({ error: error.message || "Internal server error during TTS." });
+    res.status(500).json({ error: "Internal server error during TTS." });
   }
 });
 
@@ -397,26 +398,12 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error: any) {
     console.error("Chat API Error:", error);
-    let errorMessage = error.message || "Internal server error while processing your request.";
-    try {
-      const jsonStrMatch = errorMessage.match(/\{.*\}/s);
-      if (jsonStrMatch) {
-        const parsed = JSON.parse(jsonStrMatch[0]);
-        if (parsed.error && parsed.error.message) {
-           let innerMsg = parsed.error.message;
-           try {
-             const innerParsed = JSON.parse(innerMsg);
-             if (innerParsed.error && innerParsed.error.message) {
-               innerMsg = innerParsed.error.message;
-             }
-           } catch (e2) {}
-           errorMessage = innerMsg;
-        } else if (parsed.message) {
-           errorMessage = parsed.message;
-        }
-      }
-    } catch (e) {}
+    let errorMessage = "Internal server error while processing your request.";
     const statusCode = error.status || error.statusCode || 500;
+
+    // We intentionally do not leak error.message back to the client
+    // as it can expose system internals, stack traces, or API keys.
+
     if (!res.headersSent) {
       res.status(statusCode).json({ error: errorMessage });
     } else {
