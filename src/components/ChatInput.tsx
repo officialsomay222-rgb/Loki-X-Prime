@@ -200,6 +200,8 @@ export const ChatInput = memo(
         setHasInput(val.trim().length > 0);
       }, []);
 
+      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
+
       const handleDebouncedChange = useCallback((val: string) => {
         if (saveSessionDraft && currentSessionId) {
           saveSessionDraft(currentSessionId, val, attachments);
@@ -221,6 +223,17 @@ export const ChatInput = memo(
       const audioChunksRef = useRef<Blob[]>([]);
       const internalRef = useRef<HTMLTextAreaElement>(null);
       const inputRef = internalRef;
+
+      const handleSend = () => {
+        if ((!textValueRef.current.trim() && attachments.length === 0) || isLoading) return;
+        onSendMessage(textValueRef.current.trim(), isImageMode, undefined, attachments);
+        setInput("");
+        setAttachments([]);
+        if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
+        if (inputRef.current) {
+          inputRef.current.style.height = "auto";
+        }
+      };
       
       React.useImperativeHandle(ref, () => ({
         focus: () => {
@@ -238,8 +251,6 @@ export const ChatInput = memo(
           setInput(text);
         }
       }), []);
-
-      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
 
       useEffect(() => {
         setInput(draftText);
@@ -443,17 +454,6 @@ export const ChatInput = memo(
           handleSend();
         }
       }, [enterToSend, handleSend]);
-
-      const handleSend = () => {
-        if ((!textValueRef.current.trim() && attachments.length === 0) || isLoading) return;
-        onSendMessage(textValueRef.current.trim(), isImageMode, undefined, attachments);
-        setInput("");
-        setAttachments([]);
-        if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
-        if (inputRef.current) {
-          inputRef.current.style.height = "auto";
-        }
-      };
 
       const startRecording = async () => {
         setMicError(null);
