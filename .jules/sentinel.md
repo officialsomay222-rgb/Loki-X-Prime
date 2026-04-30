@@ -17,3 +17,8 @@
 **Vulnerability:** User-provided URLs in `react-markdown` links could potentially use malicious protocols (e.g., `javascript:`) to execute cross-site scripting (XSS), and external links without `rel="noopener noreferrer"` could expose the app to reverse tabnabbing.
 **Learning:** `react-markdown` does not sanitize `href` attributes for safe protocols by default. The custom renderer for the `a` tag must explicitly validate that the URL protocol is safe (e.g., `http:`, `https:`, `mailto:`, or relative URLs starting with `/`) and override it if not.
 **Prevention:** Always implement a custom `a` tag renderer in the `components` prop of `<ReactMarkdown>` that enforces a strict protocol whitelist (ignoring case) and applies `target="_blank"` with `rel="noopener noreferrer"`.
+
+## 2024-04-29 - Prevent Application DoS via Express Request Body Parsing
+**Vulnerability:** Endpoints using `Buffer.from(req.body.audioBase64, 'base64')` were vulnerable to Application-level Denial of Service. If an attacker sent an array or object instead of a string in the JSON payload, `Buffer.from()` would throw a synchronous `TypeError`, bypassing normal error handling and crashing the Node.js process if not caught properly.
+**Learning:** Never trust the type of properties within `req.body` in an Express application. The `express.json()` middleware parses valid JSON, meaning properties could be strings, numbers, arrays, objects, or null.
+**Prevention:** Explicitly validate the types of request body properties (e.g., `typeof audioBase64 === 'string'`) before passing them to native methods like `Buffer.from` that expect specific types.
