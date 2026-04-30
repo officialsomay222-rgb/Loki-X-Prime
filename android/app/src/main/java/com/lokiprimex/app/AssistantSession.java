@@ -11,6 +11,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -36,7 +37,10 @@ public class AssistantSession extends VoiceInteractionSession {
 
     @Override
     public View onCreateContentView() {
-        ContextThemeWrapper themedContext = new ContextThemeWrapper(getContext(), R.style.AppTheme);
+        // Set keyboard interaction to adjustResize so layout smoothly pushes up
+        getWindow().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        ContextThemeWrapper themedContext = new ContextThemeWrapper(getContext(), R.style.AppTheme_NoActionBar);
         LayoutInflater inflater = LayoutInflater.from(themedContext);
         mRootView = inflater.inflate(R.layout.assistant_overlay, null);
 

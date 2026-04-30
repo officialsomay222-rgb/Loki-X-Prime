@@ -12,4 +12,6 @@
     <color name="overlay_icon_tint">#cbd5e1</color> <!-- Slate 300 -->
     <color name="overlay_divider">#334155</color> <!-- Slate 700 -->
     <color name="overlay_input_background">#334155</color> <!-- Slate 700 -->
+    <color name="overlay_mic_accent_background">#e0e7ff</color> <!-- Indigo 100 approx for light mode, but we are in dark so maybe a soft blue -->
+    <color name="overlay_mic_accent_icon">#312e81</color> <!-- Indigo 900 -->
 </resources>
