@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors -->
+    <color name="overlay_background">#000000</color>
+    <color name="overlay_card_background">#0F172A</color>
+    <color name="overlay_text_primary">#F8FAFC</color>
+    <color name="overlay_text_secondary">#94A3B8</color>
+    <color name="overlay_icon_tint">#E2E8F0</color>
+    <color name="overlay_divider">#334155</color>
+
+    <!-- Gemini-style Floating Pill Colors for Dark Theme -->
+    <color name="overlay_pill_background">#1E1E24</color> <!-- Deep grey/blackish pill -->
+    <color name="overlay_pill_stroke">#334155</color>
+
+    <color name="overlay_input_background">@android:color/transparent</color>
+    <color name="overlay_mic_accent_background">#1E1B4B</color>
+    <color name="overlay_mic_accent_icon">#A5B4FC</color>
+</resources>
