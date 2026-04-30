@@ -43,7 +43,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           onClick={onClose} 
           aria-label="Collapse Menu"
           title="Collapse Menu"
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
         </motion.button>
@@ -75,7 +75,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSave(tempName, tempEmail)}
-          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all mt-4 shadow-xl"
+          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all mt-4 shadow-xl focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           Save Changes
         </motion.button>
@@ -282,7 +282,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClick={onClose} 
                   aria-label="Close Settings"
                   title="Close Settings"
-                  className="p-2 rounded-full transition-colors group"
+                  className="p-2 rounded-full transition-colors group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   <X className="w-6 h-6 text-slate-500 dark:text-[#717171] group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
                 </motion.button>
@@ -348,7 +348,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     whileHover={{ scale: 1.05, backgroundColor: "#f0f0f0" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowEditProfile(true)}
-                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5"
+                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                   >
                     Edit Profile
                   </motion.button>
@@ -375,7 +375,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                    className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                   >
                     Try Now
                   </motion.button>
@@ -436,7 +436,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setModelMode(m as any)}
-                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
+                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
                             >
                               {m}
                             </motion.button>
