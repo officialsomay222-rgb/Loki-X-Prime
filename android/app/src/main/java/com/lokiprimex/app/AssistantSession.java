@@ -10,25 +10,31 @@ import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.FrameLayout;
+
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import io.noties.markwon.Markwon;
 
 public class AssistantSession extends VoiceInteractionSession {
 
     private View mRootView;
+    private FrameLayout mInsetsContainer;
+    private RgbEdgeAnimationView mRgbEdgeView;
+    private InfinityLogoView mLogoInfinity;
     private LinearLayout mLayoutProcessingMode;
     private LinearLayout mExpandedCard;
     private EditText mInputText;
-    private ImageButton mBtnAdd;
     private ImageButton mBtnScan;
     private ImageButton mBtnMic;
-    private ImageButton mBtnSparkle;
     private TextView mTextResponseBody;
 
     public AssistantSession(Context context) {
@@ -37,26 +43,47 @@ public class AssistantSession extends VoiceInteractionSession {
 
     @Override
     public View onCreateContentView() {
-        // Set keyboard interaction to adjustResize so layout smoothly pushes up
+        // Ensure transparent system bars and no layout overlapping
+        getWindow().getWindow().setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
         getWindow().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         ContextThemeWrapper themedContext = new ContextThemeWrapper(getContext(), R.style.AppTheme_NoActionBar);
         LayoutInflater inflater = LayoutInflater.from(themedContext);
         mRootView = inflater.inflate(R.layout.assistant_overlay, null);
 
+        mInsetsContainer = mRootView.findViewById(R.id.assistant_insets_container);
+        mRgbEdgeView = mRootView.findViewById(R.id.rgb_edge_view);
+        mLogoInfinity = mRootView.findViewById(R.id.logo_infinity);
+
         mLayoutProcessingMode = mRootView.findViewById(R.id.layout_processing_mode);
         mExpandedCard = mRootView.findViewById(R.id.expanded_card);
         mInputText = mRootView.findViewById(R.id.input_text);
 
-        mBtnAdd = mRootView.findViewById(R.id.btn_add);
         mBtnScan = mRootView.findViewById(R.id.btn_scan);
         mBtnMic = mRootView.findViewById(R.id.btn_mic);
-        mBtnSparkle = mRootView.findViewById(R.id.btn_sparkle);
         mTextResponseBody = mRootView.findViewById(R.id.text_response_body);
 
+        setupWindowInsets();
         setupDummyListeners();
 
         return mRootView;
+    }
+
+    private void setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(mInsetsContainer, (v, insets) -> {
+            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime()).bottom;
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+
+            // Add extra 16dp margin from the bottom navigation bar / keyboard
+            float density = getContext().getResources().getDisplayMetrics().density;
+            int bottomMargin = (int) (16 * density);
+
+            v.setPadding(v.getPaddingLeft(), topInset, v.getPaddingRight(), bottomInset + bottomMargin);
+            return insets;
+        });
     }
 
     private void setupDummyListeners() {
@@ -73,18 +100,20 @@ public class AssistantSession extends VoiceInteractionSession {
     }
 
     private void setButtonsEnabled(boolean enabled) {
-        mBtnAdd.setEnabled(enabled);
-        mBtnScan.setEnabled(enabled);
-        mBtnMic.setEnabled(enabled);
-        mBtnSparkle.setEnabled(enabled);
+        if (mBtnScan != null) mBtnScan.setEnabled(enabled);
+        if (mBtnMic != null) mBtnMic.setEnabled(enabled);
     }
 
     private void triggerProcessingState() {
-        // Show processing state
+        // Show processing state and trigger edge animation
         mInputText.setVisibility(View.GONE);
         mLayoutProcessingMode.setVisibility(View.VISIBLE);
         setButtonsEnabled(false);
         mExpandedCard.setVisibility(View.GONE);
+
+        if (mRgbEdgeView != null) {
+            mRgbEdgeView.startAnimation();
+        }
 
         // Simulate 2 second delay
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -114,6 +143,11 @@ public class AssistantSession extends VoiceInteractionSession {
             setButtonsEnabled(true);
             mExpandedCard.setVisibility(View.GONE);
             mInputText.setText("");
+        }
+
+        // Always trigger edge animation when first opened
+        if (mRgbEdgeView != null) {
+            mRgbEdgeView.startAnimation();
         }
     }
 }

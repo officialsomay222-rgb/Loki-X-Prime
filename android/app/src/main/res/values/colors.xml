@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#0284c7</color> <!-- Sky 600 -->
-    <color name="colorPrimaryDark">#0369a1</color> <!-- Sky 700 -->
-    <color name="colorAccent">#0ea5e9</color> <!-- Sky 500 -->
+    <color name="colorPrimary">#0284c7</color>
+    <color name="colorPrimaryDark">#0369a1</color>
+    <color name="colorAccent">#0ea5e9</color>
 
-    <!-- App Theme Colors -->
-    <color name="overlay_background">#1e293b</color> <!-- Slate 800 -->
-    <color name="overlay_card_background">#0f172a</color> <!-- Slate 900 -->
-    <color name="overlay_text_primary">#f8fafc</color> <!-- Slate 50 -->
-    <color name="overlay_text_secondary">#94a3b8</color> <!-- Slate 400 -->
-    <color name="overlay_icon_tint">#cbd5e1</color> <!-- Slate 300 -->
-    <color name="overlay_divider">#334155</color> <!-- Slate 700 -->
-    <color name="overlay_input_background">#334155</color> <!-- Slate 700 -->
-    <color name="overlay_mic_accent_background">#e0e7ff</color> <!-- Indigo 100 approx for light mode, but we are in dark so maybe a soft blue -->
-    <color name="overlay_mic_accent_icon">#312e81</color> <!-- Indigo 900 -->
+    <!-- Light Theme Colors (Default) -->
+    <color name="overlay_background">#FFFFFF</color>
+    <color name="overlay_card_background">#F8FAFC</color>
+    <color name="overlay_text_primary">#0F172A</color>
+    <color name="overlay_text_secondary">#475569</color>
+    <color name="overlay_icon_tint">#334155</color>
+    <color name="overlay_divider">#E2E8F0</color>
+
+    <!-- Gemini-style Floating Pill Colors for Light Theme -->
+    <color name="overlay_pill_background">#F1F5F9</color> <!-- Light grey/white pill -->
+    <color name="overlay_pill_stroke">#CBD5E1</color>
+
+    <color name="overlay_input_background">@android:color/transparent</color>
+    <color name="overlay_mic_accent_background">#E0E7FF</color>
+    <color name="overlay_mic_accent_icon">#312E81</color>
 </resources>
