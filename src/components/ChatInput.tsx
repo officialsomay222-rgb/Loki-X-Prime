@@ -1354,6 +1354,20 @@ export const ChatInput = memo(
     },
   ),
   (prevProps, nextProps) => {
+    // ⚡ Bolt: Performance optimization
+    // 💡 What: Replaced JSON.stringify with custom lightweight deep equality check
+    // 🎯 Why: JSON.stringify on arrays containing large base64 image strings blocks the main thread
+    // 📊 Impact: Prevents UI lag and stalling when typing or re-rendering ChatInput
+    const areAttachmentsEqual = (prev?: any[], next?: any[]) => {
+      if (!prev && !next) return true;
+      if (!prev || !next) return false;
+      if (prev.length !== next.length) return false;
+      return prev.every((att, i) => {
+        const nextAtt = next[i];
+        return att.url === nextAtt.url && att.mimeType === nextAtt.mimeType && att.data?.length === nextAtt.data?.length;
+      });
+    };
+
     return (
       prevProps.isLoading === nextProps.isLoading &&
       prevProps.modelMode === nextProps.modelMode &&
@@ -1361,8 +1375,7 @@ export const ChatInput = memo(
       prevProps.enterToSend === nextProps.enterToSend &&
       prevProps.isAwakened === nextProps.isAwakened &&
       prevProps.draftText === nextProps.draftText &&
-      prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      areAttachmentsEqual(prevProps.draftAttachments, nextProps.draftAttachments) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
