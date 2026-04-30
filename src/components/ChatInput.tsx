@@ -1362,7 +1362,17 @@ export const ChatInput = memo(
       prevProps.isAwakened === nextProps.isAwakened &&
       prevProps.draftText === nextProps.draftText &&
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      // ⚡ Bolt: Replaced JSON.stringify with lightweight property comparison for draftAttachments
+      // 🎯 Why: draftAttachments contains base64 image data. JSON.stringify blocks the main thread
+      // causing severe UI lag.
+      // 📊 Impact: Prevents main thread blocking and ensures smooth typing and UI interactions
+      // while correctly preventing unnecessary re-renders.
+      (prevProps.draftAttachments === nextProps.draftAttachments ||
+        (prevProps.draftAttachments && nextProps.draftAttachments &&
+         prevProps.draftAttachments.every((att, i) => {
+           const nextAtt = nextProps.draftAttachments![i];
+           return att.url === nextAtt.url && att.mimeType === nextAtt.mimeType && att.data?.length === nextAtt.data?.length;
+         }))) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
