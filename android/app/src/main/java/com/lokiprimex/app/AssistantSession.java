@@ -1,6 +1,10 @@
 package com.lokiprimex.app;
 
+import androidx.core.content.ContextCompat;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +42,13 @@ public class AssistantSession extends VoiceInteractionSession {
     private LinearLayout mLayoutProcessingMode;
     private LinearLayout mExpandedCard;
     private TextView mTextResponseBody;
+    private BouncingDotsLoader mBouncingDotsLoader;
+    private ResponseReceiver mResponseReceiver;
+
+    public static final String ACTION_ASK_AI = "com.loki.ACTION_ASK_AI";
+    public static final String ACTION_AI_RESPONSE = "com.loki.ACTION_AI_RESPONSE";
+    public static final String EXTRA_TEXT = "text";
+    public static final String EXTRA_RESPONSE = "response";
 
     // Dual-State UI Elements
     private LinearLayout mStateIdlePill;
@@ -83,6 +94,9 @@ public class AssistantSession extends VoiceInteractionSession {
         mLayoutProcessingMode = mRootView.findViewById(R.id.layout_processing_mode);
         mExpandedCard = mRootView.findViewById(R.id.expanded_card);
         mTextResponseBody = mRootView.findViewById(R.id.text_response_body);
+        mBouncingDotsLoader = mRootView.findViewById(R.id.bouncing_dots_loader);
+
+        mResponseReceiver = new ResponseReceiver();
 
         // Bind Dual-State Elements
         mStateIdlePill = mRootView.findViewById(R.id.state_idle_pill);
@@ -290,6 +304,13 @@ public class AssistantSession extends VoiceInteractionSession {
     }
 
     private void triggerProcessingState() {
+        String activeText = "";
+        if (mStateTypingCard.getVisibility() == View.VISIBLE) {
+            activeText = mInputCardText.getText().toString();
+        } else {
+            activeText = mInputPillText.getText().toString();
+        }
+
         // Show processing state and trigger edge animation
         mStateIdlePill.setVisibility(View.GONE);
         mStateTypingCard.setVisibility(View.GONE);
@@ -302,29 +323,52 @@ public class AssistantSession extends VoiceInteractionSession {
 
         mLayoutProcessingMode.setVisibility(View.VISIBLE);
         setButtonsEnabled(false);
-        mExpandedCard.setVisibility(View.GONE);
+        mExpandedCard.setVisibility(View.VISIBLE);
+
+        mTextResponseBody.setText("");
+        mTextResponseBody.setVisibility(View.GONE);
+        mBouncingDotsLoader.setVisibility(View.VISIBLE);
+        mBouncingDotsLoader.startAnimation();
 
         if (mRgbEdgeView != null) {
             mRgbEdgeView.startAnimation();
         }
 
-        // Simulate 2 second delay
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // Restore input pill to normal
-            mLayoutProcessingMode.setVisibility(View.GONE);
-            mStateIdlePill.setVisibility(View.VISIBLE);
-            setButtonsEnabled(true);
-            mInputPillText.setText("");
-            mInputCardText.setText("");
+        mInputPillText.setText("");
+        mInputCardText.setText("");
 
-            // Show expanded card and render markdown
-            mExpandedCard.setVisibility(View.VISIBLE);
+        // Send Outgoing Broadcast to Web/Capacitor layer
+        Intent intent = new Intent(ACTION_ASK_AI);
+        intent.putExtra(EXTRA_TEXT, activeText);
+        getContext().sendBroadcast(intent);
+    }
 
-            String dummyMarkdown = "Hello! I am **Loki**. How can I help you today?\n\n* I can answer questions.\n* I can scan your context.";
-            Markwon markwon = Markwon.create(getContext());
-            markwon.setMarkdown(mTextResponseBody, dummyMarkdown);
+    private class ResponseReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ACTION_AI_RESPONSE.equals(intent.getAction())) {
+                String markdownResponse = intent.getStringExtra(EXTRA_RESPONSE);
 
-        }, 2000);
+                // Restore UI state
+                mLayoutProcessingMode.setVisibility(View.GONE);
+                mStateIdlePill.setVisibility(View.VISIBLE);
+                setButtonsEnabled(true);
+
+                // Stop Loader and Show Text
+                mBouncingDotsLoader.stopAnimation();
+                mBouncingDotsLoader.setVisibility(View.GONE);
+                mTextResponseBody.setVisibility(View.VISIBLE);
+
+                if (markdownResponse != null) {
+                    Markwon markwon = Markwon.create(getContext());
+                    markwon.setMarkdown(mTextResponseBody, markdownResponse);
+                }
+
+                if (mRgbEdgeView != null) {
+                    mRgbEdgeView.stopAnimation();
+                }
+            }
+        }
     }
 
     @Override
@@ -350,6 +394,9 @@ public class AssistantSession extends VoiceInteractionSession {
         if (mRgbEdgeView != null) {
             mRgbEdgeView.startAnimation();
         }
+
+        IntentFilter filter = new IntentFilter(ACTION_AI_RESPONSE);
+        ContextCompat.registerReceiver(getContext(), mResponseReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
     }
 
     @Override
@@ -357,6 +404,11 @@ public class AssistantSession extends VoiceInteractionSession {
         super.onHide();
         if (mRgbEdgeView != null) {
             mRgbEdgeView.stopAnimation();
+        }
+        try {
+            getContext().unregisterReceiver(mResponseReceiver);
+        } catch (IllegalArgumentException e) {
+            // Ignored, receiver not registered
         }
     }
 }

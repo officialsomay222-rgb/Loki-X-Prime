@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#00000000"
     android:clipToPadding="false"
     android:clipChildren="false">
 
@@ -95,6 +96,14 @@
                     android:textSize="16sp"
                     android:lineSpacingExtra="6dp" />
 
+                <!-- Custom Bouncing Dots Loader -->
+                <com.lokiprimex.app.BouncingDotsLoader
+                    android:id="@+id/bouncing_dots_loader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone" />
+
                 <!-- Footer -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -149,10 +158,11 @@
                     android:gravity="center_vertical"
                     android:background="@drawable/bg_idle_pill"
                     android:elevation="8dp"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="24dp"
                     android:layout_marginHorizontal="16dp"
-                    android:minHeight="56dp"
-                    android:paddingHorizontal="4dp"
+                    android:minHeight="64dp"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="16dp"
                     android:visibility="visible">
 
                     <ImageButton
