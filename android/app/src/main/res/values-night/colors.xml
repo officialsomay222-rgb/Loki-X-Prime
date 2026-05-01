@@ -13,6 +13,6 @@
     <color name="overlay_pill_stroke">#334155</color>
 
     <color name="overlay_input_background">@android:color/transparent</color>
-    <color name="overlay_mic_accent_background">#1E1B4B</color>
-    <color name="overlay_mic_accent_icon">#A5B4FC</color>
+    <color name="overlay_mic_accent_background">#4285F4</color>
+    <color name="overlay_mic_accent_icon">#FFFFFF</color>
 </resources>
