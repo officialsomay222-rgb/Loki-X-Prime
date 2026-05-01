@@ -1358,17 +1358,69 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 
 /* Ensure absolute backgrounds stretch to true edges, ignoring safe area padding */
 .edge-to-edge-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed;
+  top: -100px;
+  left: -100px;
+  right: -100px;
+  bottom: -100px;
   z-index: -1;
-  /* Negative margins to counteract parent padding if applied to a child */
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
-  margin-bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-  margin-left: calc(-1 * env(safe-area-inset-left, 0px));
-  margin-right: calc(-1 * env(safe-area-inset-right, 0px));
+  /* Force it under status bars */
+  pointer-events: none;
+}
+
+/* God-level RGB Fullscreen Breathing Animation */
+@keyframes rgb-breath-liquid {
+  0% {
+    filter: hue-rotate(0deg) blur(20px);
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    filter: hue-rotate(180deg) blur(40px);
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(20px);
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+.processing-rgb-overlay {
+  position: fixed;
+  top: -50vh;
+  left: -50vw;
+  width: 200vw;
+  height: 200vh;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 242, 255, 0.4) 0%,
+    rgba(189, 0, 255, 0.4) 30%,
+    rgba(255, 0, 85, 0.3) 60%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 10;
+  animation: rgb-breath-liquid 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.processing-border-effect {
+  position: absolute;
+  inset: -10px;
+  background: conic-gradient(
+    from 0deg,
+    #00f2ff,
+    #bd00ff,
+    #ff0055,
+    #00f2ff
+  );
+  filter: blur(20px);
+  border-radius: inherit;
+  z-index: -1;
+  animation: spin-aura 3s linear infinite;
+  opacity: 0.8;
 }
 
 /* Safe Area Global Utility Classes */
