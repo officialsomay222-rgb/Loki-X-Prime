@@ -34,6 +34,10 @@ function extractImageQuery(message: string): string | null {
 
 const app = express();
 
+// Trust proxy to correctly resolve client IP behind Vercel/Cloudflare
+// This is critical for express-rate-limit to block individual users instead of the entire app
+app.set('trust proxy', 1);
+
 const getTodayDateString = () => {
   const today = new Date();
   return today.toISOString().split('T')[0];
