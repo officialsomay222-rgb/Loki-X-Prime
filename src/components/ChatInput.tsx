@@ -1360,9 +1360,20 @@ export const ChatInput = memo(
       prevProps.currentSessionId === nextProps.currentSessionId &&
       prevProps.enterToSend === nextProps.enterToSend &&
       prevProps.isAwakened === nextProps.isAwakened &&
+      // ⚡ Bolt: Lightweight deep comparison for draftAttachments instead of JSON.stringify
+      // 💡 What: Replaced JSON.stringify deep equality with a specific property comparison checking url, mimeType, and data.length.
+      // 🎯 Why: JSON.stringify becomes a blocking operation on the main thread when arrays contain large data items like base64 images, causing severe UI lag during typing/rendering.
+      // 📊 Impact: Significantly reduces the time taken to evaluate component memoization, preventing UI stalls during typing and message updates.
       prevProps.draftText === nextProps.draftText &&
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      (prevProps.draftAttachments === nextProps.draftAttachments ||
+        (prevProps.draftAttachments && nextProps.draftAttachments &&
+          prevProps.draftAttachments.every((att, i) => {
+            const nextAtt = nextProps.draftAttachments![i];
+            return att.url === nextAtt?.url && att.mimeType === nextAtt?.mimeType && att.data?.length === nextAtt?.data?.length;
+          })
+        )
+      ) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
