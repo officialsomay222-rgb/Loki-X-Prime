@@ -20,6 +20,9 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.widget.TextView;
 import android.widget.FrameLayout;
+import android.text.TextWatcher;
+import android.text.Editable;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -34,16 +37,29 @@ public class AssistantSession extends VoiceInteractionSession {
     private VibrantGlowView mRgbEdgeView;
     private LinearLayout mLayoutProcessingMode;
     private LinearLayout mExpandedCard;
-    private EditText mInputText;
-    private ImageButton mBtnAdd;
-    private ImageButton mBtnScan;
-    private ImageButton mBtnMic;
     private TextView mTextResponseBody;
+
+    // Dual-State UI Elements
+    private LinearLayout mStateIdlePill;
+    private LinearLayout mStateTypingCard;
+
+    private EditText mInputPillText;
+    private ImageButton mBtnPillAdd;
+    private ImageButton mBtnPillLens;
+    private ImageButton mBtnPillMic;
+    private ImageButton mBtnPillSparkle;
+
+    private EditText mInputCardText;
+    private ImageButton mBtnCardAdd;
+    private ImageButton mBtnCardLens;
+    private ImageButton mBtnCardSend;
+    private View mDragHandleState2;
 
     private float mInitialTouchY;
     private float mInitialTranslationY;
     private VelocityTracker mVelocityTracker;
     private boolean mIsDragging = false;
+    private boolean mIsSyncingText = false;
 
     public AssistantSession(Context context) {
         super(context);
@@ -66,14 +82,26 @@ public class AssistantSession extends VoiceInteractionSession {
 
         mLayoutProcessingMode = mRootView.findViewById(R.id.layout_processing_mode);
         mExpandedCard = mRootView.findViewById(R.id.expanded_card);
-        mInputText = mRootView.findViewById(R.id.input_text);
-
-        mBtnAdd = mRootView.findViewById(R.id.btn_add);
-        mBtnScan = mRootView.findViewById(R.id.btn_scan);
-        mBtnMic = mRootView.findViewById(R.id.btn_mic);
         mTextResponseBody = mRootView.findViewById(R.id.text_response_body);
 
+        // Bind Dual-State Elements
+        mStateIdlePill = mRootView.findViewById(R.id.state_idle_pill);
+        mStateTypingCard = mRootView.findViewById(R.id.state_typing_card);
+
+        mInputPillText = mRootView.findViewById(R.id.input_pill_text);
+        mBtnPillAdd = mRootView.findViewById(R.id.btn_pill_add);
+        mBtnPillLens = mRootView.findViewById(R.id.btn_pill_lens);
+        mBtnPillMic = mRootView.findViewById(R.id.btn_pill_mic);
+        mBtnPillSparkle = mRootView.findViewById(R.id.btn_pill_sparkle);
+
+        mInputCardText = mRootView.findViewById(R.id.input_card_text);
+        mBtnCardAdd = mRootView.findViewById(R.id.btn_card_add);
+        mBtnCardLens = mRootView.findViewById(R.id.btn_card_lens);
+        mBtnCardSend = mRootView.findViewById(R.id.btn_card_send);
+        mDragHandleState2 = mRootView.findViewById(R.id.drag_handle_state2);
+
         setupWindowInsets();
+        setupDualStateLogic();
         setupDummyListeners();
         setupDragToDismiss();
 
@@ -82,11 +110,87 @@ public class AssistantSession extends VoiceInteractionSession {
 
     private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(mInsetsContainer, (v, insets) -> {
+            boolean isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+
+            // Toggle Dual-State UI based on IME visibility
+            if (isImeVisible) {
+                mStateIdlePill.setVisibility(View.GONE);
+                mStateTypingCard.setVisibility(View.VISIBLE);
+            } else {
+                mStateTypingCard.setVisibility(View.GONE);
+                mStateIdlePill.setVisibility(View.VISIBLE);
+                mInputPillText.clearFocus();
+            }
+
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime()).bottom;
             int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
 
             v.setPadding(v.getPaddingLeft(), topInset, v.getPaddingRight(), bottomInset);
             return insets;
+        });
+    }
+
+    private void setupDualStateLogic() {
+        // Text Synchronization
+        TextWatcher textSyncWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mIsSyncingText) return;
+                mIsSyncingText = true;
+
+                if (mInputPillText.hasFocus() && !mInputPillText.getText().toString().equals(mInputCardText.getText().toString())) {
+                    mInputCardText.setText(s);
+                    mInputCardText.setSelection(s.length());
+                } else if (mInputCardText.hasFocus() && !mInputCardText.getText().toString().equals(mInputPillText.getText().toString())) {
+                    mInputPillText.setText(s);
+                    mInputPillText.setSelection(s.length());
+                }
+
+                mIsSyncingText = false;
+            }
+        };
+
+        mInputPillText.addTextChangedListener(textSyncWatcher);
+        mInputCardText.addTextChangedListener(textSyncWatcher);
+
+        // Click to Focus & Popup Keyboard
+        mInputPillText.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                mStateTypingCard.setVisibility(View.VISIBLE);
+                mStateIdlePill.setVisibility(View.GONE);
+                mInputCardText.requestFocus();
+
+                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(mInputCardText, InputMethodManager.SHOW_IMPLICIT);
+                }
+                return true; // Consume event to prevent Pill from showing keyboard
+            }
+            return false;
+        });
+
+        // Drag Handle to Hide Keyboard (State 2)
+        mDragHandleState2.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                mInitialTouchY = event.getRawY();
+                return true;
+            } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                float deltaY = event.getRawY() - mInitialTouchY;
+                if (deltaY > 50) { // Swipe down threshold
+                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(mInputCardText.getWindowToken(), 0);
+                    }
+                }
+                return true;
+            }
+            return false;
         });
     }
 
@@ -160,9 +264,10 @@ public class AssistantSession extends VoiceInteractionSession {
     }
 
     private void setupDummyListeners() {
-        mBtnMic.setOnClickListener(v -> triggerProcessingState());
+        mBtnPillMic.setOnClickListener(v -> triggerProcessingState());
+        mBtnCardSend.setOnClickListener(v -> triggerProcessingState());
 
-        mInputText.setOnEditorActionListener((v, actionId, event) -> {
+        mInputCardText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEND ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
                 triggerProcessingState();
@@ -173,13 +278,28 @@ public class AssistantSession extends VoiceInteractionSession {
     }
 
     private void setButtonsEnabled(boolean enabled) {
-        if (mBtnScan != null) mBtnScan.setEnabled(enabled);
-        if (mBtnMic != null) mBtnMic.setEnabled(enabled);
+        if (mBtnPillMic != null) mBtnPillMic.setEnabled(enabled);
+        if (mBtnCardSend != null) mBtnCardSend.setEnabled(enabled);
+        if (mBtnPillAdd != null) mBtnPillAdd.setEnabled(enabled);
+        if (mBtnCardAdd != null) mBtnCardAdd.setEnabled(enabled);
+        if (mBtnPillLens != null) mBtnPillLens.setEnabled(enabled);
+        if (mBtnCardLens != null) mBtnCardLens.setEnabled(enabled);
+        if (mBtnPillSparkle != null) mBtnPillSparkle.setEnabled(enabled);
+        if (mInputPillText != null) mInputPillText.setEnabled(enabled);
+        if (mInputCardText != null) mInputCardText.setEnabled(enabled);
     }
 
     private void triggerProcessingState() {
         // Show processing state and trigger edge animation
-        mInputText.setVisibility(View.GONE);
+        mStateIdlePill.setVisibility(View.GONE);
+        mStateTypingCard.setVisibility(View.GONE);
+
+        // Hide Keyboard
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(mRootView.getWindowToken(), 0);
+        }
+
         mLayoutProcessingMode.setVisibility(View.VISIBLE);
         setButtonsEnabled(false);
         mExpandedCard.setVisibility(View.GONE);
@@ -192,9 +312,10 @@ public class AssistantSession extends VoiceInteractionSession {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             // Restore input pill to normal
             mLayoutProcessingMode.setVisibility(View.GONE);
-            mInputText.setVisibility(View.VISIBLE);
+            mStateIdlePill.setVisibility(View.VISIBLE);
             setButtonsEnabled(true);
-            mInputText.setText("");
+            mInputPillText.setText("");
+            mInputCardText.setText("");
 
             // Show expanded card and render markdown
             mExpandedCard.setVisibility(View.VISIBLE);
@@ -214,12 +335,15 @@ public class AssistantSession extends VoiceInteractionSession {
             mUnifiedBottomSheet.setTranslationY(0f);
         }
 
-        if (mInputText != null) {
-            mInputText.setVisibility(View.VISIBLE);
+        if (mStateIdlePill != null) {
+            mStateIdlePill.setVisibility(View.VISIBLE);
+            mStateTypingCard.setVisibility(View.GONE);
             mLayoutProcessingMode.setVisibility(View.GONE);
             setButtonsEnabled(true);
             mExpandedCard.setVisibility(View.GONE);
-            mInputText.setText("");
+            mInputPillText.setText("");
+            mInputCardText.setText("");
+            mInputPillText.clearFocus();
         }
 
         // Always trigger edge animation when first opened

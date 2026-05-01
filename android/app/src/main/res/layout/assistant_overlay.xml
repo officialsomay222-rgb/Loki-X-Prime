@@ -132,106 +132,200 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Gemini-style Input Pill (Now flat inside the sheet) -->
+            <!-- Container for State 1 and State 2 -->
             <FrameLayout
+                android:id="@+id/input_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_floating_pill"
-                android:layout_margin="16dp"
-                android:padding="6dp">
+                android:clipToPadding="false"
+                android:clipChildren="false">
 
+                <!-- STATE 1: Idle Pill -->
                 <LinearLayout
+                    android:id="@+id/state_idle_pill"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:minHeight="56dp">
+                    android:background="@drawable/bg_idle_pill"
+                    android:elevation="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:minHeight="56dp"
+                    android:paddingHorizontal="4dp"
+                    android:visibility="visible">
 
-                    <!-- Add Icon -->
                     <ImageButton
-                        android:id="@+id/btn_add"
+                        android:id="@+id/btn_pill_add"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:layout_marginStart="4dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_add_icon"
-                        app:tint="@color/overlay_icon_tint"
-                        android:contentDescription="Add Menu" />
+                        app:tint="#444746"
+                        android:contentDescription="Add" />
 
-                    <!-- Lens/Camera Icon -->
                     <ImageButton
-                        android:id="@+id/btn_scan"
+                        android:id="@+id/btn_pill_lens"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:layout_marginStart="4dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_lens"
-                        app:tint="@color/overlay_icon_tint"
+                        app:tint="#444746"
                         android:contentDescription="Lens" />
 
-                    <!-- Middle: Text Input -->
-                    <FrameLayout
+                    <EditText
+                        android:id="@+id/input_pill_text"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp">
+                        android:background="@null"
+                        android:hint="Ask Loki"
+                        android:paddingHorizontal="8dp"
+                        android:singleLine="true"
+                        android:textColorHint="@color/overlay_text_secondary"
+                        android:textColor="@color/overlay_text_primary"
+                        android:textSize="16sp" />
 
-                        <EditText
-                            android:id="@+id/input_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@null"
-                            android:hint="Ask Loki"
-                            android:textColorHint="@color/overlay_text_secondary"
-                            android:textColor="@color/overlay_text_primary"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="12dp"
-                            android:inputType="textShortMessage"
-                            android:imeOptions="actionSend"
-                            android:maxLines="4"
-                            android:textSize="16sp" />
-
-                        <!-- Listening / Processing Mode -->
-                        <LinearLayout
-                            android:id="@+id/layout_processing_mode"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@null"
-                            android:gravity="center"
-                            android:visibility="gone">
-
-                            <ProgressBar
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
-                                android:indeterminate="true"
-                                android:indeterminateTint="@color/colorAccent" />
-                        </LinearLayout>
-                    </FrameLayout>
-
-                    <!-- Mic Accent -->
                     <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="4dp"
-                        android:layout_marginStart="4dp">
-
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="4dp">
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/bg_mic_accent" />
-
+                            android:background="@drawable/bg_mic_circle" />
                         <ImageButton
-                            android:id="@+id/btn_mic"
+                            android:id="@+id/btn_pill_mic"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:padding="8dp"
+                            android:scaleType="centerInside"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:src="@drawable/ic_mic"
-                            app:tint="@color/overlay_mic_accent_icon"
-                            android:contentDescription="Microphone" />
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Mic" />
                     </FrameLayout>
 
+                    <ImageButton
+                        android:id="@+id/btn_pill_sparkle"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_sparkle_ai"
+                        app:tint="#444746"
+                        android:contentDescription="Sparkle" />
+
                 </LinearLayout>
+
+                <!-- STATE 2: Typing Card -->
+                <LinearLayout
+                    android:id="@+id/state_typing_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_typing_card"
+                    android:elevation="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:id="@+id/drag_handle_state2"
+                        android:layout_width="32dp"
+                        android:layout_height="4dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_drag_handle_state2" />
+
+                    <EditText
+                        android:id="@+id/input_card_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:minLines="2"
+                        android:maxLines="5"
+                        android:hint="Ask Loki"
+                        android:textColorHint="@color/overlay_text_secondary"
+                        android:textColor="@color/overlay_text_primary"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="8dp"
+                        android:paddingBottom="8dp">
+
+                        <ImageButton
+                            android:id="@+id/btn_card_add"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_add_icon"
+                            app:tint="#444746"
+                            android:contentDescription="Add" />
+
+                        <ImageButton
+                            android:id="@+id/btn_card_lens"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_lens"
+                            app:tint="#444746"
+                            android:contentDescription="Lens" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="4dp">
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_send_circle" />
+                            <ImageButton
+                                android:id="@+id/btn_card_send"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:scaleType="centerInside"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:src="@drawable/ic_send"
+                                app:tint="#FFFFFF"
+                                android:contentDescription="Send" />
+                        </FrameLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Listening / Processing Mode -->
+                <LinearLayout
+                    android:id="@+id/layout_processing_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@drawable/bg_idle_pill"
+                    android:elevation="8dp"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:indeterminate="true"
+                        android:indeterminateTint="@color/colorAccent" />
+                </LinearLayout>
+
             </FrameLayout>
 
         </LinearLayout>
