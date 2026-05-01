@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#94A3B8" /> <!-- A subtle gray, matches overlay_text_secondary loosely -->
+    <corners android:radius="4dp" /> <!-- Pill shape for the handle -->
+</shape>

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
     android:clipChildren="false">
 
     <!-- Screen Edge RGB Animation Layer (Backmost) -->
-    <com.lokiprimex.app.RgbEdgeAnimationView
+    <com.lokiprimex.app.VibrantGlowView
         android:id="@+id/rgb_edge_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -16,211 +17,224 @@
         android:id="@+id/assistant_insets_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="16dp"
         android:clipToPadding="false">
 
-        <!-- Expanded Card (Optional, for responses above the pill) -->
+        <!-- Unified Bottom Sheet Container -->
         <LinearLayout
-            android:id="@+id/expanded_card"
+            android:id="@+id/unified_bottom_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_marginBottom="80dp"
-            android:background="@drawable/bg_card"
-            android:elevation="8dp"
+            android:background="@drawable/bg_unified_sheet"
+            android:elevation="16dp"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:visibility="gone">
+            android:clickable="true"
+            android:focusable="true">
 
-            <!-- Header -->
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_drag_handle" />
+
+            <!-- Expanded Card Area (Content goes here directly) -->
             <LinearLayout
+                android:id="@+id/expanded_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_sparkle_ai"
-                    android:contentDescription="AI Speaker"
-                    android:tint="@color/colorAccent" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Loki AI"
-                    android:textColor="@color/overlay_text_primary"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_speaker"
-                    android:contentDescription="Speaker Volume" />
-
-            </LinearLayout>
-
-            <!-- Markdown Response Body -->
-            <TextView
-                android:id="@+id/text_response_body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/overlay_text_primary"
-                android:textSize="16sp"
-                android:lineSpacingExtra="6dp" />
-
-            <!-- Footer -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="start"
-                android:layout_marginTop="16dp">
-
-                <ImageButton
-                    android:id="@+id/btn_thumb_up"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_thumb_up"
-                    android:contentDescription="Thumb Up"
-                    android:layout_marginEnd="16dp"/>
-
-                <ImageButton
-                    android:id="@+id/btn_thumb_down"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_thumb_down"
-                    android:contentDescription="Thumb Down"
-                    android:layout_marginEnd="16dp"/>
-
-                <ImageButton
-                    android:id="@+id/btn_share"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_share"
-                    android:contentDescription="Share"
-                    android:layout_marginEnd="16dp"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Floating Gemini-style Input Pill -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:background="@drawable/bg_floating_pill"
-            android:elevation="12dp"
-            android:padding="6dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="56dp">
-
-                <!-- Left side: Custom Infinity Logo replacing Add/Sparkle -->
-                <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="4dp">
-
-                    <com.lokiprimex.app.InfinityLogoView
-                        android:id="@+id/logo_infinity"
-                        android:layout_width="32dp"
+                    <ImageView
+                        android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:layout_gravity="center" />
-                </FrameLayout>
+                        android:src="@drawable/ic_sparkle_ai"
+                        android:contentDescription="AI Speaker"
+                        app:tint="@color/colorAccent" />
 
-                <!-- Middle: Text Input -->
-                <FrameLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp">
-
-                    <EditText
-                        android:id="@+id/input_text"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:hint="Ask Loki"
-                        android:textColorHint="@color/overlay_text_secondary"
+                        android:layout_marginStart="8dp"
+                        android:text="Loki AI"
                         android:textColor="@color/overlay_text_primary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
-                        android:inputType="textShortMessage"
-                        android:imeOptions="actionSend"
-                        android:maxLines="4"
+                        android:textStyle="bold"
                         android:textSize="16sp" />
 
-                    <!-- Listening / Processing Mode -->
-                    <LinearLayout
-                        android:id="@+id/layout_processing_mode"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@null"
-                        android:gravity="center"
-                        android:visibility="gone">
-
-                        <ProgressBar
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:indeterminate="true"
-                            android:indeterminateTint="@color/colorAccent" />
-                    </LinearLayout>
-                </FrameLayout>
-
-                <!-- Right side: Mic and Actions -->
-                <ImageButton
-                    android:id="@+id/btn_scan"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_scan_context"
-                    android:contentDescription="Scan Context" />
-
-                <!-- Mic Accent -->
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_marginStart="4dp">
-
                     <View
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_mic_accent" />
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_speaker"
+                        android:contentDescription="Speaker Volume" />
+
+                </LinearLayout>
+
+                <!-- Markdown Response Body -->
+                <TextView
+                    android:id="@+id/text_response_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_text_primary"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="6dp" />
+
+                <!-- Footer -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="start"
+                    android:layout_marginTop="16dp">
 
                     <ImageButton
-                        android:id="@+id/btn_mic"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:id="@+id/btn_thumb_up"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_mic"
-                        android:tint="@color/overlay_mic_accent_icon"
-                        android:contentDescription="Microphone" />
-                </FrameLayout>
+                        android:src="@drawable/ic_thumb_up"
+                        android:contentDescription="Thumb Up"
+                        android:layout_marginEnd="16dp"/>
 
+                    <ImageButton
+                        android:id="@+id/btn_thumb_down"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_thumb_down"
+                        android:contentDescription="Thumb Down"
+                        android:layout_marginEnd="16dp"/>
+
+                    <ImageButton
+                        android:id="@+id/btn_share"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_share"
+                        android:contentDescription="Share"
+                        android:layout_marginEnd="16dp"/>
+                </LinearLayout>
             </LinearLayout>
-        </FrameLayout>
+
+            <!-- Gemini-style Input Pill (Now flat inside the sheet) -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_floating_pill"
+                android:layout_margin="16dp"
+                android:padding="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp">
+
+                    <!-- Add Icon -->
+                    <ImageButton
+                        android:id="@+id/btn_add"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_add_icon"
+                        app:tint="@color/overlay_icon_tint"
+                        android:contentDescription="Add Menu" />
+
+                    <!-- Lens/Camera Icon -->
+                    <ImageButton
+                        android:id="@+id/btn_scan"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_lens"
+                        app:tint="@color/overlay_icon_tint"
+                        android:contentDescription="Lens" />
+
+                    <!-- Middle: Text Input -->
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp">
+
+                        <EditText
+                            android:id="@+id/input_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@null"
+                            android:hint="Ask Loki"
+                            android:textColorHint="@color/overlay_text_secondary"
+                            android:textColor="@color/overlay_text_primary"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="12dp"
+                            android:inputType="textShortMessage"
+                            android:imeOptions="actionSend"
+                            android:maxLines="4"
+                            android:textSize="16sp" />
+
+                        <!-- Listening / Processing Mode -->
+                        <LinearLayout
+                            android:id="@+id/layout_processing_mode"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@null"
+                            android:gravity="center"
+                            android:visibility="gone">
+
+                            <ProgressBar
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:indeterminate="true"
+                                android:indeterminateTint="@color/colorAccent" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- Mic Accent -->
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="4dp"
+                        android:layout_marginStart="4dp">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_mic_accent" />
+
+                        <ImageButton
+                            android:id="@+id/btn_mic"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_mic"
+                            app:tint="@color/overlay_mic_accent_icon"
+                            android:contentDescription="Microphone" />
+                    </FrameLayout>
+
+                </LinearLayout>
+            </FrameLayout>
+
+        </LinearLayout>
 
     </FrameLayout>
 </FrameLayout>
