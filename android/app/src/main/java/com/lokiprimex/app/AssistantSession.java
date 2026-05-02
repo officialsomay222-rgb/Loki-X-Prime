@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+
+import android.os.Handler;
+import android.os.Looper;
 import android.service.voice.VoiceInteractionSession;
 import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
@@ -30,6 +33,18 @@ import android.view.inputmethod.InputMethodManager;
 
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.json.JSONObject;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
+import android.util.TypedValue;
+
 
 import io.noties.markwon.Markwon;
 
@@ -49,6 +64,9 @@ public class AssistantSession extends VoiceInteractionSession {
     public static final String ACTION_AI_RESPONSE = "com.loki.ACTION_AI_RESPONSE";
     public static final String EXTRA_TEXT = "text";
     public static final String EXTRA_RESPONSE = "response";
+    private static final String SDUI_CONFIG_URL = "https://loki-x-prime.vercel.app/native_ui_config.json";
+    private static final String TAG = "LokiSDUI";
+
 
     // Dual-State UI Elements
     private LinearLayout mStateIdlePill;
@@ -118,6 +136,10 @@ public class AssistantSession extends VoiceInteractionSession {
         setupDualStateLogic();
         setupDummyListeners();
         setupDragToDismiss();
+
+        // Fetch remote Server-Driven UI config
+        fetchRemoteUIConfig();
+
 
         return mRootView;
     }
@@ -411,4 +433,74 @@ public class AssistantSession extends VoiceInteractionSession {
             // Ignored, receiver not registered
         }
     }
+    private void fetchRemoteUIConfig() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            HttpURLConnection urlConnection = null;
+            try {
+                URL url = new URL(SDUI_CONFIG_URL);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setConnectTimeout(5000);
+                urlConnection.setReadTimeout(5000);
+                urlConnection.setRequestMethod("GET");
+
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    JSONObject config = new JSONObject(response.toString());
+                    Log.i(TAG, "SDUI Config fetched successfully");
+
+                    new Handler(Looper.getMainLooper()).post(() -> applyDynamicStyles(config));
+                } else {
+                    Log.w(TAG, "Failed to fetch SDUI Config: HTTP " + responseCode);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching SDUI Config: " + e.getMessage());
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+        });
+        executor.shutdown();
+    }
+
+    private void applyDynamicStyles(JSONObject config) {
+        try {
+            if (config.has("state1_pill")) {
+                JSONObject state1Pill = config.getJSONObject("state1_pill");
+
+                if (mStateIdlePill != null && state1Pill.has("bg_color") && state1Pill.has("corner_radius_dp")) {
+                    String bgColor = state1Pill.getString("bg_color");
+                    int cornerRadiusDp = state1Pill.getInt("corner_radius_dp");
+                    float cornerRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, cornerRadiusDp, getContext().getResources().getDisplayMetrics());
+
+                    GradientDrawable pillDrawable = new GradientDrawable();
+                    pillDrawable.setShape(GradientDrawable.RECTANGLE);
+                    pillDrawable.setColor(Color.parseColor(bgColor));
+                    pillDrawable.setCornerRadius(cornerRadiusPx);
+                    mStateIdlePill.setBackground(pillDrawable);
+                }
+
+                View micBgView = mRootView.findViewById(R.id.bg_mic_circle_view);
+                if (micBgView != null && state1Pill.has("mic_bg_color")) {
+                    String micBgColor = state1Pill.getString("mic_bg_color");
+                    GradientDrawable micDrawable = new GradientDrawable();
+                    micDrawable.setShape(GradientDrawable.OVAL);
+                    micDrawable.setColor(Color.parseColor(micBgColor));
+                    micBgView.setBackground(micDrawable);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying dynamic styles: " + e.getMessage());
+        }
+    }
+
 }
