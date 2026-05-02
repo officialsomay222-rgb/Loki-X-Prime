@@ -6,6 +6,11 @@ import path from "path";
 
 async function startServer() {
   const app = express();
+
+  // Security: Trust the reverse proxy (Vercel/Cloudflare) to get real client IPs
+  // This is required for rate limiting to work correctly and prevent accidental DoS
+  app.set("trust proxy", 1);
+
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   // Mount API routes
