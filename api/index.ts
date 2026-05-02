@@ -5,7 +5,6 @@ import rateLimit from "express-rate-limit";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { HfInference } from "@huggingface/inference";
-import { performDuckDuckGoSearch, performDuckDuckGoImageSearch } from "./ddg_search.js";
 
 
 function extractImageQuery(message: string): string | null {
@@ -197,37 +196,20 @@ app.post("/api/chat", async (req, res) => {
 
       const hasAttachments = attachments && attachments.length > 0;
 
-      let searchContext = "";
       let imageMarkdown = "";
 
       if (searchGrounding) {
-        // Build search query: 20% history, 80% exact message
-        const lastFewMessages = (history || []).slice(-3).map((m: any) => m?.parts?.[0]?.text || "").join(" ");
-        const queryToSearch = `${lastFewMessages} ${message || ""}`.trim();
-        if (queryToSearch) {
-           searchContext = await performDuckDuckGoSearch(queryToSearch);
+         // Check if user is asking for an image
+         const imageQuery = extractImageQuery(message);
 
-           // Check if user is asking for an image
-           const imageQuery = extractImageQuery(message);
-
-           if (imageQuery) {
-              const imageUrls = await performDuckDuckGoImageSearch(imageQuery);
-              if (imageUrls && imageUrls.length > 0) {
-                 imageMarkdown = imageUrls.map(url => `![${imageQuery}](${url})`).join('\n\n') + '\n\n';
-              }
-           }
-        }
+         if (imageQuery) {
+            // Since we are relying on Google Search Grounding for images, we instruct the model
+            // instead of doing a separate image search API call.
+         }
       }
 
-      // Use Gemini if attachments or thinkingMode is requested, or if searchGrounding is requested and we fallback to it
-      // Wait, we don't *force* Gemini for searchGrounding anymore, but let's see.
-      // Actually, if we use Groq/HF, they can ALSO use the search context now.
-      // But the previous code forced Gemini for searchGrounding.
-      // Let's keep forcing Gemini ONLY IF attachments or thinkingMode are present.
-      // If ONLY searchGrounding is present, we can use Groq/HF if mode is fast/pro/happy!
-      // But wait, the original code forced Gemini if `searchGrounding` was requested.
-      // Let's modify the condition:
-      if (hasAttachments || thinkingMode) {
+      // Use Gemini if attachments or thinkingMode or searchGrounding is requested
+      if (hasAttachments || thinkingMode || searchGrounding) {
         if (!apiKey) {
           return res.status(400).json({ error: "Google AI Key is missing. Please add 'GOOGLE_AI_KEY' or 'GC' to your AI Studio Secrets to enable Vision/Fast Model." });
         }
@@ -241,6 +223,11 @@ app.post("/api/chat", async (req, res) => {
           topP: topP || 0.95,
           topK: topK || 64,
         };
+
+        if (searchGrounding) {
+          modelName = "gemini-2.5-flash"; // Required for Google Search Grounding to work reliably
+          config.tools = [{ googleSearch: {} }];
+        }
 
         if (thinkingMode) {
           config.thinkingConfig = { thinkingLevel: "HIGH" };
@@ -276,8 +263,11 @@ app.post("/api/chat", async (req, res) => {
            if (hasAttachments) finalMessage = "Please analyze this image.";
         }
 
-        if (searchGrounding && searchContext) {
-           finalMessage = `Context from Web Search:\n${searchContext}\n\nBased on the above context, answer the following:\n${finalMessage}`;
+        if (searchGrounding) {
+           const imageQuery = extractImageQuery(finalMessage);
+           if (imageQuery) {
+             finalMessage = `${finalMessage}\n\nIMPORTANT: The user is asking for images. Please perform a Google Search to find relevant image URLs for "${imageQuery}". Include the images in your response using Markdown format like so: ![description](url). Return ONLY the markdown image links and a brief confirmation message.`;
+           }
         }
         
         userParts.push({ text: finalMessage });
@@ -295,11 +285,37 @@ app.post("/api/chat", async (req, res) => {
           res.write(`data: ${JSON.stringify({ text: imageMarkdown })}\n\n`);
         }
 
+        let sourcesAdded = false;
+
         for await (const chunk of responseStream) {
           if (chunk.text) {
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
           }
+
+          if (!sourcesAdded && searchGrounding) {
+            // Wait, we need to inspect the final response for metadata, but we're in a stream.
+            // The `@google/genai` library provides metadata on the chunk or we can collect it.
+            // Actually, we can check candidates from the chunks.
+            const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks;
+            if (groundingChunks && groundingChunks.length > 0) {
+                sourcesAdded = true;
+                let sourcesMarkdown = "\n\n**Sources:**\n";
+                const addedUris = new Set<string>();
+
+                groundingChunks.forEach((c: any) => {
+                    const uri = c.web?.uri;
+                    const title = c.web?.title;
+                    if (uri && !addedUris.has(uri)) {
+                        addedUris.add(uri);
+                        sourcesMarkdown += `- [${title || uri}](${uri})\n`;
+                    }
+                });
+
+                res.write(`data: ${JSON.stringify({ text: sourcesMarkdown })}\n\n`);
+            }
+          }
         }
+
         res.write(`data: [DONE]\n\n`);
         res.end();
 
@@ -324,9 +340,6 @@ app.post("/api/chat", async (req, res) => {
         messages.push(...historyMessages);
 
         let finalMessage = message && message.trim() !== "" ? message : " ";
-        if (searchGrounding && searchContext) {
-           finalMessage = `Context from Web Search:\n${searchContext}\n\nBased on the above context, answer the following:\n${finalMessage}`;
-        }
 
         messages.push({ role: "user", content: finalMessage });
 
