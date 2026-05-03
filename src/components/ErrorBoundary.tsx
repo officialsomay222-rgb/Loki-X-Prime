@@ -57,6 +57,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             )}
           </div>
           <button 
+            aria-label="Re-initialize Core"
             className="px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-slate-200 transition-all focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none"
             onClick={() => window.location.reload()}
           >
