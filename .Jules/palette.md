@@ -14,3 +14,6 @@
 ## 2026-04-27 - Add keyboard focus indicators to boot overlays
 **Learning:** Critical boot sequence overlays (WelcomeModal, SignInOverlay, ErrorBoundary) lacked visible focus states on their primary actions, impeding keyboard navigation for a11y users before the main app UI is even reached.
 **Action:** Ensure all initial, full-screen blockers and modals inherently include `focus-visible` utility classes on interactive elements to establish an accessible baseline from step 1.
+## 2026-05-05 - Add keyboard focus indicators to various overlays
+**Learning:** Found several overlay components (ClearConfirmOverlay, PickerOverlay, PrivacyOverlay, ReportOverlay, TermsOverlay) lacking visible focus states on their buttons and interactable elements, impeding keyboard navigation for a11y users.
+**Action:** Ensure all interactive elements in modals and overlays include `focus-visible` utility classes to establish an accessible baseline.

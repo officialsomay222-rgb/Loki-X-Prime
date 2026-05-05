@@ -24,7 +24,7 @@ export const ReportOverlay: React.FC<ReportOverlayProps> = ({ onClose }) => {
                       onClick={onClose}
                       aria-label="Close"
                       title="Close"
-                      className="p-2 rounded-full transition-colors"
+                      className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
                     </motion.button>
@@ -48,7 +48,7 @@ export const ReportOverlay: React.FC<ReportOverlayProps> = ({ onClose }) => {
                         setReportText('');
                       }}
                       disabled={!reportText.trim()}
-                      className="w-full py-4 bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-bold transition-all shadow-xl shadow-blue-600/20"
+                      className="w-full py-4 bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-bold transition-all shadow-xl shadow-blue-600/20 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-offset-2"
                     >
                       Submit Report
                     </motion.button>
