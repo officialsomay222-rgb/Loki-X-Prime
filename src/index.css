@@ -1380,12 +1380,15 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 }
 .keyboard-safe-area-bottom {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-bottom, 0px));
+  transition: padding-bottom 0.05s ease-out;
 }
 
 .input-keyboard-safe-area {
   padding-bottom: calc(16px + max(clamp(0px, env(safe-area-inset-bottom, 0px), 48px), env(keyboard-inset-bottom, 0px)));
+  transition: padding-bottom 0.05s ease-out;
 }
 
 .attachment-keyboard-safe-area {
   padding-bottom: max(clamp(24px, env(safe-area-inset-bottom, 0px), 48px), env(keyboard-inset-bottom, 0px));
+  transition: padding-bottom 0.05s ease-out;
 }

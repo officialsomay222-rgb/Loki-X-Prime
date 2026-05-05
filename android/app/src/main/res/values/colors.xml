@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#0284c7</color>
+    <color name="colorPrimaryDark">#0369a1</color>
+    <color name="colorAccent">#0ea5e9</color>
+
+    <!-- Light Theme Colors (Default) -->
+    <color name="overlay_background">#FFFFFF</color>
+    <color name="overlay_card_background">#F8FAFC</color>
+    <color name="overlay_text_primary">#0F172A</color>
+    <color name="overlay_text_secondary">#475569</color>
+    <color name="overlay_icon_tint">#334155</color>
+    <color name="overlay_divider">#E2E8F0</color>
+
+    <!-- Gemini-style Floating Pill Colors for Light Theme -->
+    <color name="overlay_pill_background">#F1F5F9</color> <!-- Light grey/white pill -->
+    <color name="overlay_pill_stroke">#CBD5E1</color>
+
+    <color name="overlay_input_background">@android:color/transparent</color>
+    <color name="overlay_mic_accent_background">#4285F4</color>
+    <color name="overlay_mic_accent_icon">#FFFFFF</color>
+</resources>
