@@ -43,7 +43,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           onClick={onClose} 
           aria-label="Collapse Menu"
           title="Collapse Menu"
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
         </motion.button>
@@ -75,7 +75,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSave(tempName, tempEmail)}
-          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all mt-4 shadow-xl"
+          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all mt-4 shadow-xl focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           Save Changes
         </motion.button>
@@ -120,7 +120,16 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
               const rect = e.currentTarget.getBoundingClientRect();
               setShowPicker({ label, options, value, onChange, rect });
             }}
-            className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer" aria-label={label}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                setShowPicker({ label, options, value, onChange, rect });
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="flex items-center gap-1 text-sm text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white transition-colors py-1 px-2 -mr-2 rounded-lg cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none" aria-label={label}
           >
             <span className="capitalize">{value}</span>
             <ChevronRight className="w-4 h-4" />
@@ -159,7 +168,15 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={onClick ? { scale: 0.995 } : {}}
       onClick={onClick}
-      className={`flex items-center justify-between p-4 transition-colors ${onClick ? 'cursor-pointer' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(e as any);
+        }
+      } : undefined}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      className={`flex items-center justify-between p-4 transition-colors ${onClick ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none' : ''} ${!noBorder ? 'border-b border-slate-100 dark:border-white/5' : ''} ${danger ? 'text-red-500' : ''}`}
     >
       <div className="flex items-center gap-4 flex-1 mr-4">
         {Icon && <Icon className={`w-5 h-5 shrink-0 ${danger ? 'text-red-500' : 'text-slate-500 dark:text-[#717171]'}`} />}
@@ -282,7 +299,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClick={onClose} 
                   aria-label="Close Settings"
                   title="Close Settings"
-                  className="p-2 rounded-full transition-colors group"
+                  className="p-2 rounded-full transition-colors group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   <X className="w-6 h-6 text-slate-500 dark:text-[#717171] group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
                 </motion.button>
@@ -321,9 +338,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     <motion.div 
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/10 shadow-2xl cursor-pointer group relative aspect-square"
+                      className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/10 shadow-2xl cursor-pointer group relative aspect-square focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                       style={{ borderRadius: '9999px' }}
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Upload avatar"
+                      title="Upload avatar"
                     >
                       <div className="w-full h-full rounded-full overflow-hidden" style={{ borderRadius: '9999px' }}>
                         <img 
@@ -348,7 +375,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     whileHover={{ scale: 1.05, backgroundColor: "#f0f0f0" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowEditProfile(true)}
-                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5"
+                    className="px-10 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-bold transition-all shadow-xl shadow-black/5 dark:shadow-white/5 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                   >
                     Edit Profile
                   </motion.button>
@@ -375,7 +402,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                    className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                   >
                     Try Now
                   </motion.button>
@@ -436,7 +463,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setModelMode(m as any)}
-                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
+                              className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${modelMode === m ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 dark:text-[#717171] hover:text-slate-900 dark:hover:text-white'}`}
                             >
                               {m}
                             </motion.button>
