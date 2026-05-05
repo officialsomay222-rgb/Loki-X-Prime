@@ -76,11 +76,7 @@ app.post("/api/transcribe", async (req, res) => {
   try {
     const { audioBase64, mimeType } = req.body;
     if (!audioBase64 || typeof audioBase64 !== 'string') {
-<<<<<<< sentinel-api-type-validation-7103622378134801228
-      return res.status(400).json({ error: "audioBase64 is required and must be a string" });
-=======
       return res.status(400).json({ error: "audioBase64 string is required" });
->>>>>>> main
     }
 
     let groqKey = process.env.GROQ_API_KEY;
@@ -131,11 +127,7 @@ app.post("/api/tts", async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || typeof text !== 'string') {
-<<<<<<< sentinel-api-type-validation-7103622378134801228
-      return res.status(400).json({ error: "text is required and must be a string" });
-=======
       return res.status(400).json({ error: "text string is required" });
->>>>>>> main
     }
 
     let geminiKey = process.env.GEMINI_API_KEY;

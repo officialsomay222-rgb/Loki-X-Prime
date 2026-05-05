@@ -22,7 +22,7 @@ export const TermsOverlay: React.FC<TermsOverlayProps> = ({ onClose }) => {
                       onClick={onClose}
                       aria-label="Close"
                       title="Close"
-                      className="p-2 rounded-full transition-colors"
+                      className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
                     </motion.button>
