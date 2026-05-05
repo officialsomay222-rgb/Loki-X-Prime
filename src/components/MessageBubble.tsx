@@ -111,6 +111,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
           <img
             {...props}
             src={safeSrc}
+            alt={props.alt || "Message image"}
             className={`w-full h-full object-cover transition-all duration-700 ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
             referrerPolicy="no-referrer"
             loading="lazy"
@@ -248,6 +249,7 @@ const MarkdownImage = ({ node, ...props }: any) => {
 
           <img
             {...props}
+            alt={props.alt || "Fullscreen image preview"}
             className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           />
