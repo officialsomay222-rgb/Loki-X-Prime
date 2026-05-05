@@ -4,7 +4,7 @@ import { Pause, X, Sparkles } from 'lucide-react';
 
 interface LiveVoiceOverlayProps {
   isOpen: boolean;
-  userVolume?: number;
+  userVolumeRef?: React.MutableRefObject<number>;
   onClose: () => void;
   onHold: () => void;
 }
@@ -56,19 +56,12 @@ class VolumeParticle {
   }
 }
 
-export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, userVolume = 0, onClose, onHold }) => {
+export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, userVolumeRef, onClose, onHold }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const particlesRef = useRef<VolumeParticle[]>([]);
 
-  // Normalize volume: roughly 0-255 from analyser, mapping to 0-1 scale
-  const normalizedVolume = Math.min(Math.max(userVolume / 128.0, 0), 1.5);
-  const volumeRef = useRef(normalizedVolume);
-
-  useEffect(() => {
-    // Smooth out the volume over time to avoid jitter
-    volumeRef.current = volumeRef.current * 0.8 + normalizedVolume * 0.2;
-  }, [normalizedVolume]);
+  const volumeRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -99,6 +92,11 @@ export const LiveVoiceOverlay: React.FC<LiveVoiceOverlayProps> = ({ isOpen, user
     let frameCount = 0;
 
     const animate = () => {
+      // Normalize volume: roughly 0-255 from analyser, mapping to 0-1 scale
+      const currentRawVolume = userVolumeRef?.current || 0;
+      const normalizedVolume = Math.min(Math.max(currentRawVolume / 128.0, 0), 1.5);
+      // Smooth out the volume over time to avoid jitter
+      volumeRef.current = volumeRef.current * 0.8 + normalizedVolume * 0.2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const centerX = window.innerWidth / 2;
