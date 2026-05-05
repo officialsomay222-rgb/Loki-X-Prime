@@ -1362,7 +1362,14 @@ export const ChatInput = memo(
       prevProps.isAwakened === nextProps.isAwakened &&
       prevProps.draftText === nextProps.draftText &&
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
-      JSON.stringify(prevProps.draftAttachments) === JSON.stringify(nextProps.draftAttachments) &&
+      // ⚡ Bolt: Lightweight array comparison instead of JSON.stringify
+      // 🎯 Why: When dealing with large base64 encoded attachments, JSON.stringify blocks the main thread
+      // and causes severe UI lag during rendering, breaking memoization performance.
+      // 📊 Impact: O(1) comparison on key fields replaces O(N) deep stringification, restoring smooth 60fps typing.
+      (prevProps.draftAttachments || []).every((att, i) => {
+        const nextAtt = nextProps.draftAttachments?.[i];
+        return nextAtt && att.url === nextAtt.url && att.mimeType === nextAtt.mimeType && att.data?.length === nextAtt.data?.length;
+      }) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
       prevProps.onDeleteSession === nextProps.onDeleteSession &&
