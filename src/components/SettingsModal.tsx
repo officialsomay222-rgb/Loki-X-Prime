@@ -355,7 +355,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       <div className="w-full h-full rounded-full overflow-hidden" style={{ borderRadius: '9999px' }}>
                         <img 
                           src={avatarUrl} 
-                          alt="Avatar" 
+                          alt="User avatar preview"
                           className="w-full h-full object-cover transition-transform group-hover:scale-110" 
                         />
                       </div>
