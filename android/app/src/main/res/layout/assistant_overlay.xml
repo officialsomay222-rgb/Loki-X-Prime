@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#00000000"
+    android:clipToPadding="false"
+    android:clipChildren="false">
+
+    <!-- Screen Edge RGB Animation Layer (Backmost) -->
+    <com.lokiprimex.app.VibrantGlowView
+        android:id="@+id/rgb_edge_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Overlay Container for Floating UI (Insets applied here) -->
+    <FrameLayout
+        android:id="@+id/assistant_insets_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false">
+
+        <!-- Unified Bottom Sheet Container -->
+        <LinearLayout
+            android:id="@+id/unified_bottom_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_unified_sheet"
+            android:elevation="16dp"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_drag_handle" />
+
+            <!-- Expanded Card Area (Content goes here directly) -->
+            <LinearLayout
+                android:id="@+id/expanded_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <!-- Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_sparkle_ai"
+                        android:contentDescription="AI Speaker"
+                        app:tint="@color/colorAccent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Loki AI"
+                        android:textColor="@color/overlay_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="16sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_speaker"
+                        android:contentDescription="Speaker Volume" />
+
+                </LinearLayout>
+
+                <!-- Markdown Response Body -->
+                <TextView
+                    android:id="@+id/text_response_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_text_primary"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="6dp" />
+
+                <!-- Custom Bouncing Dots Loader -->
+                <com.lokiprimex.app.BouncingDotsLoader
+                    android:id="@+id/bouncing_dots_loader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone" />
+
+                <!-- Footer -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="start"
+                    android:layout_marginTop="16dp">
+
+                    <ImageButton
+                        android:id="@+id/btn_thumb_up"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_thumb_up"
+                        android:contentDescription="Thumb Up"
+                        android:layout_marginEnd="16dp"/>
+
+                    <ImageButton
+                        android:id="@+id/btn_thumb_down"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_thumb_down"
+                        android:contentDescription="Thumb Down"
+                        android:layout_marginEnd="16dp"/>
+
+                    <ImageButton
+                        android:id="@+id/btn_share"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_share"
+                        android:contentDescription="Share"
+                        android:layout_marginEnd="16dp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Container for State 1 and State 2 -->
+            <FrameLayout
+                android:id="@+id/input_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:clipChildren="false">
+
+                <!-- STATE 1: Idle Pill -->
+                <LinearLayout
+                    android:id="@+id/state_idle_pill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_idle_pill"
+                    android:elevation="8dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:minHeight="64dp"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="16dp"
+                    android:visibility="visible">
+
+                    <ImageButton
+                        android:id="@+id/btn_pill_add"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_add_icon"
+                        app:tint="#444746"
+                        android:contentDescription="Add" />
+
+                    <ImageButton
+                        android:id="@+id/btn_pill_lens"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_lens"
+                        app:tint="#444746"
+                        android:contentDescription="Lens" />
+
+                    <EditText
+                        android:id="@+id/input_pill_text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="Ask Loki"
+                        android:paddingHorizontal="8dp"
+                        android:singleLine="true"
+                        android:textColorHint="@color/overlay_text_secondary"
+                        android:textColor="@color/overlay_text_primary"
+                        android:textSize="16sp" />
+
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="4dp">
+                        <View
+                            android:id="@+id/bg_mic_circle_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_mic_circle" />
+                        <ImageButton
+                            android:id="@+id/btn_pill_mic"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="8dp"
+                            android:scaleType="centerInside"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_mic"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Mic" />
+                    </FrameLayout>
+
+                    <ImageButton
+                        android:id="@+id/btn_pill_sparkle"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_sparkle_ai"
+                        app:tint="#444746"
+                        android:contentDescription="Sparkle" />
+
+                </LinearLayout>
+
+                <!-- STATE 2: Typing Card -->
+                <LinearLayout
+                    android:id="@+id/state_typing_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_typing_card"
+                    android:elevation="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:id="@+id/drag_handle_state2"
+                        android:layout_width="32dp"
+                        android:layout_height="4dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_drag_handle_state2" />
+
+                    <EditText
+                        android:id="@+id/input_card_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:minLines="2"
+                        android:maxLines="5"
+                        android:hint="Ask Loki"
+                        android:textColorHint="@color/overlay_text_secondary"
+                        android:textColor="@color/overlay_text_primary"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="8dp"
+                        android:paddingBottom="8dp">
+
+                        <ImageButton
+                            android:id="@+id/btn_card_add"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_add_icon"
+                            app:tint="#444746"
+                            android:contentDescription="Add" />
+
+                        <ImageButton
+                            android:id="@+id/btn_card_lens"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_lens"
+                            app:tint="#444746"
+                            android:contentDescription="Lens" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="4dp">
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_send_circle" />
+                            <ImageButton
+                                android:id="@+id/btn_card_send"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:scaleType="centerInside"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:src="@drawable/ic_send"
+                                app:tint="#FFFFFF"
+                                android:contentDescription="Send" />
+                        </FrameLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Listening / Processing Mode -->
+                <LinearLayout
+                    android:id="@+id/layout_processing_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@drawable/bg_idle_pill"
+                    android:elevation="8dp"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:indeterminate="true"
+                        android:indeterminateTint="@color/colorAccent" />
+                </LinearLayout>
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+</FrameLayout>

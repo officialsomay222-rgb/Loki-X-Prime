@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo, forwardRef } from "react";
+import React, { useState, useRef, useEffect, memo, forwardRef, useImperativeHandle, useCallback } from "react";
 import {
   Plus,
   Mic,
@@ -36,6 +36,13 @@ import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
+// ⚡ Bolt: Extracted default array to a stable module-level constant
+// 🎯 Why: Passing an inline fallback like `draftAttachments = []` to a `React.memo` wrapped component
+// creates a new array reference on every render of the parent component.
+// 📊 Impact: This prevents severe rendering bottlenecks by ensuring the memoization is not defeated
+// by unstable prop references.
+const EMPTY_ARRAY: any[] = [];
+
 const sharedPcmData = new Int16Array(4096);
 const sharedUint8Data = new Uint8Array(sharedPcmData.buffer);
 
@@ -65,6 +72,98 @@ interface ChatInputProps {
   saveSessionDraft?: (id: string, text: string, attachments: any[]) => void;
 }
 
+
+export interface MemoizedTextAreaHandle {
+  setInput: (text: string) => void;
+  getValue: () => string;
+  focus: () => void;
+}
+
+interface MemoizedTextAreaProps {
+  initialValue: string;
+  onChange: (value: string) => void;
+  onDebouncedChange: (value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  isTranscribing: boolean;
+  isRecording: boolean;
+  isImageMode: boolean;
+  isAwakened?: boolean;
+  effectInputBox?: boolean;
+  isLoading: boolean;
+}
+
+const MemoizedTextArea = memo(forwardRef<MemoizedTextAreaHandle, MemoizedTextAreaProps>(({
+  initialValue,
+  onChange,
+  onDebouncedChange,
+  onKeyDown,
+  isTranscribing,
+  isRecording,
+  isImageMode,
+  isAwakened,
+  effectInputBox,
+  isLoading
+}, ref) => {
+  const [localValue, setLocalValue] = useState(initialValue);
+  const internalRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    setInput: (val: string) => {
+      setLocalValue(val);
+      onChange(val);
+    },
+    getValue: () => localValue,
+    focus: () => {
+      internalRef.current?.focus();
+    }
+  }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    onChange(val);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onDebouncedChange(localValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localValue, onDebouncedChange]);
+
+  useEffect(() => {
+    if (internalRef.current) {
+      internalRef.current.style.height = "auto";
+      const scrollHeight = internalRef.current.scrollHeight;
+      internalRef.current.style.height = `${Math.min(scrollHeight, 150)}px`;
+      internalRef.current.style.overflowY = scrollHeight > 80 ? "auto" : "hidden";
+    }
+  }, [localValue]);
+
+  return (
+    <textarea
+      aria-label="Chat input"
+      ref={internalRef}
+      value={localValue}
+      onChange={handleChange}
+      onKeyDown={onKeyDown}
+      placeholder={
+        isTranscribing
+          ? "Transcribing..."
+          : isRecording
+            ? "Listening..."
+            : isImageMode
+              ? "Describe the image for LOKI..."
+              : "Ask AI..."
+      }
+      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
+      rows={1}
+      readOnly={isRecording || isTranscribing}
+      disabled={isLoading}
+    />
+  );
+}));
+
 export const ChatInput = memo(
   forwardRef<ChatInputHandle, ChatInputProps>(
     (
@@ -79,22 +178,43 @@ export const ChatInput = memo(
         enterToSend,
         isAwakened,
         draftText = "",
-        draftAttachments = [],
+        draftAttachments = EMPTY_ARRAY,
         saveSessionDraft,
       },
       ref,
     ) => {
-      const [input, setInput] = useState(draftText);
+      const textValueRef = useRef(draftText);
+      const childInputRef = useRef<MemoizedTextAreaHandle>(null);
+      const [hasInput, setHasInput] = useState(draftText.trim().length > 0);
+
+      const setInput = (val: string) => {
+        textValueRef.current = val;
+        setHasInput(val.trim().length > 0);
+        if (childInputRef.current) {
+           childInputRef.current.setInput(val);
+        }
+      };
+
+      const handleInputChange = useCallback((val: string) => {
+        textValueRef.current = val;
+        setHasInput(val.trim().length > 0);
+      }, []);
+
+      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
+
+      const handleDebouncedChange = useCallback((val: string) => {
+        if (saveSessionDraft && currentSessionId) {
+          saveSessionDraft(currentSessionId, val, attachments);
+        }
+      }, [saveSessionDraft, currentSessionId, attachments]);
       const [isOptionsOpen, setIsOptionsOpen] = useState(false);
       const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
       const [isImageMode, setIsImageMode] = useState(false);
       const [isRecording, setIsRecording] = useState(false);
       const [isTranscribing, setIsTranscribing] = useState(false);
-      const [isFocused, setIsFocused] = useState(false);
-      const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
+            const [isVoiceOverlayOpen, setIsVoiceOverlayOpen] = useState(false);
       const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
-      const [userVolume, setUserVolume] = useState<number>(0);
-      const [isSuccessFlash, setIsSuccessFlash] = useState(false);
+            const [isSuccessFlash, setIsSuccessFlash] = useState(false);
       const [micError, setMicError] = useState<string | null>(null);
       const [transcriptionError, setTranscriptionError] = useState<
         string | null
@@ -103,23 +223,34 @@ export const ChatInput = memo(
       const audioChunksRef = useRef<Blob[]>([]);
       const internalRef = useRef<HTMLTextAreaElement>(null);
       const inputRef = internalRef;
+
+      const handleSend = () => {
+        if ((!textValueRef.current.trim() && attachments.length === 0) || isLoading) return;
+        onSendMessage(textValueRef.current.trim(), isImageMode, undefined, attachments);
+        setInput("");
+        setAttachments([]);
+        if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
+        if (inputRef.current) {
+          inputRef.current.style.height = "auto";
+        }
+      };
       
       React.useImperativeHandle(ref, () => ({
         focus: () => {
-          internalRef.current?.focus();
+          if (childInputRef.current && childInputRef.current.focus) {
+             childInputRef.current.focus();
+          }
         },
         setInput: (text: string) => {
           setInput(text);
         },
         get value() {
-          return input;
+          return textValueRef.current;
         },
         set value(text: string) {
           setInput(text);
         }
-      }), [input]);
-
-      const [attachments, setAttachments] = useState<{data: string, mimeType: string, url: string}[]>(draftAttachments);
+      }), []);
 
       useEffect(() => {
         setInput(draftText);
@@ -127,22 +258,12 @@ export const ChatInput = memo(
       }, [currentSessionId]);
 
       // Use a ref to track the latest input/attachments to avoid adding them to dependency array
-      const draftStateRef = useRef({ input, attachments });
+      const draftStateRef = useRef({ attachments });
       useEffect(() => {
-        draftStateRef.current = { input, attachments };
-      }, [input, attachments]);
+        draftStateRef.current = { attachments };
+      }, [attachments]);
 
-      useEffect(() => {
-        if (!saveSessionDraft || !currentSessionId) return;
-
-        const timeoutId = setTimeout(() => {
-          saveSessionDraft(currentSessionId, input, attachments);
-        }, 500);
-
-        return () => {
-          clearTimeout(timeoutId);
-        };
-      }, [input, attachments, currentSessionId, saveSessionDraft]);
+      // Draft saving is now debounced in MemoizedTextArea
 
       // Only save on unmount/session switch, reading from the ref to get latest state
       useEffect(() => {
@@ -150,7 +271,7 @@ export const ChatInput = memo(
 
         return () => {
            // When switching sessions, save the last known state of the *previous* session
-           saveSessionDraft(currentSessionId, draftStateRef.current.input, draftStateRef.current.attachments);
+           saveSessionDraft(currentSessionId, textValueRef.current, draftStateRef.current.attachments);
         };
       }, [currentSessionId, saveSessionDraft]);
 
@@ -276,6 +397,7 @@ export const ChatInput = memo(
       const audioQueueRef = useRef<Float32Array[]>([]);
       const isPlayingRef = useRef(false);
       const volumeAnimFrameRef = useRef<number>(0);
+      const userVolumeRef = useRef<number>(0);
 
       useEffect(() => {
         const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -306,20 +428,7 @@ export const ChatInput = memo(
         };
       }, [isOptionsOpen, isModelMenuOpen]);
 
-      const autoResizeInput = () => {
-        if (inputRef.current) {
-          inputRef.current.style.height = "auto";
-          const scrollHeight = inputRef.current.scrollHeight;
-          inputRef.current.style.height = `${Math.min(scrollHeight, 150)}px`;
-          // Show scrollbar only if content exceeds roughly 2 lines (approx 72px)
-          inputRef.current.style.overflowY =
-            scrollHeight > 80 ? "auto" : "hidden";
-        }
-      };
 
-      useEffect(() => {
-        autoResizeInput();
-      }, [input]);
 
       const getOptionsIcon = () => {
         if (isImageMode) return <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />;
@@ -339,24 +448,12 @@ export const ChatInput = memo(
         }
       };
 
-      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (enterToSend && e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           handleSend();
         }
-        // If enterToSend is false, or if shift+enter is pressed, it naturally adds a new line
-      };
-
-      const handleSend = () => {
-        if ((!input.trim() && attachments.length === 0) || isLoading) return;
-        onSendMessage(input.trim(), isImageMode, undefined, attachments);
-        setInput("");
-        setAttachments([]);
-        if (saveSessionDraft && currentSessionId) saveSessionDraft(currentSessionId, "", []);
-        if (inputRef.current) {
-          inputRef.current.style.height = "auto";
-        }
-      };
+      }, [enterToSend, handleSend]);
 
       const startRecording = async () => {
         setMicError(null);
@@ -432,7 +529,7 @@ export const ChatInput = memo(
           mediaRecorder.onstop = () => {
             setTimeout(async () => {
               // If no audio was detected at all, just cancel
-              if (!hasSpokenRef.current && !input.trim()) {
+              if (!hasSpokenRef.current && !textValueRef.current.trim()) {
                 setIsRecording(false);
                 stopRecording();
                 return;
@@ -445,7 +542,7 @@ export const ChatInput = memo(
               const audioUrl = URL.createObjectURL(audioBlob);
 
               setIsTranscribing(true);
-              const currentInput = input.trim();
+              const currentInput = textValueRef.current.trim();
               setInput("");
 
               const reader = new FileReader();
@@ -693,6 +790,11 @@ export const ChatInput = memo(
           analyser.fftSize = 256;
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
+          // TODO: Migrate from deprecated ScriptProcessor to AudioWorklet.
+          // 1. Create a public/audio-processor.js file extending AudioWorkletProcessor.
+          // 2. Call await audioCtx.audioWorklet.addModule('/audio-processor.js').
+          // 3. const processor = new AudioWorkletNode(audioCtx, 'audio-processor').
+          // This will prevent the main UI thread from blocking during live audio encoding.
           const processor = audioCtx.createScriptProcessor(4096, 1, 1);
 
           source.connect(analyser);
@@ -706,7 +808,7 @@ export const ChatInput = memo(
               sum += dataArray[i];
             }
             const average = sum / dataArray.length;
-            setUserVolume(average);
+            userVolumeRef.current = average;
             volumeAnimFrameRef.current = requestAnimationFrame(updateVolume);
           };
           updateVolume();
@@ -881,7 +983,7 @@ export const ChatInput = memo(
                   <div
                     className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
                       isAwakened || effectInputBox
-                        ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 ${isFocused ? 'shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]' : 'shadow-[inset_0_0_30px_rgba(0,242,255,0.1)]'}` 
+                        ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 shadow-[inset_0_0_30px_rgba(0,242,255,0.1)] focus-within:shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]`
                         : "bg-slate-100/20 dark:bg-white/5"
                     } ${
                       isSuccessFlash
@@ -899,7 +1001,7 @@ export const ChatInput = memo(
                             <button
                               onClick={() => removeAttachment(index)}
                               title="Remove attachment" aria-label="Remove attachment"
-                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                             >
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
@@ -907,27 +1009,18 @@ export const ChatInput = memo(
                         ))}
                       </div>
                     )}
-                    <textarea
-                      aria-label="Chat input"
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
+                    <MemoizedTextArea
+                      ref={childInputRef}
+                      initialValue={textValueRef.current}
+                      onChange={handleInputChange}
+                      onDebouncedChange={handleDebouncedChange}
                       onKeyDown={handleKeyDown}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      placeholder={
-                        isTranscribing
-                          ? "Transcribing..."
-                          : isRecording
-                            ? "Listening..."
-                            : isImageMode
-                              ? "Describe the image for LOKI..."
-                              : "Ask AI..."
-                      }
-                      className={`w-full max-h-[200px] sm:max-h-[250px] min-h-[44px] sm:min-h-[52px] bg-transparent border-0 focus:ring-0 focus:outline-none resize-none px-2 py-2 sm:py-3 text-base sm:text-lg text-slate-900 dark:text-[#E3E3E3] placeholder:text-slate-400 dark:placeholder:text-[#C4C7C5] custom-scrollbar leading-relaxed font-medium transition-all duration-300 ${isAwakened || effectInputBox ? 'dark:text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]' : ''}`}
-                      rows={1}
-                      readOnly={isRecording || isTranscribing}
-                      disabled={isLoading}
+                      isTranscribing={isTranscribing}
+                      isRecording={isRecording}
+                      isImageMode={isImageMode}
+                      isAwakened={isAwakened}
+                      effectInputBox={effectInputBox}
+                      isLoading={isLoading}
                     />
                     
                     <div className="flex items-center justify-between mt-1 sm:mt-2 px-1 relative">
@@ -943,7 +1036,7 @@ export const ChatInput = memo(
                         <button
                           onClick={handleAttachmentClick}
                           aria-label="Attach file"
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3] transition-all"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3] transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                           title="Attach file"
                         >
                           <Plus className="w-6 h-6" />
@@ -953,7 +1046,7 @@ export const ChatInput = memo(
                           <button
                             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
                             title="Options menu" aria-label="Options menu"
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${isOptionsOpen || isImageMode || thinkingMode || searchGrounding ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] shadow-lg" : "text-slate-500 dark:text-[#C4C7C5] hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-[#E3E3E3]"}`}
                           >
                             <SlidersHorizontal className="w-5 h-5" />
                           </button>
@@ -976,7 +1069,7 @@ export const ChatInput = memo(
                                       onClick={() => setThinkingMode(!thinkingMode)}
                                       title="Toggle Deep Search"
                                       aria-label="Toggle Deep Search"
-                                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${thinkingMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                     >
                                       <div className="flex items-center gap-3">
                                         <Sparkles className="w-4 h-4" />
@@ -1000,7 +1093,7 @@ export const ChatInput = memo(
                                     }
                                     title="Toggle Web Grounding"
                                     aria-label="Toggle Web Grounding"
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${searchGrounding ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <Globe className="w-4 h-4" />
@@ -1021,7 +1114,7 @@ export const ChatInput = memo(
                                     onClick={() => setIsImageMode(!isImageMode)}
                                     title="Toggle Image Mode"
                                     aria-label="Toggle Image Mode"
-                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${isImageMode ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <div className="flex items-center gap-3">
                                       <ImageIcon className="w-4 h-4" />
@@ -1050,7 +1143,7 @@ export const ChatInput = memo(
                           <button
                             onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
                             title="Select Model" aria-label="Select Model"
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${
                               isModelMenuOpen 
                                 ? "bg-slate-200 dark:bg-white/20 border-transparent text-slate-900 dark:text-[#E3E3E3] shadow-md" 
                                 : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
@@ -1085,7 +1178,7 @@ export const ChatInput = memo(
                                       setModelMode(m.id as any);
                                       setIsModelMenuOpen(false);
                                     }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${modelMode === m.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3]" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all focus-visible:bg-slate-100 dark:focus-visible:bg-white/10 focus-visible:outline-none ${modelMode === m.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3]" : "text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"}`}
                                   >
                                     <m.icon className="w-4 h-4" />
                                     <span className="text-[0.75rem] font-bold uppercase tracking-wider">
@@ -1104,7 +1197,7 @@ export const ChatInput = memo(
                           onClick={toggleRecording}
                           disabled={isTranscribing}
                           title="Toggle Voice Input" aria-label="Toggle Voice Input"
-                          className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border ${
+                          className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all border focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${
                             isRecording 
                               ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 
                               : "bg-transparent border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#C4C7C5] hover:bg-slate-100 dark:hover:bg-white/5"
@@ -1120,7 +1213,7 @@ export const ChatInput = memo(
                         </motion.button>
 
                         <AnimatePresence mode="popLayout">
-                          {!(input.trim() || attachments.length > 0) && !isLoading ? (
+                          {!(hasInput || attachments.length > 0) && !isLoading ? (
                             <motion.button
                               key="live-conv-btn"
                               layout
@@ -1132,7 +1225,7 @@ export const ChatInput = memo(
                                 startLiveSession();
                               }}
                               aria-label="Start Live Conversation"
-                              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent"
+                              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20 border border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                             >
                               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 11v3M12 7v10M16 10v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -1152,7 +1245,7 @@ export const ChatInput = memo(
                                 <button
                                   onClick={onStopGeneration}
                                   aria-label="Stop Generation"
-                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group"
+                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 border border-rose-400/50 group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                                   title="Stop Generation"
                                 >
                                   <div className="w-6 h-6 rounded-full border-2 border-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform bg-rose-400/10">
@@ -1162,9 +1255,9 @@ export const ChatInput = memo(
                               ) : (
                                 <button
                                   onClick={handleSend}
-                                  disabled={!(input.trim() || attachments.length > 0)}
+                                  disabled={!(hasInput || attachments.length > 0)}
                                   aria-label="Send Message"
-                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${(input.trim() || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
+                                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${(hasInput || attachments.length > 0) ? "bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-[#E3E3E3] hover:bg-slate-300 dark:hover:bg-white/20" : "text-slate-400 dark:text-[#C4C7C5] opacity-50 cursor-not-allowed"}`}
                                 >
                                   {sendButtonIcon === 'arrow' ? (
                                     <ArrowRight className="w-5 h-5" />
@@ -1190,7 +1283,7 @@ export const ChatInput = memo(
 
           <LiveVoiceOverlay
             isOpen={isVoiceOverlayOpen}
-            userVolume={userVolume}
+            userVolumeRef={userVolumeRef}
             onClose={() => {
               setIsVoiceOverlayOpen(false);
               stopLiveSession();
@@ -1217,8 +1310,7 @@ export const ChatInput = memo(
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="fixed bottom-0 left-0 right-0 z-[999] attachment-menu-container rounded-t-3xl bg-white dark:bg-[#1E1F20] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 dark:border-white/10"
-                  style={{ paddingBottom: 'clamp(24px, env(safe-area-inset-bottom), 48px)' }}
+                  className="fixed bottom-0 left-0 right-0 z-[999] attachment-menu-container rounded-t-3xl bg-white dark:bg-[#1E1F20] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border-t border-slate-200 dark:border-white/10 attachment-keyboard-safe-area"
                 >
                   <div className="flex flex-col p-4 sm:p-6 gap-4">
                     <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/20 rounded-full mx-auto mb-2" />
@@ -1227,7 +1319,7 @@ export const ChatInput = memo(
                       onClick={() => handleAttachmentOptionSelect('gallery')}
                       title="Open Gallery"
                       aria-label="Open Gallery"
-                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none"
                     >
                       <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
                         <ImageIcon className="w-6 h-6" />
@@ -1242,7 +1334,7 @@ export const ChatInput = memo(
                       onClick={() => handleAttachmentOptionSelect('files')}
                       title="Open File Manager"
                       aria-label="Open File Manager"
-                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 active:bg-slate-200 dark:active:bg-white/10 transition-colors focus-visible:bg-slate-100 dark:focus-visible:bg-white/5 focus-visible:outline-none"
                     >
                       <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center">
                         <Folder className="w-6 h-6" />
@@ -1261,4 +1353,24 @@ export const ChatInput = memo(
       );
     },
   ),
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isLoading === nextProps.isLoading &&
+      prevProps.modelMode === nextProps.modelMode &&
+      prevProps.currentSessionId === nextProps.currentSessionId &&
+      prevProps.enterToSend === nextProps.enterToSend &&
+      prevProps.isAwakened === nextProps.isAwakened &&
+      prevProps.draftText === nextProps.draftText &&
+      prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
+      (prevProps.draftAttachments || []).every((att, i) => {
+        const nextAtt = (nextProps.draftAttachments || [])[i];
+        return att.mimeType === nextAtt?.mimeType && att.data.length === nextAtt?.data.length;
+      }) &&
+      prevProps.setModelMode === nextProps.setModelMode &&
+      prevProps.onSendMessage === nextProps.onSendMessage &&
+      prevProps.onDeleteSession === nextProps.onDeleteSession &&
+      prevProps.onStopGeneration === nextProps.onStopGeneration &&
+      prevProps.saveSessionDraft === nextProps.saveSessionDraft
+    );
+  }
 );

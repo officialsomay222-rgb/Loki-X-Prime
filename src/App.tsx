@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
 import { Capacitor } from "@capacitor/core";
@@ -20,9 +21,12 @@ import { MessageBubble } from "./components/MessageBubble";
 import { AwakenedBackground } from "./components/AwakenedBackground";
 import { CommandPalette } from "./components/CommandPalette";
 import { SettingsModal } from "./components/SettingsModal";
+import { useDeepCompareMemo } from "./hooks/useDeepCompareMemo";
 import { AppsModal } from "./components/AppsModal";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { useSettings } from "./contexts/SettingsContext";
+import { useAuth } from "./contexts/AuthContext";
+import { SignInOverlay } from "./components/SignInOverlay";
 import { useChat } from "./contexts/ChatContext";
 import { InfinityLogo, HeaderInfinityLogo } from "./components/Logos";
 import { TimelineItem } from "./components/TimelineItem";
@@ -73,6 +77,8 @@ declare global {
 const AssistantModePlugin = registerPlugin("AssistantMode");
 
 export default function App() {
+  const { isLoggedIn, isGuest } = useAuth();
+  const [showSignInOverlay, setShowSignInOverlay] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isAssistantMode, setIsAssistantMode] = useState<boolean | null>(null);
   const [isAvatarActive, setIsAvatarActive] = useState(false);
@@ -97,7 +103,6 @@ export default function App() {
     setActiveModal(null);
   }, []);
 
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const {
     theme,
     resolvedTheme,
@@ -180,10 +185,18 @@ export default function App() {
     resetSettings,
   } = useSettings();
 
-  const { awakening, triggerAwakening, handleAwakeningResponse } = useAwakening(
+  const { awakening, triggerAwakening: originalTriggerAwakening, handleAwakeningResponse } = useAwakening(
     isAwakened,
     setIsAwakened,
   );
+
+  const triggerAwakening = useCallback((e: React.MouseEvent) => {
+    if (!isLoggedIn && !isGuest) {
+      setShowSignInOverlay(true);
+      return;
+    }
+    originalTriggerAwakening(e);
+  }, [isLoggedIn, isGuest, originalTriggerAwakening]);
 
   const {
     sessions,
@@ -353,6 +366,14 @@ export default function App() {
 
   const currentSession = sessions.find((s) => s.id === currentSessionId);
 
+  // ⚡ BOLT OPTIMIZATION:
+  // Dexie's useLiveQuery creates new array references for draftAttachments on every DB update.
+  // We use useDeepCompareMemo to stabilize the reference before passing it to the heavily
+  // memoized ChatInput, preventing expensive O(N) child re-renders during text streaming.
+  const memoizedDraftAttachments = useDeepCompareMemo(() => {
+    return currentSession?.draftAttachments || EMPTY_ARRAY;
+  }, [currentSession?.draftAttachments]);
+
   // Search and sort timelines
   const sortedAndFilteredSessions = React.useMemo(() => {
     let result = [...sessions];
@@ -382,25 +403,30 @@ export default function App() {
     }
   }, [currentSession?.messages.length, currentSessionId, autoScroll]);
 
-  const checkScrollPosition = useCallback(() => {
-    const target = scrollContainerRef.current;
+  // Use IntersectionObserver to toggle scroll-to-bottom button
+  useEffect(() => {
+    const target = messagesEndRef.current;
     if (!target) return;
 
-    // Check if there is enough content to scroll
-    if (target.scrollHeight <= target.clientHeight) {
-      setShowScrollToBottom(false);
-      return;
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        // Show scroll-to-bottom if the end ref is not intersecting
+        setShowScrollToBottom(!entry.isIntersecting);
+      },
+      {
+        root: scrollContainerRef.current,
+        threshold: 0,
+      }
+    );
 
-    const isNearBottom =
-      target.scrollHeight - target.scrollTop - target.clientHeight < 400;
-    setShowScrollToBottom(!isNearBottom);
-  }, []);
+    observer.observe(target);
 
-  // Check scroll position when messages change or session changes
-  useEffect(() => {
-    checkScrollPosition();
-  }, [currentSession?.messages.length, currentSessionId, checkScrollPosition]);
+    return () => {
+      observer.unobserve(target);
+      observer.disconnect();
+    };
+  }, [currentSession?.messages.length, currentSessionId]);
 
   const handleSetModelMode = useCallback((mode: string) => {
     setModelMode(mode as any);
@@ -416,6 +442,11 @@ export default function App() {
       audioUrl?: boolean | string,
       attachments?: { data: string; mimeType: string }[],
     ) => {
+      if (!isLoggedIn && !isGuest) {
+        setShowSignInOverlay(true);
+        return;
+      }
+
       await sendMessage(
         text,
         isImageMode,
@@ -428,7 +459,7 @@ export default function App() {
         }, 10);
       }
     },
-    [sendMessage],
+    [sendMessage, isLoggedIn, isGuest],
   );
 
   const handleDeleteSession = useCallback(
@@ -473,12 +504,6 @@ export default function App() {
     [setCurrentSessionId, setIsSidebarOpen],
   );
 
-  const copyToClipboard = useCallback((text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  }, []);
-
   const formatDate = useCallback((date: Date) => {
     if (isToday(date)) {
       return format(date, "HH:mm");
@@ -501,63 +526,66 @@ export default function App() {
     }
   }, [currentSessionId, deleteMessage]);
 
-  const renderedMessages = useMemo(() => {
-    return currentSession?.messages.map((message) => (
-      <MessageBubble
-        key={message.id}
-        message={message}
-        commanderName={commanderName}
-        avatarUrl={avatarUrl}
-        isCopied={copiedId === message.id}
-        onCopy={copyToClipboard}
-        onEdit={message.role === "user" ? onEditMessageAction : undefined}
-        onDelete={handleDeleteMessage}
-        formatDate={formatDate}
-        bubbleStyle={bubbleStyle}
-        fontSize={fontSize}
-        messageAnimation={messageAnimation}
-        textReveal={textReveal}
-        animationSpeed={animationSpeed}
-        accentColor={accentColor}
-        messageDensity={messageDensity}
-        showAvatars={showAvatars}
-        isAwakened={isAwakened || effectMessageBubbles}
-        chatAlignment={chatAlignment}
-        blurIntensity={blurIntensity}
-        timestampFormat={timestampFormat}
-        codeTheme={codeTheme}
-        avatarShape={avatarShape}
-        messageShadow={messageShadow}
-        resolvedTheme={resolvedTheme}
-      />
-    ));
-  }, [
-    currentSession?.messages,
-    isAwakened,
-    effectMessageBubbles,
-    commanderName,
-    avatarUrl,
-    copiedId,
-    copyToClipboard,
-    formatDate,
-    bubbleStyle,
-    fontSize,
-    messageAnimation,
-    textReveal,
-    animationSpeed,
-    accentColor,
-    messageDensity,
-    showAvatars,
-    chatAlignment,
-    blurIntensity,
-    timestampFormat,
-    codeTheme,
-    avatarShape,
-    messageShadow,
-    resolvedTheme,
-    onEditMessageAction,
-    handleDeleteMessage,
-  ]);
+  const rowVirtualizer = useVirtualizer({
+    count: currentSession?.messages.length || 0,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 100, // Reasonable fallback, will adjust dynamically
+  });
+
+  const renderedMessages = (
+    <div
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        width: '100%',
+        position: 'relative',
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const message = currentSession?.messages[virtualRow.index];
+        if (!message) return null;
+
+        return (
+          <div
+            key={virtualRow.key}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            <MessageBubble
+              message={message}
+              commanderName={commanderName}
+              avatarUrl={avatarUrl}
+              onEdit={message.role === "user" ? onEditMessageAction : undefined}
+              onDelete={handleDeleteMessage}
+              formatDate={formatDate}
+              bubbleStyle={bubbleStyle}
+              fontSize={fontSize}
+              messageAnimation={messageAnimation}
+              textReveal={textReveal}
+              animationSpeed={animationSpeed}
+              accentColor={accentColor}
+              messageDensity={messageDensity}
+              showAvatars={showAvatars}
+              isAwakened={isAwakened || effectMessageBubbles}
+              chatAlignment={chatAlignment}
+              blurIntensity={blurIntensity}
+              timestampFormat={timestampFormat}
+              codeTheme={codeTheme}
+              avatarShape={avatarShape}
+              messageShadow={messageShadow}
+              resolvedTheme={resolvedTheme}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 
   if (isBooting) {
     return (
@@ -818,32 +846,50 @@ export default function App() {
               />
             </div>
 
-            <AnimatePresence>
-              {sortedAndFilteredSessions.map((session, index) => (
-                <TimelineItem
-                  key={session.id}
-                  session={session}
-                  index={index}
-                  isActive={currentSessionId === session.id}
-                  isAwakened={isAwakened}
-                  effectSidebar={effectSidebar}
-                  onClick={handleSessionClick}
-                  onDelete={handleDeleteSession}
-                  onPin={togglePinSession}
-                  onRename={renameSession}
-                />
-              ))}
-            </AnimatePresence>
-            {sortedAndFilteredSessions.length === 0 && (
+            {(!isLoggedIn && !isGuest) ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
               >
-                {sessions.length === 0
-                  ? "No timelines yet. Initiate an awakening."
-                  : "No matching timelines found."}
+                <p className="mb-4">Please sign in to the app</p>
+                <button
+                  onClick={() => setShowSignInOverlay(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
+                >
+                  Sign In
+                </button>
               </motion.div>
+            ) : (
+              <>
+                <AnimatePresence>
+                  {sortedAndFilteredSessions.map((session, index) => (
+                    <TimelineItem
+                      key={session.id}
+                      session={session}
+                      index={index}
+                      isActive={currentSessionId === session.id}
+                      isAwakened={isAwakened}
+                      effectSidebar={effectSidebar}
+                      onClick={handleSessionClick}
+                      onDelete={handleDeleteSession}
+                      onPin={togglePinSession}
+                      onRename={renameSession}
+                    />
+                  ))}
+                </AnimatePresence>
+                {sortedAndFilteredSessions.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center text-slate-500 dark:text-[#6b6b80] text-sm py-12 px-6 font-medium"
+                  >
+                    {sessions.length === 0
+                      ? "No timelines yet. Initiate an awakening."
+                      : "No matching timelines found."}
+                  </motion.div>
+                )}
+              </>
             )}
           </div>
 
@@ -961,42 +1007,50 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-end gap-2 sm:gap-6 flex-1">
-              <div
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? "opacity-0" : "opacity-100"}`}
-                title={commanderName}
-                onClick={triggerAwakening}
-                onMouseDown={() => setIsAvatarActive(true)}
-                onMouseUp={() => setIsAvatarActive(false)}
-                onMouseLeave={() => setIsAvatarActive(false)}
-                onTouchStart={() => setIsAvatarActive(true)}
-                onTouchEnd={() => setIsAvatarActive(false)}
-              >
-                <AvatarShockwave isActive={isAvatarActive} />
-                {(isAwakened || effectAvatar) && (
-                  <div
-                    className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura"
-                    style={{
-                      background:
-                        "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)",
-                      boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
-                    }}
-                  ></div>
-                )}
-                <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
-                  <img
-                    src="/Picsart-26-02-28-11-29-26-443.jpg"
-                    className="w-full h-full object-cover"
-                    alt="Commander"
-                  />
+              {(isLoggedIn || isGuest) ? (
+                <div
+                  className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex justify-center items-center hover:scale-110 transition-transform ${awakening ? "opacity-0" : "opacity-100"}`}
+                  title={commanderName}
+                  onClick={triggerAwakening}
+                  onMouseDown={() => setIsAvatarActive(true)}
+                  onMouseUp={() => setIsAvatarActive(false)}
+                  onMouseLeave={() => setIsAvatarActive(false)}
+                  onTouchStart={() => setIsAvatarActive(true)}
+                  onTouchEnd={() => setIsAvatarActive(false)}
+                >
+                  <AvatarShockwave isActive={isAvatarActive} />
+                  {(isAwakened || effectAvatar) && (
+                    <div
+                      className="absolute -inset-[2px] sm:-inset-[3px] rounded-full z-[1] opacity-100 animate-spin-aura"
+                      style={{
+                        background:
+                          "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00f0ff, #bd00ff, #ff00ff, #ff0000)",
+                        boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                      }}
+                    ></div>
+                  )}
+                  <div className="w-full h-full rounded-full overflow-hidden z-[2] border-2 border-white dark:border-[#08080c] relative">
+                    <img
+                      src="/Picsart-26-02-28-11-29-26-443.jpg"
+                      className="w-full h-full object-cover"
+                      alt="Commander"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <button
+                  onClick={() => setShowSignInOverlay(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95"
+                >
+                  Sign Up
+                </button>
+              )}
             </div>
           </header>
 
           {/* Chat Area - Scrollable */}
           <div
             ref={scrollContainerRef}
-            onScroll={checkScrollPosition}
             className={`flex-1 overflow-x-hidden custom-scrollbar relative w-full transform-gpu ${!currentSession || currentSession.messages.length === 0 ? "overflow-hidden" : "overflow-y-auto overscroll-contain"}`}
             style={{
               WebkitOverflowScrolling: "touch",
@@ -1117,10 +1171,8 @@ export default function App() {
 
           {/* Input Area - Flex Item (Not Absolute) */}
           <div
-            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto`}
+            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto input-keyboard-safe-area`}
             style={{
-              paddingBottom:
-                "calc(16px + clamp(0px, env(safe-area-inset-bottom, 0px), 48px))",
               paddingTop: "8px",
             }}
           >
@@ -1136,12 +1188,15 @@ export default function App() {
               onStopGeneration={stopGeneration}
               enterToSend={enterToSend}
               draftText={currentSession?.draftText || ""}
-              draftAttachments={currentSession?.draftAttachments || EMPTY_ARRAY}
+              draftAttachments={memoizedDraftAttachments}
               saveSessionDraft={saveSessionDraft}
             />
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {showSignInOverlay && <SignInOverlay onClose={() => setShowSignInOverlay(false)} />}
+      </AnimatePresence>
     </motion.div>
   );
 }
