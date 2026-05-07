@@ -1364,7 +1364,10 @@ export const ChatInput = memo(
       prevProps.draftAttachments?.length === nextProps.draftAttachments?.length &&
       (prevProps.draftAttachments || []).every((att, i) => {
         const nextAtt = (nextProps.draftAttachments || [])[i];
-        return att.mimeType === nextAtt?.mimeType && att.data.length === nextAtt?.data.length;
+        // 💡 What: Compare `url` and safely check `data?.length` using optional chaining in draftAttachments equality check.
+        // 🎯 Why: Using a unique identifier like `url` prevents false equivalencies when comparing complex objects containing large data like base64 images without relying on stringify, and optional chaining prevents runtime crashes.
+        // 📊 Impact: Prevents UI lag from main thread blocking during React.memo equality checks while avoiding fatal errors from missing properties.
+        return att?.url === nextAtt?.url && att?.mimeType === nextAtt?.mimeType && att?.data?.length === nextAtt?.data?.length;
       }) &&
       prevProps.setModelMode === nextProps.setModelMode &&
       prevProps.onSendMessage === nextProps.onSendMessage &&
