@@ -14,3 +14,7 @@
 ## 2026-04-27 - Add keyboard focus indicators to boot overlays
 **Learning:** Critical boot sequence overlays (WelcomeModal, SignInOverlay, ErrorBoundary) lacked visible focus states on their primary actions, impeding keyboard navigation for a11y users before the main app UI is even reached.
 **Action:** Ensure all initial, full-screen blockers and modals inherently include `focus-visible` utility classes on interactive elements to establish an accessible baseline from step 1.
+
+## 2024-05-26 - Destructive Action Overlay Constraints
+**Learning:** Destructive overlays (like ClearConfirmOverlay) lack sufficient semantics and keyboard navigation properties, causing screen readers to miss the critical context and preventing keyboard-only users from interacting.
+**Action:** Destructive action overlays MUST use `role="alertdialog"` with `aria-modal="true"`. They MUST be programmatically linked to their title and description using `aria-labelledby` and `aria-describedby`. Decorative icons MUST be explicitly hidden with `aria-hidden="true"`. All action buttons MUST include visual focus indicators (e.g., `focus-visible:ring-2 focus-visible:outline-none`).
