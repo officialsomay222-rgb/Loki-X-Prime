@@ -1,3 +1,3 @@
-## 2024-05-05 - Missing explicit alt text for unrendered UI components like modal images
-**Learning:** Decorative modal imagery and dynamic elements like `MessageBubble` or `SettingsModal` often lack valid fallback descriptors.
-**Action:** Always provide explicit, context-driven `alt` attributes or set decorative elements to `alt=""` to optimize screen-reader compatibility and reduce unhelpful auditory noise.
+## 2024-05-08 - Accessible Destructive Overlays
+**Learning:** Destructive action overlays (like `ClearConfirmOverlay`) require `role="alertdialog"`, `aria-modal="true"`, and linked `aria-labelledby`/`aria-describedby` attributes to be properly announced by screen readers. Furthermore, interactive elements within Framer Motion's `motion.button` components frequently lack default focus states in this codebase and require explicit `focus-visible` utility classes to ensure proper keyboard accessibility.
+**Action:** When implementing or modifying dialog overlays, especially destructive ones, ensure they use `alertdialog` semantics and that all interactive child components have explicitly defined focus states.
