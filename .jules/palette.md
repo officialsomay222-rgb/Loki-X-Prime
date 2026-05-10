@@ -1,3 +1,6 @@
 ## 2024-05-05 - Missing explicit alt text for unrendered UI components like modal images
 **Learning:** Decorative modal imagery and dynamic elements like `MessageBubble` or `SettingsModal` often lack valid fallback descriptors.
 **Action:** Always provide explicit, context-driven `alt` attributes or set decorative elements to `alt=""` to optimize screen-reader compatibility and reduce unhelpful auditory noise.
+## 2024-05-10 - Screen reader accessibility in destructive action overlays
+**Learning:** Destructive action overlays (like `ClearConfirmOverlay`) must use `role="alertdialog"`, `aria-modal="true"`, and properly linked `aria-labelledby` and `aria-describedby` attributes to ensure screen reader accessibility. Any decorative icons inside these dialogs should explicitly use `aria-hidden="true"`. Interactive elements within modals and overlays (like `motion.button` components) require explicit Tailwind `focus-visible` utility classes (e.g., `focus-visible:ring-2`, `focus-visible:outline-none`) to ensure proper keyboard accessibility, as default focus states are often missing.
+**Action:** Always add `role="alertdialog"` and related ARIA attributes to destructive overlays, hide decorative icons from screen readers, and manually add `focus-visible` styles to all interactive elements in modals.
