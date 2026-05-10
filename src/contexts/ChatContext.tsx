@@ -28,6 +28,7 @@ export type Message = {
 export type ChatSession = {
   id: string;
   title: string;
+  searchTitle?: string;
   messages: Message[];
   updatedAt: Date;
   isPinned?: boolean;
@@ -175,6 +176,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       await localDb.sessions.add({
         id: sessionId,
         title: 'New Awakening',
+        searchTitle: 'new awakening',
         updatedAt: new Date(),
         modelMode: initialModelMode || modelMode
       });
@@ -311,6 +313,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     const session = await localDb.sessions.get(id);
     if (session) {
       session.title = title;
+      session.searchTitle = title.toLowerCase();
       // Intentionally not updating updatedAt so it doesn't jump to the top
       await localDb.sessions.put(session);
     }
@@ -429,6 +432,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
       : session.title;
 
     session.title = title;
+    session.searchTitle = title.toLowerCase();
     session.updatedAt = new Date();
     await localDb.sessions.put(session);
     await localDb.messages.add({ ...userMessage, sessionId: currentSessionId });

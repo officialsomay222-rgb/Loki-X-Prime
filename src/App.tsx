@@ -379,8 +379,8 @@ export default function App() {
     let result = [...sessions];
 
     if (timelineSearchQuery.trim()) {
-      const lowerQuery = timelineSearchQuery.toLowerCase();
-      result = result.filter((s) => s.title.toLowerCase().includes(lowerQuery));
+      const lowerQuery = timelineSearchQuery.trim().toLowerCase();
+      result = result.filter((s) => (s.searchTitle || s.title.toLowerCase()).includes(lowerQuery));
     }
 
     // Sort by pinned status first

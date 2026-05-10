@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command, Settings, Plus, X } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
@@ -19,7 +19,11 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const filteredSessions = sessions.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+  const filteredSessions = useMemo(() => {
+    const lowerQuery = query.trim().toLowerCase();
+    if (!lowerQuery) return sessions;
+    return sessions.filter(s => (s.searchTitle || s.title.toLowerCase()).includes(lowerQuery));
+  }, [sessions, query]);
 
   return (
     <AnimatePresence>
