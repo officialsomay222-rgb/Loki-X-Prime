@@ -8,7 +8,10 @@ import { HfInference } from "@huggingface/inference";
 
 
 function extractImageQuery(message: string): string | null {
-  if (!message) return null;
+  if (!message || typeof message !== 'string') return null;
+  // Security: Limit input length to prevent ReDoS
+  if (message.length > 500) return null;
+
   const cleanMessage = message.replace(/^(show\s+me|give\s+me|send|find|search\s+for|i\s+need|mujhe|bhai|bro)\s+(an?\s+)?/i, "").trim();
 
   const prefixRegex = /^(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)$/i;
@@ -166,6 +169,14 @@ app.post("/api/tts", async (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
+
+  // Security: Validate message type and limit length to prevent Application DoS
+  if (message !== undefined && typeof message !== 'string') {
+    return res.status(400).json({ error: "Message must be a string" });
+  }
+  if (message && message.length > 50000) {
+    return res.status(400).json({ error: "Message exceeds maximum length of 50000 characters" });
+  }
 
   if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
     return res.status(400).json({ error: "Message or attachments are required" });
