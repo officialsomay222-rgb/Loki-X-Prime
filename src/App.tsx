@@ -378,8 +378,11 @@ export default function App() {
   const sortedAndFilteredSessions = React.useMemo(() => {
     let result = [...sessions];
 
-    if (timelineSearchQuery.trim()) {
-      const lowerQuery = timelineSearchQuery.toLowerCase();
+    // ⚡ Bolt: Trim and lowercase search query ONCE outside the filter loop
+    // to avoid O(N) string allocations during search.
+    const trimmedQuery = timelineSearchQuery.trim();
+    if (trimmedQuery) {
+      const lowerQuery = trimmedQuery.toLowerCase();
       result = result.filter((s) => s.title.toLowerCase().includes(lowerQuery));
     }
 
