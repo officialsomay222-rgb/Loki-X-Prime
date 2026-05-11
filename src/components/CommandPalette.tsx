@@ -19,7 +19,12 @@ export const CommandPalette = memo(({ isOpen, onClose }: { isOpen: boolean; onCl
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const filteredSessions = sessions.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+  // ⚡ Bolt: Trim and lowercase search query ONCE outside the filter loop
+  // to avoid O(N) string allocations. Also short-circuit filter if query is empty.
+  const lowerQuery = query.trim().toLowerCase();
+  const filteredSessions = lowerQuery
+    ? sessions.filter(s => s.title.toLowerCase().includes(lowerQuery))
+    : sessions;
 
   return (
     <AnimatePresence>
