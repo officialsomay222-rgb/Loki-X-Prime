@@ -1,3 +1,6 @@
 ## 2024-05-05 - Missing explicit alt text for unrendered UI components like modal images
 **Learning:** Decorative modal imagery and dynamic elements like `MessageBubble` or `SettingsModal` often lack valid fallback descriptors.
 **Action:** Always provide explicit, context-driven `alt` attributes or set decorative elements to `alt=""` to optimize screen-reader compatibility and reduce unhelpful auditory noise.
+## 2024-05-12 - AudioPlayer Scrubber and Play Button Accessibility
+**Learning:** The custom audio player scrubber `div` and play button lacked keyboard accessibility and screen-reader support. Native audio controls provide this out of the box, but custom implementations require manual ARIA attributes (`role="slider"`, `aria-label`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`) and keyboard event listeners (`onKeyDown`) for seeking, along with explicit `focus-visible` styles to replace default focus rings.
+**Action:** Always add standard ARIA attributes (`role`, `aria-label`, `aria-valuenow`), `tabIndex={0}`, keyboard navigation handlers (`onKeyDown`), and explicit `focus-visible` styles to any non-semantic elements (like `div` or `span`) acting as interactive sliders or progress bars. Apply explicit `focus-visible` styles to icon-only buttons.
