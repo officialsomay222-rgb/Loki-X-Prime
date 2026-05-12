@@ -167,6 +167,28 @@ app.post("/api/tts", async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
 
+  if (message !== undefined && typeof message !== 'string') {
+    return res.status(400).json({ error: "Invalid message format" });
+  }
+  if (message && message.length > 50000) {
+    return res.status(400).json({ error: "Message exceeds maximum length" });
+  }
+
+  if (systemInstruction !== undefined && typeof systemInstruction !== 'string') {
+    return res.status(400).json({ error: "Invalid systemInstruction format" });
+  }
+  if (systemInstruction && systemInstruction.length > 50000) {
+    return res.status(400).json({ error: "System instruction exceeds maximum length" });
+  }
+
+  if (history !== undefined && !Array.isArray(history)) {
+    return res.status(400).json({ error: "Invalid history format" });
+  }
+
+  if (attachments !== undefined && !Array.isArray(attachments)) {
+    return res.status(400).json({ error: "Invalid attachments format" });
+  }
+
   if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
     return res.status(400).json({ error: "Message or attachments are required" });
   }
