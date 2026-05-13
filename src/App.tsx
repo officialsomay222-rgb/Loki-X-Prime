@@ -798,7 +798,7 @@ export default function App() {
             <button
               onClick={() => setIsSidebarOpen(false)}
               aria-label="Close Sidebar"
-              className={`p-2 rounded-lg transition-colors ${isAwakened && theme === "light" ? "hover:bg-slate-200 text-slate-600" : "hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white"}`}
+              className={`p-2 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none ${isAwakened && theme === "light" ? "hover:bg-slate-200 text-slate-600" : "hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white"}`}
             >
               <PanelLeftClose className="w-5 h-5" />
             </button>
@@ -858,7 +858,7 @@ export default function App() {
                 <p className="mb-4">Please sign in to the app</p>
                 <button
                   onClick={() => setShowSignInOverlay(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   Sign In
                 </button>
@@ -961,7 +961,7 @@ export default function App() {
                 <button
                   onClick={() => setIsSidebarOpen(true)}
                   aria-label="Open Sidebar"
-                  className="p-2 sm:p-2.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-white"
+                  className="p-2 sm:p-2.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-white focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   <PanelLeftOpen className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -1043,7 +1043,7 @@ export default function App() {
               ) : (
                 <button
                   onClick={() => setShowSignInOverlay(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   Sign Up
                 </button>
