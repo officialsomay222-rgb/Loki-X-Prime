@@ -22,3 +22,8 @@
 **Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
 **Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
 **Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
+
+## 2025-05-18 - Prevent DoS via Missing Input Length Limits and Regex Patterns
+**Vulnerability:** The `/api/chat` endpoint and its helper function `extractImageQuery` failed to check string limits on user payloads (`message`, `systemInstruction`) before doing expensive operations and complex regex processing. This exposed the application to Denial of Service (DoS) and Regular Expression Denial of Service (ReDoS) attacks.
+**Learning:** Type checking alone (`typeof x === 'string'`) is insufficient for strings that can be gigabytes in size. Regex operations (especially with unbounded `.+)` matchers) can stall the server if fed an extremely large string.
+**Prevention:** Always enforce strict maximum length limits (e.g., 50,000 for text content, 500 for regex extraction) on all string inputs in addition to type validation before any processing occurs.
