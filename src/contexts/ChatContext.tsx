@@ -157,12 +157,34 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
-  const sessions = React.useMemo(() => {
+  // ⚡ Bolt: Extracted base sessions mapping to prevent full list recreation.
+  // This isolates changes in rawSessions (which update infrequently) from
+  // rawMessages (which update constantly during streaming).
+  const baseSessions = React.useMemo(() => {
     return (rawSessions || []).map(s => ({
       ...s,
-      messages: currentSessionId === s.id ? (rawMessages || []) : []
-    })) as ChatSession[];
-  }, [rawSessions, rawMessages, currentSessionId]);
+      messages: []
+    }));
+  }, [rawSessions]);
+
+  // ⚡ Bolt: Targeted shallow copy for the active session instead of mapping over
+  // all sessions. This prevents O(N) object allocations and preserves referential
+  // equality for inactive sessions during high-frequency DB updates, drastically
+  // reducing re-renders in the sidebar.
+  const sessions = React.useMemo(() => {
+    if (!currentSessionId || baseSessions.length === 0) return baseSessions as ChatSession[];
+
+    const index = baseSessions.findIndex(s => s.id === currentSessionId);
+    if (index === -1) return baseSessions as ChatSession[];
+
+    const newSessions = [...baseSessions];
+    newSessions[index] = {
+      ...newSessions[index],
+      messages: rawMessages || []
+    };
+
+    return newSessions as ChatSession[];
+  }, [baseSessions, rawMessages, currentSessionId]);
 
   const sessionsRef = useRef(sessions);
   useEffect(() => {
@@ -540,17 +562,22 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
   }, [currentSessionId, isLoading, modelMode, getFullSystemInstruction, temperature, topP, topK, imageSize, setTone, thinkingMode, searchGrounding, responseLength]);
 
+  // ⚡ Bolt: Replaced O(N) session mapping with O(1) object allocation (via shallow copy)
+  // for modifying the active session during streaming. This drastically reduces GC pressure
+  // and prevents unnecessary updates to the `ChatContext` consumers.
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    const index = sessions.findIndex(s => s.id === currentSessionId);
+    if (index === -1) return sessions;
+
+    const newSessions = [...sessions];
+    newSessions[index] = {
+      ...newSessions[index],
+      messages: newSessions[index].messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
