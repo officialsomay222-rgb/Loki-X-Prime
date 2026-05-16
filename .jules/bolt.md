@@ -17,3 +17,6 @@
 ## 2026-04-27 - [JSON.stringify in React.memo Custom Equality]
 **Learning:** Using `JSON.stringify` inside a custom `arePropsEqual` function for `React.memo` (e.g. to compare `draftAttachments` arrays containing base64 images) causes severe main thread blocking and lag. While it correctly catches deep equality changes, stringifying large data structures on every render of the parent component completely defeats the performance benefits of memoization.
 **Action:** Never use `JSON.stringify` in `React.memo`. Instead, stabilize the object or array reference in the parent component using a custom hook like `useDeepCompareMemo` before passing it as a prop. Then, rely on simple reference equality (`prev === next`) inside the `React.memo` equality function.
+## 2026-05-16 - [O(N) Object Allocations in Context Mapping]
+**Learning:** Using `.map()` to update a single item in a large array (like `sessions`) inside a `React.useMemo` creates new object references for *every* item. During high-frequency updates (e.g., text streaming 20 times a second), this causes severe GC pressure and breaks memoization for all child components, causing O(N) re-renders across the UI.
+**Action:** Always use `findIndex` and targeted shallow cloning (e.g., `[...array]`) to update only the active item, thereby preserving referential equality for all inactive items.
