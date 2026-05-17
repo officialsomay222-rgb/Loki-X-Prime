@@ -542,15 +542,27 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // ⚡ Bolt: Replace O(N) .map() with O(1) targeted shallow cloning via findIndex
+    // to prevent large array allocations during high-frequency text streaming.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const targetSession = sessions[sessionIndex];
+    const messageIndex = targetSession.messages.findIndex(m => m.id === streamingMessage.id);
+
+    if (messageIndex === -1) return sessions;
+
+    const newMessages = [...targetSession.messages];
+    newMessages[messageIndex] = streamingMessage;
+
+    const newSessions = [...sessions];
+    newSessions[sessionIndex] = {
+      ...targetSession,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
