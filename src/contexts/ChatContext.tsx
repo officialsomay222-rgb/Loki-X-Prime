@@ -542,15 +542,30 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // ⚡ Bolt: Use findIndex instead of map to avoid O(N) array allocations
+    // during high-frequency text streaming (every ~50ms).
+    // Expected impact: Eliminates unnecessary object creation for inactive sessions/messages,
+    // reducing GC pressure and preventing O(N) re-renders in deeply nested components.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const currentSession = sessions[sessionIndex];
+    const messageIndex = currentSession.messages.findIndex(m => m.id === streamingMessage.id);
+
+    if (messageIndex === -1) return sessions;
+
+    // Shallow clone only the specific array being updated
+    const newMessages = [...currentSession.messages];
+    newMessages[messageIndex] = streamingMessage;
+
+    const newSessions = [...sessions];
+    newSessions[sessionIndex] = {
+      ...currentSession,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
