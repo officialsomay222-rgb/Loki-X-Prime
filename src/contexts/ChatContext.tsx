@@ -542,15 +542,30 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // ⚡ Bolt Optimization: Use findIndex and shallow cloning instead of .map().
+    // During text streaming, this function is called at high frequency.
+    // .map() iterates over all sessions and all messages, allocating new objects.
+    // findIndex + shallow array cloning updates only the active item in O(1) time
+    // once the index is found, preserving referential equality for inactive items.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions; // Preserve referential equality if not found
+
+    const targetSession = sessions[sessionIndex];
+    const messageIndex = targetSession.messages.findIndex(m => m.id === streamingMessage.id);
+    if (messageIndex === -1) return sessions; // Preserve referential equality if not found
+
+    // Shallow clone the specific target array and modify the exact index
+    const newMessages = [...targetSession.messages];
+    newMessages[messageIndex] = streamingMessage;
+
+    const newSessions = [...sessions];
+    newSessions[sessionIndex] = {
+      ...targetSession,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
