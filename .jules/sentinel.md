@@ -22,3 +22,7 @@
 **Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
 **Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
 **Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
+## 2026-05-18 - Prevent DoS/ReDoS in Express APIs
+**Vulnerability:** Unbounded string parsing and missing type checks on incoming req.body inputs led to potential ReDoS in regex functions and DoS when passing huge objects to external SDKs.
+**Learning:** Parsed JSON body properties (like `message`) cannot be trusted to be strings or within reasonable lengths by default.
+**Prevention:** Always strictly validate the type (e.g., `typeof message === 'string'`) and enforce maximum length constraints (e.g., < 50,000 chars) before running regex or passing to external services.
