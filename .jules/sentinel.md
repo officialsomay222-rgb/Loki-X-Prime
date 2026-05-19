@@ -22,3 +22,8 @@
 **Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
 **Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
 **Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
+
+## 2025-02-28 - Missing Trust Proxy in Express App Rate Limiting
+**Vulnerability:** The Express application uses `express-rate-limit` but lacks `app.set('trust proxy', 1)`. Because the app is deployed behind reverse proxies (like Vercel/Cloudflare), this causes all users to share a single rate-limiting bucket based on the proxy's IP.
+**Learning:** When using rate limiting in an Express application behind a reverse proxy, you must explicitly configure the app to trust the proxy. Otherwise, the rate limiter will incorrectly use the proxy's IP address for all incoming requests, leading to rate limit bypasses or inadvertent denial of service for all users.
+**Prevention:** Always add `app.set('trust proxy', 1);` or an appropriate proxy configuration to Express applications when deploying behind a reverse proxy and using IP-based security middleware.
