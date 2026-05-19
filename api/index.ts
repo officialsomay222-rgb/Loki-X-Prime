@@ -32,6 +32,7 @@ function extractImageQuery(message: string): string | null {
 }
 
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy for accurate IP tracking (Vercel/Cloudflare)
 
 const getTodayDateString = () => {
   const today = new Date();
