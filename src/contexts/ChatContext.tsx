@@ -542,15 +542,29 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // ⚡ Bolt: Performance Optimization
+    // Replaced O(N) nested .map() loops with O(N) .findIndex() and targeted shallow cloning.
+    // This avoids unnecessary array allocations and preserves referential equality for inactive sessions/messages,
+    // preventing severe O(N) re-renders across the entire chat list during high-frequency text streaming.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const targetSession = sessions[sessionIndex];
+    const messageIndex = targetSession.messages.findIndex(m => m.id === streamingMessage.id);
+
+    if (messageIndex === -1) return sessions;
+
+    const newMessages = [...targetSession.messages];
+    newMessages[messageIndex] = streamingMessage;
+
+    const newSessions = [...sessions];
+    newSessions[sessionIndex] = {
+      ...targetSession,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
