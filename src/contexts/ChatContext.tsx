@@ -542,15 +542,29 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // Performance Optimization: Prevent O(N) array mapping during high-frequency text streaming
+    // by using targeted findIndex and localized shallow cloning instead.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const session = sessions[sessionIndex];
+    const messageIndex = session.messages.findIndex(m => m.id === streamingMessage.id);
+
+    // If message is not found, don't modify anything
+    if (messageIndex === -1) return sessions;
+
+    // Shallow clone only the required parts
+    const updatedMessages = [...session.messages];
+    updatedMessages[messageIndex] = streamingMessage;
+
+    const updatedSessions = [...sessions];
+    updatedSessions[sessionIndex] = {
+      ...session,
+      messages: updatedMessages
+    };
+
+    return updatedSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
