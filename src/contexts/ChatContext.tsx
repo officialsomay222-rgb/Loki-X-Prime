@@ -542,15 +542,28 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // Bolt: Use findIndex and targeted shallow cloning instead of .map()
+    // to avoid O(N) object allocations and preserve referential equality
+    // for unmodified items during high-frequency text streaming.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const newSessions = [...sessions];
+    const session = newSessions[sessionIndex];
+
+    const msgIndex = session.messages.findIndex(m => m.id === streamingMessage.id);
+    if (msgIndex === -1) return sessions; // Message not yet in state, fallback (though Dexie add happens before stream)
+
+    const newMessages = [...session.messages];
+    newMessages[msgIndex] = streamingMessage;
+
+    newSessions[sessionIndex] = {
+      ...session,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
