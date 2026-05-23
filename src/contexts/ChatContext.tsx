@@ -542,15 +542,28 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
 
   const modifiedSessions = React.useMemo(() => {
     if (!streamingMessage || !currentSessionId) return sessions;
-    return sessions.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          messages: s.messages.map(m => m.id === streamingMessage.id ? streamingMessage : m)
-        };
-      }
-      return s;
-    });
+
+    // ⚡ Bolt: Prevent callback overhead during high-frequency text streaming
+    // 🎯 Why: Using .map() iterates over every item in the array and executes the callback function for each,
+    // even though only one message in one session needs to be updated.
+    // 📊 Impact: Avoids unnecessary iterations and callback function executions, yielding slight performance gains during streaming.
+    const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+    if (sessionIndex === -1) return sessions;
+
+    const targetSession = sessions[sessionIndex];
+    const messageIndex = targetSession.messages.findIndex(m => m.id === streamingMessage.id);
+    if (messageIndex === -1) return sessions;
+
+    const newMessages = [...targetSession.messages];
+    newMessages[messageIndex] = streamingMessage;
+
+    const newSessions = [...sessions];
+    newSessions[sessionIndex] = {
+      ...targetSession,
+      messages: newMessages
+    };
+
+    return newSessions;
   }, [sessions, streamingMessage, currentSessionId]);
 
   const contextValue = React.useMemo(() => ({
