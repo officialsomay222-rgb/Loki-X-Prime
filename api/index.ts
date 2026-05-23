@@ -9,6 +9,8 @@ import { HfInference } from "@huggingface/inference";
 
 function extractImageQuery(message: string): string | null {
   if (!message) return null;
+  if (typeof message !== 'string') return null;
+  if (message.length > 500) return null; // Prevent ReDoS by capping input length
   const cleanMessage = message.replace(/^(show\s+me|give\s+me|send|find|search\s+for|i\s+need|mujhe|bhai|bro)\s+(an?\s+)?/i, "").trim();
 
   const prefixRegex = /^(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)$/i;
