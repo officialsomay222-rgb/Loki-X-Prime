@@ -8,7 +8,7 @@ import { HfInference } from "@huggingface/inference";
 
 
 function extractImageQuery(message: string): string | null {
-  if (!message) return null;
+  if (!message || typeof message !== 'string' || message.length > 500) return null;
   const cleanMessage = message.replace(/^(show\s+me|give\s+me|send|find|search\s+for|i\s+need|mujhe|bhai|bro)\s+(an?\s+)?/i, "").trim();
 
   const prefixRegex = /^(?:image|picture|photo|pic|img)s?\s*(?:of|about|for)?\s+(.+)$/i;
@@ -32,6 +32,7 @@ function extractImageQuery(message: string): string | null {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -169,6 +170,15 @@ app.post("/api/chat", async (req, res) => {
 
   if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
     return res.status(400).json({ error: "Message or attachments are required" });
+  }
+
+  // Security: Enforce input length and type constraints to prevent DoS
+  if (message && (typeof message !== 'string' || message.length > 50000)) {
+    return res.status(400).json({ error: "Message must be a string and less than 50,000 characters." });
+  }
+
+  if (history && !Array.isArray(history)) {
+    return res.status(400).json({ error: "History must be an array." });
   }
 
   const setupSSE = () => {
