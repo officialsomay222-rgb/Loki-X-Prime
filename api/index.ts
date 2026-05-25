@@ -32,6 +32,7 @@ function extractImageQuery(message: string): string | null {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 const getTodayDateString = () => {
   const today = new Date();
