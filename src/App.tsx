@@ -810,7 +810,7 @@ export default function App() {
               whileHover={{ filter: "brightness(1.2)" }}
               type="button"
               onClick={handleCreateNewSession}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest gpu-accelerate"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] font-bold text-xs border border-white/20 uppercase tracking-widest gpu-accelerate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
             >
               <Plus className="w-4 h-4" />
               NEW AWAKENING
@@ -858,7 +858,7 @@ export default function App() {
                 <p className="mb-4">Please sign in to the app</p>
                 <button
                   onClick={() => setShowSignInOverlay(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
                   Sign In
                 </button>
@@ -916,7 +916,7 @@ export default function App() {
                     clearAllSessions();
                   }
                 }}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all border border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
               >
                 <Trash2 className="w-4 h-4" />
                 CLEAR ALL TIMELINES
@@ -926,7 +926,7 @@ export default function App() {
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => openModal("apps")}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
             >
               <Rocket className="w-4 h-4" />
               TRY OUR APPS
@@ -935,7 +935,7 @@ export default function App() {
               whileTap={{ scale: 0.97 }}
               whileHover={{ filter: "brightness(1.2)" }}
               onClick={() => openModal("settings")}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-[#888] hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-slate-200/50 dark:hover:border-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
             >
               <Settings className="w-4 h-4" />
               SYSTEM SETTINGS
@@ -1043,7 +1043,7 @@ export default function App() {
               ) : (
                 <button
                   onClick={() => setShowSignInOverlay(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
                   Sign Up
                 </button>
@@ -1162,7 +1162,7 @@ export default function App() {
                         block: "end",
                       });
                     }}
-                    className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto"
+                    className="absolute bottom-4 right-4 sm:right-8 p-3 rounded-full flex items-center justify-center bg-cyan-600/90 backdrop-blur-md text-white shadow-[0_0_15px_rgba(0,242,255,0.4)] hover:shadow-[0_0_25px_rgba(0,242,255,0.6)] hover:bg-cyan-500 transition-all duration-300 border-2 border-cyan-400/50 pointer-events-auto focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                     aria-label="Scroll to bottom"
                     title="Scroll to bottom"
                   >
