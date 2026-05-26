@@ -22,3 +22,13 @@
 **Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
 **Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
 **Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
+
+## 2025-10-24 - Rate Limit Proxy IP Sharing
+**Vulnerability:** The application used `express-rate-limit` without setting `app.set('trust proxy', 1)`. When deployed behind a reverse proxy (e.g., Vercel, Cloudflare), all incoming requests appeared to originate from the proxy's IP address. This effectively caused all users to share a single rate-limiting bucket, leading to legitimate users being rate-limited unexpectedly.
+**Learning:** When using rate limiting in Express applications that are deployed behind reverse proxies, it is crucial to explicitly configure Express to trust the proxy so it correctly identifies the client's actual IP address.
+**Prevention:** Always add `app.set('trust proxy', 1)` (or the appropriate proxy trust configuration) when implementing `express-rate-limit` in an environment that may utilize reverse proxies.
+
+## 2025-10-24 - Chat Input Denial of Service (DoS)
+**Vulnerability:** The `/api/chat` endpoint parsed `req.body` without validating the type and length of the `message` field. Passing an unusually large string could consume excessive server resources, and passing a non-string value (like an object or array) would crash the server when string methods like `.replace()` were called inside functions like `extractImageQuery`.
+**Learning:** Checking for truthiness (e.g., `if (!message)`) is insufficient for complex API endpoints. Failing to enforce strict type and length limits on user input exposes the server to resource exhaustion and unhandled exception crashes.
+**Prevention:** Always implement explicit type validation (e.g., `typeof message === 'string'`) and length constraints (e.g., `message.length <= 50000`) on all incoming request payload fields before processing them.

@@ -32,6 +32,7 @@ function extractImageQuery(message: string): string | null {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -166,6 +167,19 @@ app.post("/api/tts", async (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
+
+  if (message !== undefined) {
+    if (typeof message !== 'string') {
+      return res.status(400).json({ error: "Message must be a string" });
+    }
+    if (message.length > 50000) {
+      return res.status(400).json({ error: "Message exceeds maximum length of 50,000 characters" });
+    }
+  }
+
+  if (history !== undefined && !Array.isArray(history)) {
+    return res.status(400).json({ error: "History must be an array" });
+  }
 
   if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
     return res.status(400).json({ error: "Message or attachments are required" });
