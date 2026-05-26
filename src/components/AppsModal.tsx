@@ -40,7 +40,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
               onClick={onClose}
               aria-label="Close Apps Menu"
               title="Close Apps Menu"
-              className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-10 group"
+              className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-10 group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
             >
               <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
             </button>
@@ -95,7 +95,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ delay: 0.55 }}
-                  className="group relative flex items-center justify-center gap-3 px-8 py-4 -mt-2 rounded-2xl bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 hover:border-cyan-400/80 shadow-[0_0_20px_rgba(0,242,255,0.15)] hover:shadow-[0_0_40px_rgba(0,242,255,0.4)] transition-all overflow-hidden"
+                  className="group relative flex items-center justify-center gap-3 px-8 py-4 -mt-2 rounded-2xl bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 hover:border-cyan-400/80 shadow-[0_0_20px_rgba(0,242,255,0.15)] hover:shadow-[0_0_40px_rgba(0,242,255,0.4)] transition-all overflow-hidden focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -136,7 +136,7 @@ export const AppsModal: React.FC<AppsModalProps> = ({ isOpen, onClose, commander
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.7 + index * 0.1 }}
-                        className="group relative p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
+                        className="group relative p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)] focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
                       >
                         <div className="flex items-start gap-4">
                           <div className={`p-3 rounded-xl bg-gradient-to-br ${app.color} bg-opacity-20`}>
