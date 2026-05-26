@@ -790,12 +790,10 @@ export const ChatInput = memo(
           analyser.fftSize = 256;
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-          // TODO: Migrate from deprecated ScriptProcessor to AudioWorklet.
-          // 1. Create a public/audio-processor.js file extending AudioWorkletProcessor.
-          // 2. Call await audioCtx.audioWorklet.addModule('/audio-processor.js').
-          // 3. const processor = new AudioWorkletNode(audioCtx, 'audio-processor').
+          // Migrate from deprecated ScriptProcessor to AudioWorklet.
           // This will prevent the main UI thread from blocking during live audio encoding.
-          const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+          await audioCtx.audioWorklet.addModule('/audio-processor.js');
+          const processor = new AudioWorkletNode(audioCtx, 'audio-processor');
 
           source.connect(analyser);
           analyser.connect(processor);
@@ -813,19 +811,11 @@ export const ChatInput = memo(
           };
           updateVolume();
 
-          processor.onaudioprocess = (e) => {
+          processor.port.onmessage = (e) => {
             if (!isLiveSessionActive) return;
-            const inputData = e.inputBuffer.getChannelData(0);
-            const l = inputData.length;
-            // Convert Float32 to Int16
-            const pcmData = l === 4096 ? sharedPcmData : new Int16Array(l);
-            const uint8Data = l === 4096 ? sharedUint8Data : new Uint8Array(pcmData.buffer);
 
-            for (let i = 0; i < l; i++) {
-              let s = inputData[i];
-              s = s < -1 ? -1 : (s > 1 ? 1 : s);
-              pcmData[i] = s * 0x7fff;
-            }
+            const pcmBuffer = e.data.pcmData;
+            const uint8Data = new Uint8Array(pcmBuffer);
 
             let binary = '';
             const chunkSize = 0x8000;
