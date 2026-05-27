@@ -45,6 +45,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           style={{ transform: 'translateZ(0)', willChange: 'opacity', paddingTop: 'clamp(24px, env(safe-area-inset-top, 0px), 48px)', paddingBottom: 'clamp(0px, env(safe-area-inset-bottom, 0px), 32px)' }}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="welcome-title"
+            aria-describedby="welcome-desc"
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: -20 }}
@@ -62,14 +66,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
 
             <div className="relative z-10 flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-500 to-violet-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
-                <Sparkles className="w-8 h-8 text-white" />
+                <Sparkles aria-hidden="true" className="w-8 h-8 text-white" />
               </div>
 
-              <h2 className={`text-2xl font-bold mb-2 text-center tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              <h2 id="welcome-title" className={`text-2xl font-bold mb-2 text-center tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                 Welcome to LOKI X PRIME
               </h2>
 
-              <p className={`text-center mb-8 text-sm ${theme === 'dark' ? 'text-[#a1a1aa]' : 'text-slate-500'}`}>
+              <p id="welcome-desc" className={`text-center mb-8 text-sm ${theme === 'dark' ? 'text-[#a1a1aa]' : 'text-slate-500'}`}>
                 Before we begin our journey, how should I address you?
               </p>
 
@@ -103,7 +107,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
                   className="w-full py-4 rounded-full font-bold transition-all shadow-xl flex items-center justify-center gap-2 group bg-gradient-to-r from-cyan-600 to-violet-600 text-white hover:from-cyan-500 hover:to-violet-500 shadow-cyan-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   <span>Start Experience</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight aria-hidden="true" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
               </div>
             </div>
