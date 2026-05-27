@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, User, Sliders, Monitor, Zap, Volume2, Type, Layout, Sparkles, Camera, 
-  Shield, Database, LogOut, Trash2, Download, ChevronDown, ChevronRight, 
-  MessageSquare, Bell, History, Info, HelpCircle, FileText, Lock, Eye, 
-  MousePointer2, Smartphone, Moon, Sun, Cloud, Keyboard, XCircle, CheckCircle, 
+import {
+  X, User, Sliders, Monitor, Zap, Volume2, Type, Layout, Sparkles, Camera,
+  Shield, Database, LogOut, Trash2, Download, ChevronDown, ChevronRight,
+  MessageSquare, Bell, History, Info, HelpCircle, FileText, Lock, Eye,
+  MousePointer2, Smartphone, Moon, Sun, Cloud, Keyboard, XCircle, CheckCircle,
   Circle, Maximize, Minimize, Square, Box, Palette, Droplets, Wind, Activity, Send, ArrowRight, Rocket
 } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
@@ -30,33 +30,30 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
   const [tempEmail, setTempEmail] = useState(email);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className="absolute inset-0 z-[120] bg-white dark:bg-[#0a0a0a] flex flex-col"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-profile-title"
     >
       <div className="flex items-center gap-4 p-5 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] sticky top-0">
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
           whileTap={{ scale: 0.9 }}
-          onClick={onClose} 
+          onClick={onClose}
           aria-label="Collapse Menu"
           title="Collapse Menu"
           className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
         </motion.button>
-        <h2 id="edit-profile-title" className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Edit Profile</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Edit Profile</h2>
       </div>
       <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar transform-gpu" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)', willChange: 'transform' }}>
         <div className="space-y-4">
           <label htmlFor="displayName" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Display Name</label>
           <input id="displayName"
-            type="text" 
+            type="text"
             value={tempName}
             onChange={(e) => setTempName(e.target.value)}
             className="w-full bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors"
@@ -67,14 +64,14 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
         <div className="space-y-4">
           <label htmlFor="emailAddress" className="block text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Email Address</label>
           <input id="emailAddress"
-            type="email" 
+            type="email"
             value={tempEmail}
             onChange={(e) => setTempEmail(e.target.value)}
             className="w-full bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors"
             placeholder="Enter your email"
           />
         </div>
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSave(tempName, tempEmail)}
@@ -88,7 +85,7 @@ const EditProfileOverlay = ({ name, email, onSave, onClose }: { key?: string, na
 };
 
 const SettingSection = ({ title, children }: any) => (
-  <motion.div 
+  <motion.div
     variants={{
       hidden: { opacity: 0, y: 20 },
       visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } }
@@ -105,7 +102,7 @@ const SettingSection = ({ title, children }: any) => (
 const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, danger, noBorder, type, options, min, max, step, onChange, checked, setShowPicker }: any) => {
   const renderControl = () => {
     if (children) return children;
-    
+
     switch (type) {
       case 'toggle':
         return (
@@ -116,7 +113,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
         );
       case 'select':
         return (
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
             whileTap={{ scale: 0.95 }}
             onClick={(e) => {
@@ -141,8 +138,8 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
       case 'range':
         return (
           <div className="flex items-center gap-3 min-w-[120px]">
-            <input 
-              type="range" min={min} max={max} step={step} value={value} 
+            <input
+              type="range" min={min} max={max} step={step} value={value}
               onChange={(e) => onChange(parseFloat(e.target.value))}
               className="flex-1 h-1 bg-slate-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-white"
               aria-label={label}
@@ -152,8 +149,8 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
         );
       case 'text':
         return (
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="bg-transparent text-sm text-slate-900 dark:text-white text-right focus:outline-none w-32"
@@ -167,7 +164,7 @@ const SettingItem = ({ icon: Icon, label, value, subLabel, onClick, children, da
   };
 
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={onClick ? { scale: 0.995 } : {}}
       onClick={onClick}
@@ -273,7 +270,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
       {isOpen && (
         <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden">
           {/* Backdrop (Optional for full screen, but good for exit) */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -282,24 +279,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           />
 
           {/* Modal Container */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.99 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="w-full h-full flex flex-col overflow-hidden relative bg-white dark:bg-[#0a0a0a] z-10 shadow-2xl transform-gpu will-change-transform"
           >
-            
+
             {/* Header */}
             <div
               className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 shrink-0 bg-white dark:bg-[#0a0a0a] sticky top-0 z-20"
               style={{ paddingTop: 'calc(1rem + clamp(24px, env(safe-area-inset-top, 0px), 48px))' }}
             >
               <div className="flex items-center gap-4">
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={onClose} 
+                  onClick={onClose}
                   aria-label="Close Settings"
                   title="Close Settings"
                   className="p-2 rounded-full transition-colors group focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
@@ -314,9 +311,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </div>
               </div>
             </div>
-              
-              <motion.div 
-                ref={scrollContainerRef} 
+
+              <motion.div
+                ref={scrollContainerRef}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -328,9 +325,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 }}
               >
               <div className="max-w-3xl mx-auto space-y-12">
-            
+
                 {/* Profile Section - Centered */}
-                <motion.div 
+                <motion.div
                   variants={{
                     hidden: { opacity: 0, y: 20 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
@@ -338,7 +335,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   className="flex flex-col items-center py-6 space-y-4"
                 >
                   <div className="relative">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/10 shadow-2xl cursor-pointer group relative aspect-square focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
@@ -356,10 +353,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       title="Upload avatar"
                     >
                       <div className="w-full h-full rounded-full overflow-hidden" style={{ borderRadius: '9999px' }}>
-                        <img 
-                          src={avatarUrl} 
+                        <img
+                          src={avatarUrl}
                           alt="User avatar preview"
-                          className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-110"
                         />
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/40 dark:bg-black/40" style={{ borderRadius: '9999px' }}>
@@ -368,13 +365,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     </motion.div>
                     <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                   </div>
-                  
+
                   <div className="text-center space-y-1">
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{commanderName || 'Owner'}</h3>
                     <p className="text-sm text-slate-500 dark:text-[#717171] font-medium">{commanderEmail}</p>
                   </div>
 
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.05, backgroundColor: "#f0f0f0" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowEditProfile(true)}
@@ -385,7 +382,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </motion.div>
 
                 {/* Promo Card */}
-                <motion.div 
+                <motion.div
                   variants={{
                     hidden: { opacity: 0, y: 20 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
@@ -402,7 +399,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       <p className="text-xs text-slate-500 dark:text-[#717171]">Upgrade for higher limits & exclusive features</p>
                     </div>
                   </div>
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
@@ -413,9 +410,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* General Section */}
                 <SettingSection title="General" delay={0.2}>
-                  <SettingItem 
-                    icon={Monitor} 
-                    label="Appearance" 
+                  <SettingItem
+                    icon={Monitor}
+                    label="Appearance"
                     type="select"
                     value={theme}
                     onChange={setTheme}
@@ -426,16 +423,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'System', value: 'system', icon: Monitor }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Volume2} 
-                    label="Sound Effects" 
+                  <SettingItem
+                    icon={Volume2}
+                    label="Sound Effects"
                     type="toggle"
                     checked={soundEnabled}
                     onChange={setSoundEnabled}
                   />
-                  <SettingItem 
-                    icon={Volume2} 
-                    label="Sound Theme" 
+                  <SettingItem
+                    icon={Volume2}
+                    label="Sound Theme"
                     type="select"
                     value={soundTheme}
                     onChange={setSoundTheme}
@@ -478,9 +475,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                           <label htmlFor="temperature-slider" className="text-[10px] font-bold text-slate-500 dark:text-[#717171] uppercase tracking-[0.2em]">Temperature</label>
                           <span className="text-xs font-mono text-slate-900 dark:text-white bg-slate-100 dark:bg-[#222] px-2 py-0.5 rounded border border-slate-100 dark:border-white/5">{temperature}</span>
                         </div>
-                        <input 
+                        <input
                           id="temperature-slider"
-                          type="range" min="0" max="2" step="0.1" value={temperature} 
+                          type="range" min="0" max="2" step="0.1" value={temperature}
                           onChange={(e) => setTemperature(parseFloat(e.target.value))}
                           className="w-full h-1.5 bg-slate-200 dark:bg-[#333] rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-white"
                         />
@@ -497,9 +494,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       onChange={setThinkingMode}
                     />
                   )}
-                  <SettingItem 
-                    icon={Eye} 
-                    label="Search Grounding" 
+                  <SettingItem
+                    icon={Eye}
+                    label="Search Grounding"
                     subLabel="Use Google Search for real-time info"
                     type="toggle"
                     checked={searchGrounding}
@@ -516,17 +513,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     subLabel="Set as default digital assistant"
                     onClick={() => setShowAssistantIntro(true)}
                   />
-                  <SettingItem 
-                    icon={Smartphone} 
-                    label="Live Audio" 
+                  <SettingItem
+                    icon={Smartphone}
+                    label="Live Audio"
                     subLabel="Enable real-time voice interaction"
                     type="toggle"
                     checked={liveAudioEnabled}
                     onChange={setLiveAudioEnabled}
                   />
-                  <SettingItem 
-                    icon={MousePointer2} 
-                    label="Enter to Send" 
+                  <SettingItem
+                    icon={MousePointer2}
+                    label="Enter to Send"
                     type="toggle"
                     checked={enterToSend}
                     onChange={setEnterToSend}
@@ -536,9 +533,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Visuals */}
                 <SettingSection title="Visuals" delay={0.35}>
-                  <SettingItem 
-                    icon={Layout} 
-                    label="Sidebar Position" 
+                  <SettingItem
+                    icon={Layout}
+                    label="Sidebar Position"
                     type="select"
                     value={sidebarPosition}
                     onChange={setSidebarPosition}
@@ -548,9 +545,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Right', value: 'right', icon: Layout }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Layout} 
-                    label="Chat Alignment" 
+                  <SettingItem
+                    icon={Layout}
+                    label="Chat Alignment"
                     type="select"
                     value={chatAlignment}
                     onChange={setChatAlignment}
@@ -560,9 +557,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Left Aligned', value: 'left', icon: Layout }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Droplets} 
-                    label="Glass Blur Intensity" 
+                  <SettingItem
+                    icon={Droplets}
+                    label="Glass Blur Intensity"
                     type="select"
                     value={blurIntensity}
                     onChange={setBlurIntensity}
@@ -574,9 +571,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'High', value: 'high', icon: Cloud }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Layout} 
-                    label="Message Density" 
+                  <SettingItem
+                    icon={Layout}
+                    label="Message Density"
                     type="select"
                     value={messageDensity}
                     onChange={setMessageDensity}
@@ -586,9 +583,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Comfortable', value: 'comfortable', icon: Maximize }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Type} 
-                    label="Font Size" 
+                  <SettingItem
+                    icon={Type}
+                    label="Font Size"
                     type="select"
                     value={fontSize}
                     onChange={setFontSize}
@@ -599,9 +596,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Large', value: 'large', icon: Type }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Palette} 
-                    label="Accent Color" 
+                  <SettingItem
+                    icon={Palette}
+                    label="Accent Color"
                     type="select"
                     value={accentColor}
                     onChange={setAccentColor}
@@ -613,16 +610,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Rose', value: 'rose', icon: Palette }
                     ]}
                   />
-                  <SettingItem 
-                    icon={User} 
-                    label="Show Avatars" 
+                  <SettingItem
+                    icon={User}
+                    label="Show Avatars"
                     type="toggle"
                     checked={showAvatars}
                     onChange={setShowAvatars}
                   />
-                  <SettingItem 
-                    icon={User} 
-                    label="Avatar Shape" 
+                  <SettingItem
+                    icon={User}
+                    label="Avatar Shape"
                     type="select"
                     value={avatarShape}
                     onChange={setAvatarShape}
@@ -633,9 +630,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Rounded', value: 'rounded', icon: Box }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Box} 
-                    label="Message Shadow" 
+                  <SettingItem
+                    icon={Box}
+                    label="Message Shadow"
                     type="select"
                     value={messageShadow}
                     onChange={setMessageShadow}
@@ -647,9 +644,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Large', value: 'lg', icon: Cloud }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Send} 
-                    label="Send Button Icon" 
+                  <SettingItem
+                    icon={Send}
+                    label="Send Button Icon"
                     type="select"
                     value={sendButtonIcon}
                     onChange={setSendButtonIcon}
@@ -660,9 +657,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Rocket', value: 'rocket', icon: Rocket }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Box} 
-                    label="Code Block Theme" 
+                  <SettingItem
+                    icon={Box}
+                    label="Code Block Theme"
                     type="select"
                     value={codeTheme}
                     onChange={setCodeTheme}
@@ -673,9 +670,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Neon', value: 'neon', icon: Box }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Zap} 
-                    label="Animations" 
+                  <SettingItem
+                    icon={Zap}
+                    label="Animations"
                     type="toggle"
                     checked={messageAnimation}
                     onChange={setMessageAnimation}
@@ -685,41 +682,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Advanced Effects */}
                 <SettingSection title="Advanced Effects (Awakened UI)" delay={0.38}>
-                  <SettingItem 
-                    icon={Sparkles} 
-                    label="Input Box Glow" 
+                  <SettingItem
+                    icon={Sparkles}
+                    label="Input Box Glow"
                     subLabel="Awakened styling for chat input"
                     type="toggle"
                     checked={effectInputBox}
                     onChange={setEffectInputBox}
                   />
-                  <SettingItem 
-                    icon={MessageSquare} 
-                    label="Message Bubbles" 
+                  <SettingItem
+                    icon={MessageSquare}
+                    label="Message Bubbles"
                     subLabel="Awakened styling for chat messages"
                     type="toggle"
                     checked={effectMessageBubbles}
                     onChange={setEffectMessageBubbles}
                   />
-                  <SettingItem 
-                    icon={Layout} 
-                    label="Sidebar Effects" 
+                  <SettingItem
+                    icon={Layout}
+                    label="Sidebar Effects"
                     subLabel="Awakened styling for sidebar items"
                     type="toggle"
                     checked={effectSidebar}
                     onChange={setEffectSidebar}
                   />
-                  <SettingItem 
-                    icon={Monitor} 
-                    label="Background Particles" 
+                  <SettingItem
+                    icon={Monitor}
+                    label="Background Particles"
                     subLabel="Awakened background animations"
                     type="toggle"
                     checked={effectBackground}
                     onChange={setEffectBackground}
                   />
-                  <SettingItem 
-                    icon={User} 
-                    label="Avatar Aura" 
+                  <SettingItem
+                    icon={User}
+                    label="Avatar Aura"
                     subLabel="Spinning aura around avatars"
                     type="toggle"
                     checked={effectAvatar}
@@ -730,9 +727,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Behavior */}
                 <SettingSection title="Behavior" delay={0.4}>
-                  <SettingItem 
-                    icon={Zap} 
-                    label="Text Reveal" 
+                  <SettingItem
+                    icon={Zap}
+                    label="Text Reveal"
                     type="select"
                     value={textReveal}
                     onChange={setTextReveal}
@@ -743,9 +740,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Typewriter', value: 'typewriter', icon: Keyboard }
                     ]}
                   />
-                  <SettingItem 
-                    icon={Zap} 
-                    label="Typing Speed" 
+                  <SettingItem
+                    icon={Zap}
+                    label="Typing Speed"
                     type="range"
                     min={10}
                     max={100}
@@ -753,9 +750,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     value={typingSpeed}
                     onChange={setTypingSpeed}
                   />
-                  <SettingItem 
-                    icon={Zap} 
-                    label="Response Length" 
+                  <SettingItem
+                    icon={Zap}
+                    label="Response Length"
                     type="select"
                     value={responseLength}
                     onChange={setResponseLength}
@@ -766,9 +763,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       { label: 'Detailed', value: 'detailed', icon: Maximize }
                     ]}
                   />
-                  <SettingItem 
-                    icon={History} 
-                    label="Timestamp Format" 
+                  <SettingItem
+                    icon={History}
+                    label="Timestamp Format"
                     type="select"
                     value={timestampFormat}
                     onChange={setTimestampFormat}
@@ -784,25 +781,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Data & Privacy */}
                 <SettingSection title="Data & Privacy" delay={0.45}>
-                  <SettingItem 
-                    icon={Download} 
-                    label="Export Data" 
+                  <SettingItem
+                    icon={Download}
+                    label="Export Data"
                     onClick={onExportChat}
                   />
-                  <SettingItem 
-                    icon={Trash2} 
-                    label="Clear History" 
+                  <SettingItem
+                    icon={Trash2}
+                    label="Clear History"
                     danger
                     onClick={() => setShowClearConfirm(true)}
                   />
-                  <SettingItem 
-                    icon={Shield} 
-                    label="Data Controls" 
+                  <SettingItem
+                    icon={Shield}
+                    label="Data Controls"
                     onClick={() => {}}
                   />
-                  <SettingItem 
-                    icon={Database} 
-                    label="Memories" 
+                  <SettingItem
+                    icon={Database}
+                    label="Memories"
                     noBorder
                     onClick={() => {}}
                   />
@@ -810,19 +807,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* Legal */}
                 <SettingSection title="Legal & Support" delay={0.5}>
-                  <SettingItem 
-                    icon={FileText} 
-                    label="Terms of Use" 
+                  <SettingItem
+                    icon={FileText}
+                    label="Terms of Use"
                     onClick={() => setShowTerms(true)}
                   />
-                  <SettingItem 
-                    icon={Lock} 
-                    label="Privacy Policy" 
+                  <SettingItem
+                    icon={Lock}
+                    label="Privacy Policy"
                     onClick={() => setShowPrivacy(true)}
                   />
-                  <SettingItem 
-                    icon={HelpCircle} 
-                    label="Report a Problem" 
+                  <SettingItem
+                    icon={HelpCircle}
+                    label="Report a Problem"
                     noBorder
                     onClick={() => setShowReport(true)}
                   />
@@ -830,16 +827,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
                 {/* System */}
                 <SettingSection delay={0.55}>
-                  <SettingItem 
-                    icon={LogOut} 
-                    label="Reset All Settings" 
+                  <SettingItem
+                    icon={LogOut}
+                    label="Reset All Settings"
                     danger
                     noBorder
                     onClick={resetSettings}
                   />
                 </SettingSection>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
@@ -860,16 +857,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             {/* Overlays Container */}
             <AnimatePresence mode="wait">
               {showEditProfile && (
-                <EditProfileOverlay 
+                <EditProfileOverlay
                   key="edit-profile"
-                  name={commanderName} 
+                  name={commanderName}
                   email={commanderEmail}
                   onSave={(newName, newEmail) => {
                     setCommanderName(newName);
                     setCommanderEmail(newEmail);
                     setShowEditProfile(false);
-                  }} 
-                  onClose={() => setShowEditProfile(false)} 
+                  }}
+                  onClose={() => setShowEditProfile(false)}
                 />
               )}
 

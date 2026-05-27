@@ -31,12 +31,12 @@ export const ReportOverlay: React.FC<ReportOverlayProps> = ({ onClose }) => {
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
                     </motion.button>
-                    <h2 id="report-title" className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Report a Problem</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Report a Problem</h2>
                   </div>
                   <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
-                    <p id="report-description" className="text-sm text-slate-500 dark:text-[#717171]">Describe the issue you're experiencing. Our team will look into it as soon as possible.</p>
+                    <p className="text-sm text-slate-500 dark:text-[#717171]">Describe the issue you're experiencing. Our team will look into it as soon as possible.</p>
                     <textarea
-                      aria-labelledby="report-description"
+                      aria-label="Report description"
                       value={reportText}
                       onChange={(e) => setReportText(e.target.value)}
                       placeholder="Type your message here..."

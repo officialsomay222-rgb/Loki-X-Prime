@@ -14,6 +14,9 @@ export const TermsOverlay: React.FC<TermsOverlayProps> = ({ onClose }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   className="absolute inset-0 z-[120] bg-white dark:bg-[#0a0a0a] flex flex-col"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="terms-title"
                 >
                   <div className="flex items-center gap-4 p-5 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] sticky top-0">
                     <motion.button
@@ -26,7 +29,7 @@ export const TermsOverlay: React.FC<TermsOverlayProps> = ({ onClose }) => {
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
                     </motion.button>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Terms of Use</h2>
+                    <h2 id="terms-title" className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Terms of Use</h2>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-slate-500 dark:text-[#717171] leading-relaxed custom-scrollbar">
                     <section className="space-y-2">
