@@ -167,6 +167,11 @@ app.post("/api/tts", async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   const { message, history, mode, systemInstruction, temperature, topP, topK, thinkingMode, searchGrounding, attachments } = req.body;
 
+  if (message !== undefined && typeof message !== 'string') return res.status(400).json({ error: "message must be a string" });
+  if (mode !== undefined && typeof mode !== 'string') return res.status(400).json({ error: "mode must be a string" });
+  if (history !== undefined && !Array.isArray(history)) return res.status(400).json({ error: "history must be an array" });
+  if (attachments !== undefined && !Array.isArray(attachments)) return res.status(400).json({ error: "attachments must be an array" });
+
   if (!message && (!attachments || attachments.length === 0) && mode !== 'image') {
     return res.status(400).json({ error: "Message or attachments are required" });
   }

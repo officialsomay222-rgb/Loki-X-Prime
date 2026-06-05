@@ -22,3 +22,8 @@
 **Vulnerability:** Endpoints expecting structured strings (`audioBase64` and `text`) allowed arbitrary types like objects or arrays to bypass simple truthiness checks. Passing these to native functions like `Buffer.from` causes unhandled Node.js exceptions. Additionally, the error responses directly mirrored raw internal `error.message` strings to the client.
 **Learning:** Checking `if (!value)` only validates existence and truthiness, not structure. In Express without comprehensive schema validation (like Zod), users can send manipulated JSON structures. Exposing the resulting error messages can leak infrastructure details or stack shapes.
 **Prevention:** Always enforce explicit type checks (`typeof value !== 'string'`) before passing user inputs to core Node libraries. Fail securely by sending generic error constants to the client and logging the real exception server-side.
+
+## 2024-05-08 - [Type confusion in /api/chat Endpoint]
+**Vulnerability:** The `/api/chat` endpoint failed to strictly validate that `message`, `mode`, `history`, and `attachments` were strings or arrays respectively, potentially leading to server-side exceptions and DoS if non-string types were passed in the body payload.
+**Learning:** Checking for truthiness (e.g. `!message`) is insufficient to prevent type confusion vulnerabilities. Explicit `typeof` and `Array.isArray()` checks are required when passing parsed JSON body parameters into further server logic.
+**Prevention:** Implement strict type validation in all Express API routes. For string fields, ensure `typeof param !== 'string'`. For arrays, ensure `Array.isArray(param)`. Return a `400 Bad Request` if types do not match expectations.
