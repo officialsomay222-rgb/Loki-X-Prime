@@ -16,7 +16,7 @@ import { StatusBar } from "@capacitor/status-bar";
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
-import { WebGLCanvas } from "./components/WebGLCanvas";
+import { PremiumLiquidShockwave } from "./components/PremiumLiquidShockwave";
 import { MessageBubble } from "./components/MessageBubble";
 import { AwakenedBackground } from "./components/AwakenedBackground";
 import { CommandPalette } from "./components/CommandPalette";
@@ -699,16 +699,7 @@ export default function App() {
           }}
         >
           {/* Shockwave rendered strictly behind the avatar container */}
-          {awakening.phase === "shockwave" && (
-            <WebGLCanvas
-              config={{
-                shockwaveWaveSpeed: (useSettings() as any).shockwaveWaveSpeed,
-                shockwaveWaveThickness: (useSettings() as any).shockwaveWaveThickness,
-                shockwaveWaveGlow: (useSettings() as any).shockwaveWaveGlow,
-                shockwaveParticleSpeed: (useSettings() as any).shockwaveParticleSpeed,
-              }}
-            />
-          )}
+          {awakening.phase === "shockwave" && <PremiumLiquidShockwave />}
 
           <div
             className={`avatar-awakening flex justify-center items-center ${awakening.phase === "moving-out" ? "avatar-moving-out" : "avatar-moving-in"}`}
