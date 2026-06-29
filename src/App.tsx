@@ -16,7 +16,7 @@ import { StatusBar } from "@capacitor/status-bar";
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
-import { WebGLCanvas } from "./components/WebGLCanvas";
+import { WebGLCanvas, WebGLCanvasRef } from "./components/WebGLCanvas";
 import { MessageBubble } from "./components/MessageBubble";
 import { AwakenedBackground } from "./components/AwakenedBackground";
 import { CommandPalette } from "./components/CommandPalette";
@@ -189,6 +189,15 @@ export default function App() {
     isAwakened,
     setIsAwakened,
   );
+
+  const shockwaveRef = useRef<WebGLCanvasRef>(null);
+
+  useEffect(() => {
+    if (awakening.phase === "shockwave" && shockwaveRef.current) {
+      // Assuming center of screen for avatar click
+      shockwaveRef.current.triggerShockwave(0.5, 0.5);
+    }
+  }, [awakening.phase]);
 
   const triggerAwakening = useCallback((e: React.MouseEvent) => {
     if (!isLoggedIn && !isGuest) {
@@ -701,11 +710,12 @@ export default function App() {
           {/* Shockwave rendered strictly behind the avatar container */}
           {awakening.phase === "shockwave" && (
             <WebGLCanvas
+              ref={shockwaveRef}
               config={{
-                shockwaveWaveSpeed: (useSettings() as any).shockwaveWaveSpeed,
-                shockwaveWaveThickness: (useSettings() as any).shockwaveWaveThickness,
-                shockwaveWaveGlow: (useSettings() as any).shockwaveWaveGlow,
-                shockwaveParticleSpeed: (useSettings() as any).shockwaveParticleSpeed,
+                waveSpeed: (useSettings() as any).shockwaveWaveSpeed ?? 1.0,
+                waveThickness: (useSettings() as any).shockwaveWaveThickness ?? 1.0,
+                waveGlow: (useSettings() as any).shockwaveWaveGlow ?? 1.0,
+                particleSpeed: (useSettings() as any).shockwaveParticleSpeed ?? 1.0,
               }}
             />
           )}

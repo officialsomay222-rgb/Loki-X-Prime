@@ -1,281 +1,327 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 
-// Define the configuration interface required by the webgl application
-interface Config {
-  shockwaveWaveSpeed: number;
-  shockwaveWaveThickness: number;
-  shockwaveWaveGlow: number;
-  shockwaveParticleSpeed: number;
+const vertexShaderSource = `
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+`;
+
+// Standard WebGL fragment shader for the shockwave effect
+const fragmentShaderSource = `
+  precision highp float;
+  uniform vec2 u_resolution;
+  uniform float u_time;
+  uniform vec3 u_shockwaves[10]; // x, y, startTime
+  uniform float u_waveSpeed;
+  uniform float u_waveThickness;
+  uniform float u_waveGlow;
+  uniform float u_particleSpeed;
+
+  float sdInfinity(vec2 p, float a) {
+    float x2 = p.x * p.x;
+    float y2 = p.y * p.y;
+    float r2 = x2 + y2;
+    float f = r2 * r2 - a * a * (x2 - y2);
+    vec2 grad = vec2(4.0 * p.x * r2 - 2.0 * a * a * p.x,
+                     4.0 * p.y * r2 + 2.0 * a * a * p.y);
+    return abs(f) / (length(grad) + 0.0001);
+  }
+
+  void main() {
+    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    vec2 pos = uv;
+    float aspect = u_resolution.x / u_resolution.y;
+    pos.x *= aspect;
+
+    vec3 color = vec3(0.0); // Transparent background
+    float alpha = 0.0;
+
+    // Google official brand colors
+    vec3 cBlue = vec3(0.259, 0.522, 0.957);
+    vec3 cRed = vec3(0.918, 0.263, 0.208);
+    vec3 cYellow = vec3(0.984, 0.737, 0.020);
+    vec3 cGreen = vec3(0.204, 0.659, 0.325);
+
+    for (int i = 0; i < 10; i++) { // Max 10 simultaneous shockwaves
+      float startTime = u_shockwaves[i].z;
+      if (startTime <= 0.0) continue;
+
+      float age = u_time - startTime;
+      if (age > 0.0 && age < 4.0) {
+        vec2 center = u_shockwaves[i].xy;
+        center.x *= aspect; // apply aspect ratio to center
+
+        float dist = distance(pos, center);
+        float currentRadius = age * 0.7 * u_waveSpeed; // Speed of expansion
+        float thickness = (0.02 + (age * 0.025)) * u_waveThickness; // Gets thicker as it expands
+
+        // Loop over the 4 Google colors to make a rainbow wave
+        for(int j = 0; j < 4; j++) {
+          float offset = float(j) * (0.06 + age * 0.015);
+          float r = currentRadius - offset;
+
+          if (r > 0.0) {
+            float ring = smoothstep(r - thickness, r, dist) - smoothstep(r, r + thickness, dist);
+
+            vec3 ringColor;
+            if (j == 0) ringColor = cBlue;
+            else if (j == 1) ringColor = cRed;
+            else if (j == 2) ringColor = cYellow;
+            else ringColor = cGreen;
+
+            // Fade out smoothly at end of life and fade in quickly at start
+            float fade = smoothstep(4.0, 0.0, age) * smoothstep(0.0, 0.1, age);
+
+            // Add a soft glow effect alongside the hard ring
+            float glow = exp(-abs(dist - r) * 8.0) * 0.8 * u_waveGlow;
+
+            color += ringColor * (ring + glow) * fade;
+            alpha += (ring + glow) * fade;
+          }
+        }
+      }
+    }
+
+    // Render central animated infinity loop
+    vec2 centeredPos = uv - 0.5;
+    centeredPos.x *= aspect;
+
+    // Subtle wavy distortion based on time to make it feel alive
+    centeredPos += vec2(sin(u_time * 2.0 + centeredPos.y * 10.0) * 0.005, cos(u_time * 1.5 + centeredPos.x * 10.0) * 0.005);
+
+    float infA = min(aspect, 1.0) * 0.35;
+    float dInf = sdInfinity(centeredPos, infA);
+
+    // Animate the thickness and add colorful gradients
+    float thicknessBase = 0.005 + 0.002 * sin(u_time * 3.0);
+    float infLine = smoothstep(thicknessBase, 0.0, dInf);
+
+    // Colorful shifting glow for the track
+    float colorShift = u_time * 0.8 + length(centeredPos) * 3.0;
+    vec3 baseInfColor = vec3(
+      0.5 + 0.5 * sin(colorShift),
+      0.5 + 0.5 * sin(colorShift + 2.094),
+      0.5 + 0.5 * sin(colorShift + 4.188)
+    ) * 0.2;
+
+    // Pulsing glow
+    float glowSize = 0.001 + 0.0005 * sin(u_time * 4.0);
+    float infGlow = glowSize / (abs(dInf) + 0.001);
+
+    color += baseInfColor * infLine * 1.5 + baseInfColor * infGlow * 2.0;
+    alpha += (infLine + infGlow * 0.5);
+
+    float walkTime = u_time * 1.5 * u_particleSpeed;
+    for(int k = 0; k < 4; k++) {
+      float tk = walkTime - float(k) * 1.5707963268;
+      float denom = 1.0 + sin(tk) * sin(tk);
+      vec2 pt = vec2(infA * cos(tk) / denom, infA * sin(tk) * cos(tk) / denom);
+
+      float distToPt = length(centeredPos - pt);
+      // Brighter cores
+      float pCore = smoothstep(0.015, 0.0, distToPt);
+      float pGlow = 0.0025 / (distToPt + 0.002);
+
+      vec3 ptColor;
+      if (k == 0) ptColor = cBlue;
+      else if (k == 1) ptColor = cRed;
+      else if (k == 2) ptColor = cYellow;
+      else ptColor = cGreen;
+
+      color += ptColor * (pCore * 2.0 + pGlow * 2.0);
+      alpha += (pCore + pGlow);
+
+      // Longer and smoother trail
+      for(int m = 1; m <= 8; m++) {
+        float tailTk = tk - float(m) * 0.06;
+        float tailDenom = 1.0 + sin(tailTk) * sin(tailTk);
+        vec2 tailPt = vec2(infA * cos(tailTk) / tailDenom, infA * sin(tailTk) * cos(tailTk) / tailDenom);
+        float tailDist = length(centeredPos - tailPt);
+        float tailGlow = 0.0008 / (tailDist + 0.001) * (1.0 - float(m)/8.0);
+        color += ptColor * tailGlow * 1.5;
+        alpha += tailGlow * 0.5;
+      }
+    }
+
+    gl_FragColor = vec4(clamp(color, 0.0, 1.0), clamp(alpha, 0.0, 1.0));
+  }
+`;
+
+function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+  const shader = gl.createShader(type);
+  if (!shader) return null;
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+  return shader;
 }
 
-interface WebGLCanvasProps {
-  config: Config;
+function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+  const program = gl.createProgram();
+  if (!program) return null;
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error('Program linking error:', gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    return null;
+  }
+  return program;
 }
 
-export const WebGLCanvas: React.FC<WebGLCanvasProps> = ({ config }) => {
+export interface WebGLCanvasRef {
+  triggerShockwave: (normalizedX: number, normalizedY: number) => void;
+}
+
+export interface ShockwaveConfig {
+  waveSpeed: number;
+  waveThickness: number;
+  waveGlow: number;
+  particleSpeed: number;
+}
+
+export const WebGLCanvas = forwardRef<WebGLCanvasRef, { config?: ShockwaveConfig }>(({ config }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Create a ref to store the shockwave triggering function
-  const triggerShockwaveRef = useRef<(x: number, y: number) => void>(() => {});
+  const configRef = useRef(config || {
+    waveSpeed: 1.0,
+    waveThickness: 1.0,
+    waveGlow: 1.0,
+    particleSpeed: 1.0
+  });
+
+  useEffect(() => {
+    if (config) {
+      configRef.current = config;
+    }
+  }, [config]);
+
+  // Store up to 10 shockwaves: x, y, startTime
+  const shockwavesRef = useRef<Float32Array>(new Float32Array(30));
+  const currentIdxRef = useRef(0);
+
+  useImperativeHandle(ref, () => ({
+    triggerShockwave: (normalizedX: number, normalizedY: number) => {
+      const idx = (currentIdxRef.current % 10) * 3;
+      shockwavesRef.current[idx] = normalizedX;
+      shockwavesRef.current[idx + 1] = normalizedY;
+      shockwavesRef.current[idx + 2] = performance.now() / 1000.0;
+      currentIdxRef.current += 1;
+    }
+  }));
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const gl = canvas.getContext('webgl');
     if (!gl) {
       console.error('WebGL not supported');
       return;
     }
 
-    // Set canvas dimensions
-    const setSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    setSize();
-    window.addEventListener('resize', setSize);
-
-    // Vertex Shader
-    const vsSource = `
-      attribute vec2 position;
-      varying vec2 vUv;
-      void main() {
-        vUv = position * 0.5 + 0.5;
-        vUv.y = 1.0 - vUv.y; // Flip Y for standard texture coordinates
-        gl_Position = vec4(position, 0.0, 1.0);
-      }
-    `;
-
-    // Fragment Shader
-    const fsSource = `
-      precision highp float;
-      uniform vec2 resolution;
-      uniform float time;
-      uniform vec2 shockwaveCenter;
-      uniform float shockwaveTime;
-
-      // Configuration Uniforms
-      uniform float u_waveSpeed;
-      uniform float u_waveThickness;
-      uniform float u_waveGlow;
-      uniform float u_particleSpeed;
-
-      // Color Palette (matching Loki Prime aesthetic)
-      vec3 color1 = vec3(0.0, 1.0, 0.8); // Cyan
-      vec3 color2 = vec3(0.8, 0.0, 1.0); // Purple
-      vec3 color3 = vec3(1.0, 0.5, 0.0); // Orange
-
-      // Noise function for particles
-      float random(vec2 st) {
-          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-      }
-
-      void main() {
-        vec2 uv = gl_FragCoord.xy / resolution.xy;
-        float aspect = resolution.x / resolution.y;
-
-        // Correct aspect ratio for circular distance calculations
-        vec2 center = shockwaveCenter;
-        vec2 delta = uv - center;
-        delta.x *= aspect;
-
-        float dist = length(delta);
-
-        vec3 finalColor = vec3(0.0);
-
-        // 1. Core Shockwave
-        if (shockwaveTime > 0.0) {
-            // Apply speed setting
-            float currentRadius = shockwaveTime * 1.5 * u_waveSpeed;
-
-            // Calculate distance to the expanding ring
-            float ringDist = abs(dist - currentRadius);
-
-            // Apply thickness and glow settings
-            float thickness = 0.05 * u_waveThickness;
-            float waveAlpha = smoothstep(thickness, 0.0, ringDist);
-
-            // Core bright ring
-            float core = smoothstep(0.01 * u_waveThickness, 0.0, ringDist);
-
-            // Mix colors based on distance and time
-            vec3 waveColor = mix(color1, color2, sin(dist * 10.0 - time * 2.0) * 0.5 + 0.5);
-            waveColor = mix(waveColor, color3, core);
-
-            // Apply intensity/glow
-            finalColor += waveColor * waveAlpha * u_waveGlow * (1.0 - (currentRadius * 0.3)); // Fade out as it expands
-        }
-
-        // 2. Ambient Particles
-        // Create a grid for particles
-        vec2 gridUv = fract(uv * 20.0);
-        vec2 gridId = floor(uv * 20.0);
-
-        // Randomize particle position within grid cell
-        vec2 particleOffset = vec2(
-            random(gridId) * 0.8 + 0.1,
-            random(gridId + 10.0) * 0.8 + 0.1
-        );
-
-        // Move particles
-        particleOffset.y += sin(time * u_particleSpeed * random(gridId) + gridId.x) * 0.5;
-        particleOffset.y = fract(particleOffset.y);
-
-        float particleDist = length(gridUv - particleOffset);
-        float particleAlpha = smoothstep(0.1, 0.0, particleDist) * (0.3 + 0.7 * random(gridId + 20.0));
-
-        // Color particles based on grid ID
-        vec3 particleColor = mix(color1, color3, random(gridId + 30.0));
-
-        finalColor += particleColor * particleAlpha;
-
-        gl_FragColor = vec4(finalColor, 1.0); // Additive blending handled by WebGL context setup if needed, but here we just output the color.
-      }
-    `;
-
-    // Compile Shader
-    const compileShader = (type: number, source: string) => {
-      const shader = gl.createShader(type);
-      if (!shader) return null;
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error('Shader compile error:', gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    };
-
-    const vertexShader = compileShader(gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fsSource);
-
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     if (!vertexShader || !fragmentShader) return;
 
-    // Create Program
-    const program = gl.createProgram();
+    const program = createProgram(gl, vertexShader, fragmentShader);
     if (!program) return;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Program link error:', gl.getProgramInfoLog(program));
-      return;
-    }
+    const positionAttributeLocation = gl.getAttribLocation(program, 'position');
+    const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
+    const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
+    const shockwavesUniformLocation = gl.getUniformLocation(program, 'u_shockwaves[0]') || gl.getUniformLocation(program, 'u_shockwaves');
+    const waveSpeedLocation = gl.getUniformLocation(program, 'u_waveSpeed');
+    const waveThicknessLocation = gl.getUniformLocation(program, 'u_waveThickness');
+    const waveGlowLocation = gl.getUniformLocation(program, 'u_waveGlow');
+    const particleSpeedLocation = gl.getUniformLocation(program, 'u_particleSpeed');
 
-    gl.useProgram(program);
-
-    // Set up geometry (full screen quad)
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    const positions = new Float32Array([
-      -1.0, -1.0,
-       1.0, -1.0,
-      -1.0,  1.0,
-      -1.0,  1.0,
-       1.0, -1.0,
-       1.0,  1.0,
-    ]);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+    const positions = [
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1,
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-    const positionLocation = gl.getAttribLocation(program, 'position');
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    // Initial resize
+    const resizeCanvas = () => {
+      const displayWidth = window.innerWidth;
+      const displayHeight = window.innerHeight;
 
-    // Get uniform locations
-    const resolutionLoc = gl.getUniformLocation(program, 'resolution');
-    const timeLoc = gl.getUniformLocation(program, 'time');
-    const shockwaveCenterLoc = gl.getUniformLocation(program, 'shockwaveCenter');
-    const shockwaveTimeLoc = gl.getUniformLocation(program, 'shockwaveTime');
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      }
+    };
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // Config uniform locations
-    const waveSpeedLoc = gl.getUniformLocation(program, 'u_waveSpeed');
-    const waveThicknessLoc = gl.getUniformLocation(program, 'u_waveThickness');
-    const waveGlowLoc = gl.getUniformLocation(program, 'u_waveGlow');
-    const particleSpeedLoc = gl.getUniformLocation(program, 'u_particleSpeed');
-
-    // Enable alpha blending
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // Additive blending for glowing effect
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
     let animationFrameId: number;
-    let startTime = performance.now();
 
-    // Shockwave state
-    let swCenter = [0.5, 0.5];
-    let swStartTime = -1;
-
-    // The rendering loop
     const render = (time: number) => {
-      // Calculate elapsed time in seconds
-      const elapsedTime = (time - startTime) * 0.001;
+      // time is in ms, convert to seconds
+      const timeSecs = time * 0.001;
 
-      // Update uniforms
-      gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
-      gl.uniform1f(timeLoc, elapsedTime);
-      gl.uniform2f(shockwaveCenterLoc, swCenter[0], swCenter[1]);
-
-      // Calculate shockwave progress
-      let currentSwTime = 0.0;
-      if (swStartTime > 0) {
-          currentSwTime = (time - swStartTime) * 0.001;
-          // Optional: Reset shockwave after a certain duration to allow triggering again
-          // if (currentSwTime > 5.0) swStartTime = -1;
-      }
-      gl.uniform1f(shockwaveTimeLoc, currentSwTime);
-
-      // Update config uniforms
-      gl.uniform1f(waveSpeedLoc, config.shockwaveWaveSpeed);
-      gl.uniform1f(waveThicknessLoc, config.shockwaveWaveThickness);
-      gl.uniform1f(waveGlowLoc, config.shockwaveWaveGlow);
-      gl.uniform1f(particleSpeedLoc, config.shockwaveParticleSpeed);
-
-      // Draw
-      gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent background
       gl.clear(gl.COLOR_BUFFER_BIT);
+
+      gl.useProgram(program);
+      gl.enableVertexAttribArray(positionAttributeLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+      // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+      const size = 2;          // 2 components per iteration
+      const type = gl.FLOAT;   // the data is 32bit floats
+      const normalize = false; // don't normalize the data
+      const stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+      const offset = 0;        // start at the beginning of the buffer
+      gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+      // Set uniforms
+      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+      gl.uniform1f(timeUniformLocation, timeSecs);
+      gl.uniform3fv(shockwavesUniformLocation, shockwavesRef.current);
+      gl.uniform1f(waveSpeedLocation, configRef.current.waveSpeed);
+      gl.uniform1f(waveThicknessLocation, configRef.current.waveThickness);
+      gl.uniform1f(waveGlowLocation, configRef.current.waveGlow);
+      gl.uniform1f(particleSpeedLocation, configRef.current.particleSpeed);
+
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
       animationFrameId = requestAnimationFrame(render);
     };
 
-    // Start rendering
     animationFrameId = requestAnimationFrame(render);
 
-    // Expose trigger function
-    triggerShockwaveRef.current = (x: number, y: number) => {
-        swCenter = [x, y];
-        swStartTime = performance.now();
-    };
-
-    // Auto trigger on mount at center
-    setTimeout(() => {
-        if (triggerShockwaveRef.current) {
-            triggerShockwaveRef.current(0.5, 0.5);
-        }
-    }, 100);
-
-    // Cleanup
     return () => {
-      window.removeEventListener('resize', setSize);
+      window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
-      triggerShockwaveRef.current = undefined;
+      gl.deleteProgram(program);
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
     };
-  }, [config]); // Re-run effect if config changes, or we can handle it dynamically if we pass config differently, but re-init is safer for now or we could use refs for config to avoid re-init.
-
-  // Optimization: Use refs for config to avoid re-initializing WebGL on slider changes
-  const configRef = useRef(config);
-  useEffect(() => {
-      configRef.current = config;
-  }, [config]);
+  }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[998]"
-      style={{ width: '100%', height: '100%' }}
+      className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
     />
   );
-};
+});
+
+WebGLCanvas.displayName = 'WebGLCanvas';
+
+export default WebGLCanvas;
