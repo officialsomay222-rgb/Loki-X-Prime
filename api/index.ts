@@ -38,13 +38,37 @@ const getTodayDateString = () => {
   return today.toISOString().split('T')[0];
 };
 
+const defaultOrigins = [
+  'https://loki-x-prime.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : '*'),
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, server-to-server)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+      : defaultOrigins;
+
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Ensure rate limiting correctly tracks IPs behind reverse proxies (like Vercel/Cloudflare)
+app.set('trust proxy', 1);
 
 // Security middlewares
 app.use(helmet());
