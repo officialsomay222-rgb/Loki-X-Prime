@@ -16,7 +16,7 @@ export const WebGLCanvas: React.FC<WebGLCanvasProps> = ({ config }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Create a ref to store the shockwave triggering function
-  const triggerShockwaveRef = useRef<(x: number, y: number) => void>();
+  const triggerShockwaveRef = useRef<(x: number, y: number) => void>(() => {});
 
   useEffect(() => {
     const canvas = canvasRef.current;
