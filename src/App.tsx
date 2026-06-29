@@ -306,6 +306,13 @@ export default function App() {
         })
         .catch(console.warn);
 
+      Keyboard.addListener('keyboardWillShow', (info) => {
+        document.documentElement.style.setProperty('--keyboard-inset-bottom', `${info.keyboardHeight}px`);
+      });
+
+      Keyboard.addListener('keyboardWillHide', () => {
+        document.documentElement.style.setProperty('--keyboard-inset-bottom', '0px');
+      });
 
       return () => {
         Keyboard.removeAllListeners();
