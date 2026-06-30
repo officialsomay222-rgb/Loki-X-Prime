@@ -1147,14 +1147,14 @@ export default function App() {
               ) : (
                 <>
                   {renderedMessages}
-                  <div ref={messagesEndRef} className="h-8 sm:h-12 shrink-0" />
+                  <div ref={messagesEndRef} className="h-32 sm:h-40 shrink-0" />
                 </>
               )}
             </div>
           </div>
 
           {/* Scroll to Bottom Button Container */}
-          <div className={`relative w-full ${appWidthClass} mx-auto z-30 pointer-events-none h-0`}>
+          <div className={`absolute bottom-32 left-0 right-0 w-full ${appWidthClass} mx-auto z-30 pointer-events-none`}>
             <AnimatePresence>
               {showScrollToBottom &&
                 currentSession &&
@@ -1179,28 +1179,30 @@ export default function App() {
             </AnimatePresence>
           </div>
 
-          {/* Input Area - Flex Item (Not Absolute) */}
+          {/* Input Area - Floating (Absolute) */}
           <div
-            className={`shrink-0 z-20 w-full ${appWidthClass} mx-auto input-keyboard-safe-area`}
+            className={`absolute bottom-0 left-0 right-0 z-20 w-full ${appWidthClass} mx-auto input-keyboard-safe-area pointer-events-none`}
             style={{
               paddingTop: "8px",
             }}
           >
-            <ChatInput
-              ref={inputRef}
-              isAwakened={isAwakened}
-              isLoading={isLoading}
-              modelMode={currentSession?.modelMode || modelMode}
-              setModelMode={handleSetModelMode}
-              onSendMessage={handleSendMessage}
-              onDeleteSession={handleDeleteSession}
-              currentSessionId={currentSessionId}
-              onStopGeneration={stopGeneration}
-              enterToSend={enterToSend}
-              draftText={currentSession?.draftText || ""}
-              draftAttachments={memoizedDraftAttachments}
-              saveSessionDraft={saveSessionDraft}
-            />
+            <div className="pointer-events-auto">
+              <ChatInput
+                ref={inputRef}
+                isAwakened={isAwakened}
+                isLoading={isLoading}
+                modelMode={currentSession?.modelMode || modelMode}
+                setModelMode={handleSetModelMode}
+                onSendMessage={handleSendMessage}
+                onDeleteSession={handleDeleteSession}
+                currentSessionId={currentSessionId}
+                onStopGeneration={stopGeneration}
+                enterToSend={enterToSend}
+                draftText={currentSession?.draftText || ""}
+                draftAttachments={memoizedDraftAttachments}
+                saveSessionDraft={saveSessionDraft}
+              />
+            </div>
           </div>
         </div>
       </div>
