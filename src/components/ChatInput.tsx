@@ -984,7 +984,7 @@ export const ChatInput = memo(
                     className={`relative z-10 rounded-[30px] transition-all duration-500 flex flex-col p-2 sm:p-3 backdrop-blur-xl border-transparent shadow-sm dark:shadow-none ${
                       isAwakened || effectInputBox
                         ? `bg-white/60 dark:bg-[#050505]/90 transition-shadow duration-300 shadow-[inset_0_0_30px_rgba(0,242,255,0.1)] focus-within:shadow-[inset_0_0_50px_rgba(0,242,255,0.25)]`
-                        : "bg-slate-100/20 dark:bg-white/5"
+                        : "bg-transparent"
                     } ${
                       isSuccessFlash
                         ? "shadow-[0_0_30px_rgba(255,255,255,0.5)] border-white/50"
