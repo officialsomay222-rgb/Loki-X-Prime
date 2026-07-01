@@ -1384,7 +1384,7 @@ html:not(.dark) .awakened-mode .glass-button:hover {
 }
 
 .input-keyboard-safe-area {
-  bottom: calc(4px + max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset-bottom, 0px)));
+  bottom: max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset-bottom, 0px));
   transition: bottom 0.05s ease-out;
 }
 
