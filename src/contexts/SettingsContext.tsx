@@ -5,10 +5,6 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Capacitor } from "@capacitor/core";
-import { StatusBar, Style } from "@capacitor/status-bar";
-import { NavigationBar } from "@hugotomazi/capacitor-navigation-bar";
-
 export type Theme = "light" | "dark" | "system";
 export type BgStyle = "default" | "nebula" | "cyber-grid";
 export type ModelMode = "pro" | "fast" | "happy";
@@ -593,16 +589,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         document.documentElement.style.backgroundColor = isAwakened
           ? "#08080c"
           : "#08080c";
-
-        if (Capacitor.isNativePlatform()) {
-          StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-          StatusBar.setBackgroundColor({ color: "#00000000" }).catch(() => {});
-          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
-          NavigationBar.setColor({
-            color: "#00000000",
-            darkButtons: false,
-          }).catch(() => {});
-        }
       } else {
         document.documentElement.classList.remove("dark");
         document.body.style.backgroundColor = isAwakened
@@ -611,16 +597,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         document.documentElement.style.backgroundColor = isAwakened
           ? "#ffffff"
           : "#08080c";
-
-        if (Capacitor.isNativePlatform()) {
-          StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-          StatusBar.setBackgroundColor({ color: "#00000000" }).catch(() => {});
-          NavigationBar.setTransparency({ isTransparent: true }).catch(() => {});
-          NavigationBar.setColor({
-            color: "#00000000",
-            darkButtons: true,
-          }).catch(() => {});
-        }
       }
     };
 

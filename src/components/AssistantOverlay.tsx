@@ -3,10 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChatInput } from './ChatInput';
 import { MessageBubble } from './MessageBubble';
 import { useChat } from '../contexts/ChatContext';
-import { Capacitor } from '@capacitor/core';
-import { registerPlugin } from '@capacitor/core';
-
-const AssistantModePlugin = registerPlugin('AssistantMode');
 
 export const AssistantOverlay = ({ onClose }: { onClose: () => void }) => {
   const { sessions, currentSessionId, sendMessage, stopGeneration } = useChat();
@@ -25,15 +21,7 @@ export const AssistantOverlay = ({ onClose }: { onClose: () => void }) => {
     if (info.offset.y < -50) {
       // Dragged up
       setExpanded(true);
-      // Clean up the native intent so we don't get stuck in assistant mode
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const plugin = AssistantModePlugin as any;
-          await plugin.clearAssistantMode();
-        } catch (e) {
-          console.error(e);
-        }
-      }
+
       onClose(); // This seamlessly unmounts the overlay and reveals the main app
     } else if (info.offset.y > 50) {
       // Dragged down - close
@@ -43,14 +31,6 @@ export const AssistantOverlay = ({ onClose }: { onClose: () => void }) => {
 
   const closeOverlay = async () => {
     onClose();
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const plugin = AssistantModePlugin as any;
-        await plugin.closeAssistantMode();
-      } catch (e) {
-        console.error(e);
-      }
-    }
   };
 
   return (
