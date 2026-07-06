@@ -10,9 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { NetworkStatusIndicator } from "./components/NetworkStatusIndicator";
 
-import { Capacitor } from "@capacitor/core";
-import { Keyboard } from "@capacitor/keyboard";
-import { StatusBar } from "@capacitor/status-bar";
 import { ChatInput, ChatInputHandle } from "./components/ChatInput";
 import { useAwakening } from "./hooks/useAwakening";
 import { AvatarShockwave } from "./components/AvatarShockwave";
@@ -33,7 +30,6 @@ import { TimelineItem } from "./components/TimelineItem";
 import { format, isToday } from "date-fns";
 import { TaskWidget } from "./features/tasks/components/TaskWidget";
 import { AssistantOverlay } from "./components/AssistantOverlay";
-import { registerPlugin } from "@capacitor/core";
 import {
   Plus,
   MessageSquare,
@@ -73,8 +69,6 @@ declare global {
     };
   }
 }
-
-const AssistantModePlugin = registerPlugin("AssistantMode");
 
 export default function App() {
   const { isLoggedIn, isGuest } = useAuth();
@@ -257,72 +251,17 @@ export default function App() {
         setIsAssistantMode(true);
       }
 
-      // Check native plugin
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const plugin = AssistantModePlugin as any;
-          const { isAssistantMode: nativeMode } = await plugin.checkAssistantMode();
-          setIsAssistantMode(nativeMode);
-        } catch (e) {
-          console.warn("AssistantModePlugin not available");
-          setIsAssistantMode(false);
-        }
-      } else {
-        setIsAssistantMode(false);
-      }
+      setIsAssistantMode(false);
     };
     checkAssistantMode();
-
-    // Re-check when app resumes
-    if (Capacitor.isNativePlatform()) {
-      import('@capacitor/app').then(({ App }) => {
-        const appStateListener = App.addListener('appStateChange', (state) => {
-          if (state.isActive) {
-            checkAssistantMode();
-          }
-        });
-      });
-
-      try {
-        const plugin = AssistantModePlugin as any;
-        plugin.addListener("assistantModeChanged", (info: any) => {
-          if (info && info.isAssistantMode !== undefined) {
-             setIsAssistantMode(info.isAssistantMode);
-          }
-        });
-      } catch (e) {
-        console.error("Failed to add listener to AssistantModePlugin", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      StatusBar.setOverlaysWebView({ overlay: true })
-        .then(() => {
-          setTimeout(() => {
-            StatusBar.show().catch(console.warn);
-          }, 100);
-        })
-        .catch(console.warn);
-
-      Keyboard.addListener('keyboardWillShow', (info) => {
-        document.documentElement.style.setProperty('--keyboard-inset-bottom', `${info.keyboardHeight}px`);
-      });
-
-      Keyboard.addListener('keyboardWillHide', () => {
-        document.documentElement.style.setProperty('--keyboard-inset-bottom', '0px');
-      });
-
-      return () => {
-        Keyboard.removeAllListeners();
-      };
-    }
   }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsBooting(false);
+      if (window.AndroidNative) {
+        window.AndroidNative.showToast("Loki X Prime is running native!");
+      }
     }, 4000);
 
     const skipTimer = setTimeout(() => {

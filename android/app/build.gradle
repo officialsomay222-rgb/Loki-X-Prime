@@ -46,14 +46,14 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation 'androidx.activity:activity:1.9.3'
     implementation "io.noties.markwon:core:4.6.2"
-    implementation project(':capacitor-android')
+
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
-    implementation project(':capacitor-cordova-android-plugins')
+
 }
 
-apply from: 'capacitor.build.gradle'
+
 
 try {
     def servicesJSON = file('google-services.json')

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { Capacitor } from '@capacitor/core';
 
 export interface AuthState {
   isLoggedIn: boolean;

@@ -30,10 +30,6 @@ import { useGlobalInteraction } from "../contexts/GlobalInteractionContext";
 import { transcribeAudio, connectLiveSession } from "../services/geminiService";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfinityMic } from "./Logos";
-import { Capacitor } from '@capacitor/core';
-import { Camera } from '@capacitor/camera';
-import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
-import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { LiveVoiceOverlay } from "./LiveVoiceOverlay";
 
 // ⚡ Bolt: Extracted default array to a stable module-level constant
@@ -313,59 +309,12 @@ export const ChatInput = memo(
       };
 
       const handleAttachmentClick = async () => {
-        if (Capacitor.isNativePlatform()) {
-          setIsAttachmentMenuOpen(true);
-        } else {
-          fileInputRef.current?.click();
-        }
+        fileInputRef.current?.click();
       };
 
       const handleAttachmentOptionSelect = async (option: 'gallery' | 'files') => {
         setIsAttachmentMenuOpen(false);
-        try {
-          if (option === 'gallery') {
-            const limit = 10 - attachments.length;
-            if (limit <= 0) return;
-
-            const photoResult = await Camera.pickImages({
-              limit: limit,
-            });
-
-            if (photoResult && photoResult.photos && photoResult.photos.length > 0) {
-              const newAttachments = [...attachments];
-              for (const photo of photoResult.photos) {
-                if (newAttachments.length >= 10) break;
-                if (photo.webPath) {
-                   try {
-                     const response = await fetch(photo.webPath);
-                     const blob = await response.blob();
-                     const reader = new FileReader();
-                     reader.readAsDataURL(blob);
-                     await new Promise<void>((resolve) => {
-                       reader.onload = () => {
-                         const base64Data = (reader.result as string).split(',')[1];
-                         newAttachments.push({
-                           data: base64Data,
-                           mimeType: `image/${photo.format || 'jpeg'}`,
-                           url: photo.webPath as string
-                         });
-                         resolve();
-                       };
-                     });
-                   } catch (err) {
-                     console.error("Failed to read picked image:", err);
-                   }
-                }
-              }
-              setAttachments(newAttachments);
-            }
-          } else if (option === 'files') {
-            // Open file manager for all file types
-            fileInputRef.current?.click();
-          }
-        } catch (error) {
-          console.error("Error picking attachments:", error);
-        }
+        fileInputRef.current?.click();
       };
       
       const removeAttachment = (index: number) => {
@@ -464,16 +413,6 @@ export const ChatInput = memo(
         let stream: MediaStream;
         let mediaRecorder: MediaRecorder;
         try {
-          if (Capacitor.isNativePlatform()) {
-            const hasPermission = await VoiceRecorder.hasAudioRecordingPermission();
-            if (!hasPermission.value) {
-              const request = await VoiceRecorder.requestAudioRecordingPermission();
-              if (!request.value) {
-                throw new Error("Permission denied");
-              }
-            }
-          }
-
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             throw new Error(
               "Microphone access is not supported in this browser or environment.",
@@ -719,16 +658,6 @@ export const ChatInput = memo(
         if (isLiveSessionActive) return;
 
         try {
-          if (Capacitor.isNativePlatform()) {
-            const hasPermission = await VoiceRecorder.hasAudioRecordingPermission();
-            if (!hasPermission.value) {
-              const request = await VoiceRecorder.requestAudioRecordingPermission();
-              if (!request.value) {
-                throw new Error("Permission denied");
-              }
-            }
-          }
-
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             setMicError(
               "Microphone access is not supported or is blocked by security policies.",

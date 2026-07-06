@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Sparkles, Zap, Smartphone, CheckCircle } from 'lucide-react';
 import AssistantSettings from '../plugins/AssistantSettings';
-import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 
 interface AssistantIntroOverlayProps {
@@ -12,15 +11,11 @@ interface AssistantIntroOverlayProps {
 export const AssistantIntroOverlay: React.FC<AssistantIntroOverlayProps> = ({ onClose }) => {
 
   const handleSetAssistant = async () => {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await AssistantSettings.openAssistantSettings();
-      } catch (e) {
-        console.error('Failed to open settings', e);
-        toast.error('Could not open assistant settings. Please try manually in your device settings.');
-      }
-    } else {
-      toast.error('This feature is only available on Android devices.');
+    try {
+      await AssistantSettings.openAssistantSettings();
+    } catch (e) {
+      console.error('Failed to open settings', e);
+      toast.error('Could not open assistant settings. Please try manually in your device settings.');
     }
   };
 

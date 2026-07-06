@@ -5,7 +5,6 @@ import { incrementTextCount, incrementImageCount, canSendTextMessage, canGenerat
 import { localDb } from '../lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { toast } from 'sonner';
-import { Network } from '@capacitor/network';
 import { 
   generateChatResponse, 
   generateImage, 
@@ -370,14 +369,7 @@ ${modeInstruction} ${toneInstruction} ${lengthInstruction} ${systemInstruction}`
     }
 
     // Check for network connectivity
-    let isConnected = true;
-    try {
-      const networkStatus = await Network.getStatus();
-      isConnected = networkStatus.connected;
-    } catch (error) {
-      console.warn("Network.getStatus() failed, falling back to navigator.onLine", error);
-      isConnected = typeof navigator !== 'undefined' ? navigator.onLine : true;
-    }
+    let isConnected = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
     if (!isConnected) {
       toast.error('No Internet Connection. Please check your network to send messages.');
