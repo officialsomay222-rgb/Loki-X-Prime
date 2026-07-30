@@ -34,7 +34,7 @@ export const AssistantIntroOverlay: React.FC<AssistantIntroOverlayProps> = ({ on
           onClick={onClose}
           aria-label="Close"
           title="Close"
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
         </motion.button>
@@ -84,7 +84,7 @@ export const AssistantIntroOverlay: React.FC<AssistantIntroOverlayProps> = ({ on
           whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSetAssistant}
-          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all shadow-xl"
+          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold transition-all shadow-xl focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none"
         >
           Set Loki X Prime as default AI assistant
         </motion.button>
