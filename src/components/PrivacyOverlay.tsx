@@ -22,7 +22,7 @@ export const PrivacyOverlay: React.FC<PrivacyOverlayProps> = ({ onClose }) => {
                       onClick={onClose}
                       aria-label="Close"
                       title="Close"
-                      className="p-2 rounded-full transition-colors"
+                      className="p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-slate-400"
                     >
                       <ChevronDown className="w-5 h-5 text-slate-900 dark:text-white" />
                     </motion.button>
