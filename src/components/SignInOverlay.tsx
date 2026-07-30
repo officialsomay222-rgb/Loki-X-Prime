@@ -95,6 +95,7 @@ export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
           <button
             onClick={handleSignIn}
             disabled={isSigningIn}
+            aria-label="Continue with Google"
             className={`w-full group relative flex items-center justify-center gap-3 bg-white text-slate-900 py-4 px-8 rounded-2xl font-bold text-lg transition-all focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none ${isSigningIn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-50 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0"}`}
           >
             {isSigningIn ? (
@@ -136,12 +137,14 @@ export const SignInOverlay: React.FC<SignInOverlayProps> = ({ onClose }) => {
                       continueAsGuest();
                       onClose();
                   }}
+                  aria-label="Continue as Guest"
                   className="w-full text-slate-300 hover:text-white transition-all text-sm font-bold uppercase tracking-widest py-3.5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:outline-none"
               >
                   Continue as Guest
               </button>
               <button
                   onClick={onClose}
+                  aria-label="Cancel sign in"
                   className="text-slate-500 hover:text-slate-300 transition-colors text-sm font-medium mt-2 px-4 py-2 rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-slate-500/50 focus-visible:outline-none"
               >
                   Cancel
