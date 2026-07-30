@@ -78,7 +78,7 @@ export const AudioPlayer = ({
       <button
         onClick={togglePlay}
         aria-label={isPlaying ? "Pause" : "Play"} title={isPlaying ? "Pause" : "Play"}
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30"
+        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/30 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-cyan-500"
       >
         {isPlaying ? (
           <svg
@@ -117,13 +117,30 @@ export const AudioPlayer = ({
       </button>
 
       <div
-        className="flex-1 flex items-center justify-between h-8 gap-[2px] relative cursor-pointer"
+        role="slider"
+        aria-label="Seek audio"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progressPercentage)}
+        tabIndex={0}
+        className="flex-1 flex items-center justify-between h-8 gap-[2px] relative cursor-pointer focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-cyan-500 rounded-sm"
         onClick={(e) => {
           if (!audioRef.current || !duration) return;
           const rect = e.currentTarget.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const percentage = x / rect.width;
           audioRef.current.currentTime = percentage * duration;
+        }}
+        onKeyDown={(e) => {
+          if (!audioRef.current || !duration) return;
+          const SEEK_AMOUNT = 5;
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + SEEK_AMOUNT);
+          } else if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - SEEK_AMOUNT);
+          }
         }}
       >
         {bars.map((height, i) => {
