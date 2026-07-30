@@ -304,7 +304,8 @@ const getMarkdownComponents = (
         return <td className="px-4 py-2.5">{children}</td>;
       },
       a({ node, children, href, ...props }: any) {
-        const isSafeProtocol = href && (href.toLowerCase().startsWith('http://') || href.toLowerCase().startsWith('https://') || href.toLowerCase().startsWith('mailto:') || href.startsWith('/'));
+        const lowerHref = href ? href.toLowerCase() : '';
+        const isSafeProtocol = href && (lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('mailto:') || href.startsWith('/'));
         const safeHref = isSafeProtocol ? href : '#';
 
         if (href && (href.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i) || children?.[0]?.toString().match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i))) {
@@ -425,7 +426,8 @@ const getMarkdownComponents = (
       return <td className="px-4 py-2.5">{children}</td>;
     },
     a({ node, children, href, ...props }: any) {
-      const isSafeProtocol = href && (href.toLowerCase().startsWith('http://') || href.toLowerCase().startsWith('https://') || href.toLowerCase().startsWith('mailto:') || href.startsWith('/'));
+      const lowerHref = href ? href.toLowerCase() : '';
+      const isSafeProtocol = href && (lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('mailto:') || href.startsWith('/'));
       const safeHref = isSafeProtocol ? href : '#';
 
       if (href && (href.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i) || children?.[0]?.toString().match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i))) {
